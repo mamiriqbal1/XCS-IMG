@@ -1,6 +1,6 @@
 #include <string.h>
 #include <fstream>
-#include "time.h"
+#include "xtime.h"
 
 timeval clockstart, cpustart, cputotal;
 

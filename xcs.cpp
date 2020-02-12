@@ -12,7 +12,7 @@
 #include <cstring>
 #include <vector>
 #include "xcsMacros.h"
-#include "time.h"
+#include "xtime.h"
 #include "configuration.h"
 #include "classifier.h"
 #include "env.h"
@@ -709,8 +709,8 @@ int main(int argc, char **argv){
     for(int j=0; j<run; j++)
     {
         sprintf(path, "%d", j);
-        //mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        mkdir(path);
+        mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        //mkdir(path);
         setSeed(seeds[j]);
 
         char outputFile[200];
