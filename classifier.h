@@ -37,6 +37,8 @@ void onePointCrossover(Classifier **cl);
 void twoPointCrossover(Classifier **cl);
 bool mutation(Classifier *clfr, float state[]);
 bool applyNicheMutation(Classifier *clfr, float state[]);
+bool applyNicheMutation1(Classifier *clfr, float state[]);
+bool applyNicheMutation2(Classifier *clfr, float state[]);
 bool applyGeneralMutation(Classifier *clfr, float state[]);
 bool mutateAction(Classifier *clfr);
 

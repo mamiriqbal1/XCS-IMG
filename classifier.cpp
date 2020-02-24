@@ -785,7 +785,7 @@ bool mutation(Classifier *clfr, float state[])
     bool changedCond = false, changedAct = false;
     if(mutationType == 0)
     {
-        changedCond = applyNicheMutation(clfr,state);
+        changedCond = applyNicheMutation2(clfr,state);
     }
     else
     {
@@ -801,8 +801,43 @@ bool mutation(Classifier *clfr, float state[])
 bool applyNicheMutation(Classifier *clfr, float state[])
 {
     bool changed = false;
+
+    // Mutation as done paper XOF. It achieves best results among all 3 algos
+    for(int i=0; i<clfrCondLength; i++)
+    {
+        if(drand()<pM)
+        {
+            changed = true;
+            if(drand()<m_0)//(isDontcareCF(clfr->condition[i]))
+            {
+                CodeFragment tempCF;
+                do
+                {
+                    //ramped half-and-half, check end for sanity only
+                    tempCF = createNewCF(getNumPreviousCFs()+countNewCFs);
+                    opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
+                    validateDepth(tempCF.codeFragment,end); //validate depth
+                    ////////
+                    tempCF = addLeafCF(tempCF);
+                    ////////
+                }
+                while( evaluateCF(tempCF, state)!=1 );
+                //while( evaluateCF(tempCF.codeFragment,state)!=1 );
+                memmove(&clfr->condition[i],&tempCF,sizeof(CodeFragment));
+                countNewCFs++;
+            }
+        }
+    }
+
+   return changed;
+}
+
+// copy of original and using first alternative
+// Mutation code copied from XCSR code Hassan, although not being used even in that paper
+bool applyNicheMutation1(Classifier *clfr, float state[])
+{
+    bool changed = false;
     // Mutation code copied from XCSR code Hassan, although not being used even in that paper
-    /*
     for(int i=0; i<clfrCondLength; i++)
     {
         if(drand()<pM)
@@ -833,37 +868,18 @@ bool applyNicheMutation(Classifier *clfr, float state[])
             }
         }
     }
-    */
 
-    // Mutation as done paper XOF. It achieves best results among all 3 algos
+   return changed;
+}
+
+// copy of original and using 2nd alternative
+/////////// original code as per LML paper of Hassan /////////////////
+bool applyNicheMutation2(Classifier *clfr, float state[])
+{
+    bool changed = false;
+    // Mutation code copied from XCSR code Hassan, although not being used even in that paper
+   /////////// original code as per LML paper of Hassan /////////////////
     for(int i=0; i<clfrCondLength; i++)
-    {
-        if(drand()<pM)
-        {
-            changed = true;
-            if(drand()<m_0)//(isDontcareCF(clfr->condition[i]))
-            {
-                CodeFragment tempCF;
-                do
-                {
-                    //ramped half-and-half, check end for sanity only
-                    tempCF = createNewCF(getNumPreviousCFs()+countNewCFs);
-                    opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
-                    validateDepth(tempCF.codeFragment,end); //validate depth
-                    ////////
-                    tempCF = addLeafCF(tempCF);
-                    ////////
-                }
-                while( evaluateCF(tempCF, state)!=1 );
-                //while( evaluateCF(tempCF.codeFragment,state)!=1 );
-                memmove(&clfr->condition[i],&tempCF,sizeof(CodeFragment));
-                countNewCFs++;
-            }
-        }
-    }
-
-    /////////// original code as per LML paper of Hassan /////////////////
-    /*for(int i=0; i<clfrCondLength; i++)
     {
         if(drand()<pM)
         {
@@ -893,9 +909,11 @@ bool applyNicheMutation(Classifier *clfr, float state[])
                 clfr->specificness--;
             }
         }
-    }*/
+    }
     return changed;
 }
+
+
 /**
  * Mutates the condition of the classifier. If one allele is mutated depends on the constant pM.
  * This mutation is a general mutation.
@@ -1105,8 +1123,8 @@ bool isSubsumer(Classifier *cl)
 // filhal randomly selected two CFs, In future will select CFs based on their Fitness
 void subsumeCFs(Classifier *clfr, float state[])
 {
-    int tmpindex1 = rand() % 32;
-    int tmpindex2 = rand() % 32;
+    int tmpindex1 = rand() % clfrCondLength;
+    int tmpindex2 = rand() % clfrCondLength;
 
     if(isGeneralCF(clfr->condition[tmpindex1], clfr->condition[tmpindex2]))
     {
