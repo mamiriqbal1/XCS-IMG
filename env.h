@@ -15,3 +15,5 @@ void loadDataFile();
 void loadFileString();
 void splitData(DataSource totalData[],DataSource trainData[], DataSource testData[]);
 bool isIntegerInArray(int integer, int array[], int highestPosition);
+// my functions
+void loadDataFromFile(DataSource data[], const char inputFile[], const int numInstances);

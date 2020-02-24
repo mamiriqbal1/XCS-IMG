@@ -95,6 +95,7 @@ void writePerformance(ClassifierSet *population, int performance[], double sysEr
     fwrite(buf,strlen(buf),1,filePerformance);
     fwrite("\n",strlen("\n"),1,filePerformance);
 
+    std::cout<<"iteration: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
       //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
     //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
@@ -104,14 +105,14 @@ void writeTestPerformance(ClassifierSet *population, int performance[], double s
     char buf[100];
     double perf=0.0, serr=0.0;
 
-    for(int i=0; i<testFrequency; i++)
+    for(int i=0; i<testNumInstances; i++)
     {
         perf+=performance[i];
         serr+=sysError[i];
     }
 
-    perf/=testFrequency;
-    serr/=testFrequency;
+    perf/=testNumInstances;
+    serr/=testNumInstances;
    // std::cout<<"testing";
 
     int setSize = getSetSize(population);
@@ -126,6 +127,7 @@ void writeTestPerformance(ClassifierSet *population, int performance[], double s
     fwrite(buf,strlen(buf),1,testPerformance);
     fwrite("\n",strlen("\n"),1,testPerformance);
 
+    std::cout<<"iteration: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
     //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
     //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
@@ -195,18 +197,12 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
 
     for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC+=explore)
     {
+        std::cout<<exploreProbC<<"/"<<maxProblems<<"\r";
         explore = (explore+1)%2;
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
-        if(Testing)
-        {
-            state = &trainingData[irand(trainNumInstances)];
-        }
-        else
-        {
-            state = &input[irand(totalNumInstances)];
-        }
+        state = &trainingData[irand(trainNumInstances)];
 
         //std::cout<<index<<" ";
         /*for (int i=0;i<condLength;i++)
@@ -229,8 +225,6 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
         {
             writePerformance(*population,correct,sysError,exploreProbC);
         }
-        if((exploreProbC%10000) == 0)
-            std::cout<<"ExploreprobC: "<<exploreProbC<<std::endl;
     }
 //    delete state;
 }
@@ -281,7 +275,7 @@ void doOneSingleStepTest(ClassifierSet *population){
 	bool wasCorrect = false;
 	int correctCounter = 0;
 	int correct[testNumInstances];
-	double sysError[testFrequency];
+	double sysError[testNumInstances];
 	DataSource *testState = NULL;
 	int tmpcorrectcounter = 0;
     int tmpnotmatched = 0;
@@ -295,6 +289,7 @@ void doOneSingleStepTest(ClassifierSet *population){
     int cc = 0;
 
 	for(int t=0; t<testNumInstances; t++){
+        std::cout<<t<<"/"<<testNumInstances<<"\r";
 		ClassifierSet *mset=NULL, *poppointer;
 		bool isMatched = false;
 		//resetStateTesting(testState,t);
@@ -342,303 +337,44 @@ void doOneSingleStepTest(ClassifierSet *population){
 		getPredictionArray(mset);
         int actionWinner = bestActionWinner();
         double reward = executeAction(actionWinner,testState->action,wasCorrect);
-        sysError[t%testFrequency] = absoluteValue(reward - getBestValue());
+        sysError[t] = absoluteValue(reward - getBestValue());
 
 		//float error = computeError(computedSaliencyMap,state.output);
 		if(wasCorrect)
         {
-            /////  For TWO Classes ///////////////////////
-            /*if(actionWinner==1)
-            {
-                TP++;
-            }else if(actionWinner==0)
-            {
-                TN++;
-            }else
-            {
-                TNeu++;
-            }*/
-            ///// For Multiple Classes/////// ////////////////
-                if(actionWinner==0)
-                {
-                    class1TP++;
-                    //TN++;
-                }
-                else if(actionWinner==1)
-                {
-                    class2TP++;
-                //TP++;
-                }
-                else if(actionWinner==2)
-                {
-                    class3TP++;
-                //TP++;
-                }
-                else if(actionWinner==3)
-                {
-                    class4TP++;
-                //TP++;
-                }
-                else if(actionWinner==4)
-                {
-                    class5TP++;
-                //TP++;
-                }
-                /*else if(actionWinner==5)
-                {
-                    class6TP++;
-                    //TN++;
-                }
-                else if(actionWinner==6)
-                {
-                    class7TP++;
-                //TP++;
-                }
-                else if(actionWinner==7)
-                {
-                    class8TP++;
-                //TP++;
-                }
-                else if(actionWinner==8)
-                {
-                    class9TP++;
-                //TP++;
-                }
-                else if(actionWinner==9)
-                {
-                    class10TP++;
-                //TP++;
-                }
-                /*else if(actionWinner==10)
-                {
-                    class11TP++;
-                    //TN++;
-                }
-                else if(actionWinner==11)
-                {
-                    class12TP++;
-                //TP++;
-                }
-                else if(actionWinner==12)
-                {
-                    class13TP++;
-                //TP++;
-                }
-                else if(actionWinner==13)
-                {
-                    class14TP++;
-                //TP++;
-                }
-                else if(actionWinner==14)
-                {
-                    class15TP++;
-                //TP++;
-                }
-                else if(actionWinner==15)
-                {
-                    class16TP++;
-                    //TN++;
-                }
-                else if(actionWinner==16)
-                {
-                    class17TP++;
-                //TP++;
-                }
-                else if(actionWinner==17)
-                {
-                    class18TP++;
-                //TP++;
-                }
-                else if(actionWinner==18)
-                {
-                    class19TP++;
-                //TP++;
-                }
-                else if(actionWinner==19)
-                {
-                    class20TP++;
-                //TP++;
-                }
-                 else if(actionWinner==20)
-                {
-                    class21TP++;
-                //TP++;
-                }
-                 else if(actionWinner==21)
-                {
-                    class22TP++;
-                //TP++;
-                }
-                 else if(actionWinner==22)
-                {
-                    class23TP++;
-                //TP++;
-                }*/
-                else
-                {
-                TNeu++;
-                }
-
-                correct[t%testFrequency]=1;
+                correct[t]=1;
                 correctCounter++;
         }
         else
         {
-            //// For TWO CLASSES ///////////////////////
-            /*if(actionWinner==1)
-            {
-                FP++;
-            }else if(actionWinner==0)
-            {
-                FN++;
-            }
-            else
-            {
-                FNeu++;
-            }*/
-            //// For Multiple Classes ///////////////////////
-                if(actionWinner==0)
-                {
-                    class1FP++;
-                    //TN++;
-                }
-                else if(actionWinner==1)
-                {
-                    class2FP++;
-                //TP++;
-                }
-                else if(actionWinner==2)
-                {
-                    class3FP++;
-                //TP++;
-                }
-                else if(actionWinner==3)
-                {
-                    class4FP++;
-                //TP++;
-                }
-                else if(actionWinner==4)
-                {
-                    class5FP++;
-                //TP++;
-                }
-                /*else if(actionWinner==5)
-                {
-                    class6FP++;
-                    //TN++;
-                }
-                else if(actionWinner==6)
-                {
-                    class7FP++;
-                //TP++;
-                }
-                else if(actionWinner==7)
-                {
-                    class8FP++;
-                //TP++;
-                }
-                else if(actionWinner==8)
-                {
-                    class9FP++;
-                //TP++;
-                }
-                else if(actionWinner==9)
-                {
-                    class10FP++;
-                //TP++;
-                }
-                /*else if(actionWinner==10)
-                {
-                    class11FP++;
-                    //TN++;
-                }
-                else if(actionWinner==11)
-                {
-                    class12FP++;
-                //TP++;
-                }
-                else if(actionWinner==12)
-                {
-                    class13FP++;
-                //TP++;
-                }
-                else if(actionWinner==13)
-                {
-                    class14FP++;
-                //TP++;
-                }
-                else if(actionWinner==14)
-                {
-                    class15FP++;
-                //TP++;
-                }
-                else if(actionWinner==15)
-                {
-                    class16FP++;
-                    //TN++;
-                }
-                else if(actionWinner==16)
-                {
-                    class17FP++;
-                //TP++;
-                }
-                else if(actionWinner==17)
-                {
-                    class18FP++;
-                //TP++;
-                }
-                else if(actionWinner==18)
-                {
-                    class19FP++;
-                //TP++;
-                }
-                else if(actionWinner==19)
-                {
-                    class20FP++;
-                //TP++;
-                }
-                else if(actionWinner==20)
-                {
-                    class21FP++;
-                //TP++;
-                }
-                else if(actionWinner==21)
-                {
-                    class22FP++;
-                //TP++;
-                }
-                else if(actionWinner==22)
-                {
-                    class23FP++;
-                //TP++;
-                }*/
-
-                correct[t%testFrequency]=0;
-        }
-        if((t+1) % testFrequency == 0 && t>0)
-        {
-//            writeTestPerformance(population,correct, sysError, t+1);
+               correct[t]=0;
         }
 		freeSet(&mset);
     }
-	std::ofstream resFile;
-    resFile.open(resultFile,std::ios::app);
-    std::string wLine = "";
-    std::string wLine2 = "";
+    writeTestPerformance(population,correct, sysError, testNumInstances);
+	//std::ofstream resFile;
+    //resFile.open(resultFile,std::ios::app);
+    //std::string wLine = "";
+    //std::string wLine2 = "";
 
-	std::cout<<"Number of KNNs = "<<cc<<std::endl;
-	std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
-	std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN;
+    std::cout<<"N = "<<maxPopSize<<std::endl;
+    std::cout<<"P# = "<<P_dontcare<<std::endl;
+    std::cout<<"Total Number of Instances = "<<testNumInstances<<std::endl;
+    std::cout<<"Number of KNNs = "<<cc<<std::endl;
+    std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
+    //std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN<<std::endl;
+    std::cout<<"Accuracy: "<< (correctCounter)*1.0/(testNumInstances);
+
     // For two classes
 	//wLine = NumberToString(correctCounter) + " " + NumberToString(tmpnotmatched) + " " + NumberToString(TP) + " " + NumberToString(TN)  + " " + NumberToString(FP)  + " " + NumberToString(FN) + "\n";
 	//resFile<<wLine;
 	// for multiple classes
-	wLine = NumberToString(correctCounter) + " " + NumberToString(cc) + " " + NumberToString(class1TP) + " " + NumberToString(class1FP)  + " " + NumberToString(class2TP) + " " + NumberToString(class2FP) +" " + NumberToString(class3TP) + " " + NumberToString(class3FP)+ " " +NumberToString(class4TP) + " " + NumberToString(class4FP)+ " " + NumberToString(class5TP) + " " + NumberToString(class5FP);
+	//wLine = NumberToString(correctCounter) + " " + NumberToString(cc) + " " + NumberToString(class1TP) + " " + NumberToString(class1FP)  + " " + NumberToString(class2TP) + " " + NumberToString(class2FP) +" " + NumberToString(class3TP) + " " + NumberToString(class3FP)+ " " +NumberToString(class4TP) + " " + NumberToString(class4FP)+ " " + NumberToString(class5TP) + " " + NumberToString(class5FP);
 	//" " + NumberToString(class6TP) + " " + NumberToString(class6FP)  + " " + NumberToString(class7TP) + " " + NumberToString(class7FP) +" " + NumberToString(class8TP) + " " + NumberToString(class8FP)+ " " +NumberToString(class9TP) + " " + NumberToString(class9FP)+ " " + NumberToString(class10TP) + " " + NumberToString(class10FP);
 	//+ " " + NumberToString(class11TP) + " " + NumberToString(class11FP)  + " " + NumberToString(class12TP) + " " + NumberToString(class12FP) +" " + NumberToString(class13TP) + " " + NumberToString(class13FP)+ " " +NumberToString(class14TP) + " " + NumberToString(class14FP)+ " " + NumberToString(class15TP) + " " + NumberToString(class15FP)+
 	//+ " " + NumberToString(class16TP) + " " + NumberToString(class16FP)  + " " + NumberToString(class17TP) + " " + NumberToString(class17FP) +" " + NumberToString(class18TP) + " " + NumberToString(class18FP)+ " " +NumberToString(class19TP) + " " + NumberToString(class19FP)+ " " + NumberToString(class20TP) + " " + NumberToString(class20FP)+ " " + NumberToString(class21TP) + " " + NumberToString(class21FP) + " " + NumberToString(class22TP) + " " + NumberToString(class22FP) +" " + NumberToString(class23TP) + " " + NumberToString(class23FP) + "\n";
-	resFile<<wLine;
-	resFile.close();
+	//resFile<<wLine;
+	//resFile.close();
 }
 
 void loadDataFile(DataSource inputArray[]){
@@ -672,11 +408,19 @@ void startXCS(){
     //inp = new ds[totalNumInstances];
     //loadData(inp);
 
-    input = new DataSource[totalNumInstances];
-    initializeInput(input,totalNumInstances);
+    //input = new DataSource[totalNumInstances];
+    //initializeInput(input,totalNumInstances);
     //loadData(input);
     //loadDataFile();
-    loadDataFile(input);
+    //loadDataFile(input);
+    trainingData = new DataSource[trainNumInstances];
+    testingData = new DataSource[testNumInstances];
+    initializeInput(trainingData,trainNumInstances);
+    initializeInput(testingData,testNumInstances);
+    loadDataFromFile(trainingData, inputTrainingFile, trainNumInstances);
+    loadDataFromFile(testingData, inputTestFile, testNumInstances);
+    updateRange(trainingData,trainNumInstances);
+    updateRange(testingData,testNumInstances);
 
     printf("\nIt is in progress! Please wait ....\n");
 
@@ -692,7 +436,9 @@ void startXCS(){
     population = sortClassifierSet(&population,2); // sort according to 'fitness'
     fprintClassifierSet(fileClassifierPopulation,cfWritingFilePointer,population);
     freeClassifierSet(&population); // free population for this experiment
-    delete []input;
+    //delete []input;
+    delete []testingData;
+    delete []trainingData;
 
 }//end startXCS
 
