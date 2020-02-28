@@ -20,7 +20,7 @@ CodeFragment *previousCFPopulation;
 
 void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *cfWritingFilePointer)
 {
-    if(currentProblemLevel > 1)
+    if(use_kb)
     {
         printf("\nLoading Previous Population! Please wait ....\n");
        getPreviousCFPopulation(cfReadingFilePointer);
@@ -422,7 +422,7 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
     fwrite(buf,strlen(buf),1,cfWritingFilePointer);
     free(buf);
 
-    if(currentProblemLevel > 1)
+    if(use_kb)
     {
         firstCFID = previousCFPopulation[0].cfID;
     }
@@ -608,7 +608,7 @@ int evaluateCF(CodeFragment cf, float state[]){
 }
 
 bool isPreviousLevelsCode(const opType code){
-    if(currentProblemLevel > 1)
+    if(use_kb)
     {
         return ( previousCFPopulation[0].cfID<=code && code<(previousCFPopulation[0].cfID + numPreviousCFs) ) ? true : false;
     }
@@ -638,7 +638,7 @@ inline opType leafOpCode(const int r){
 
 inline opType randomLeaf(){
     opType leaf = OPNOP;
-    if(numPreviousCFs==0 || currentProblemLevel==1)
+    if(numPreviousCFs==0 || use_kb)
     {
         leaf = irand(condLength);
         //printf("leaf_1 %d\n",leaf);

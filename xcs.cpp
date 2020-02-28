@@ -17,7 +17,19 @@
 #include "classifier.h"
 #include "env.h"
 #include "xcs.h"
+#include <algorithm>
+
 //using namespace std;
+
+bool use_kb = false;
+int numActions = 2;
+std::string inputTrainingFile("../data/mnist/mnist_train_3_8.txt");
+std::string inputTestFile("../data/mnist/mnist_test_3_8.txt");
+std::string kb_file;
+std::string output_path;
+std::string input_path;
+
+
 
 struct distanceInputClassifier{
   int posClassifier;
@@ -417,8 +429,8 @@ void startXCS(){
     testingData = new DataSource[testNumInstances];
     initializeInput(trainingData,trainNumInstances);
     initializeInput(testingData,testNumInstances);
-    loadDataFromFile(trainingData, inputTrainingFile, trainNumInstances);
-    loadDataFromFile(testingData, inputTestFile, testNumInstances);
+    loadDataFromFile(trainingData, (input_path + inputTrainingFile).c_str(), trainNumInstances);
+    loadDataFromFile(testingData, (input_path + inputTestFile).c_str(), testNumInstances);
     updateRange(trainingData,trainNumInstances);
     updateRange(testingData,testNumInstances);
 
@@ -442,61 +454,94 @@ void startXCS(){
 
 }//end startXCS
 
+void LoadConfig(char* file)
+{
+    // std::ifstream is RAII, i.e. no need to call close
+    std::ifstream cFile (file);
+    if (cFile.is_open())
+    {
+        std::string line;
+        while(getline(cFile, line)){
+            line.erase(std::remove_if(line.begin(), line.end(), isspace),
+                       line.end());
+            if(line[0] == '#' || line.empty())
+                continue;
+            auto delimiterPos = line.find("=");
+            auto name = line.substr(0, delimiterPos);
+            auto value = line.substr(delimiterPos + 1);
+            if(name == "train_file_name"){
+                inputTrainingFile = value;
+            }else if(name == "test_file_name"){
+                inputTestFile = value;
+            }else if(name == "num_actions"){
+                numActions = atoi(value.c_str());
+            }if(name == "use_kb"){
+                if(value == "no"){
+                    use_kb = false;
+                }else if(name == "yes"){
+                    use_kb = true;
+                }
+            }else if(name == "kb_file"){
+                kb_file = value;
+            }else if(name == "output_path"){
+                output_path = value;
+            }else if(name == "input_path"){
+                input_path = value;
+            }
+
+            std::cout << name << " " << value << '\n';
+        }
+
+    }
+    else {
+        std::cerr << "Couldn't open config file for reading.\n";
+    }
+}
+
 int main(int argc, char **argv){
 
-    //loadFileString();
-
-    char path[10] = "";
-    char curLevel[2] = "";
-    sprintf(curLevel, "%d", currentProblemLevel);
-    char prevLevel[2] = "";
-    sprintf(prevLevel, "%d", currentProblemLevel-1);
+    if(argc == 1){
+        std::cout << "Please provide experiment config file" << std::endl;
+        return -1;
+    }
+    LoadConfig(argv[1]);
 
     for(int j=0; j<run; j++)
     {
-        sprintf(path, "%d", j);
-        mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir(output_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         //mkdir(path);
         setSeed(seeds[j]);
 
-        char outputFile[200];
-        sprintf(outputFile,"%s%s",path,outputFileName);
-        filePerformance=fopen(outputFile, "w"); //open outputFile in writing mode
+        filePerformance=fopen((output_path + outputFileName).c_str(), "w"); //open outputFile in writing mode
         if (filePerformance == NULL)
         {
-            printf("Error in opening a file.. %s", outputFile);
+            printf("Error in opening a file.. %s", outputFileName);
             exit(1);
         }
 
-        char outputFile2[200];
-        sprintf(outputFile2,"%s%s",path,featureFileName);
-        cfWritingFilePointer=fopen(outputFile2, "w"); //open outputFile2 in writing mode
+        cfWritingFilePointer=fopen((output_path + featureFileName).c_str(), "w"); //open outputFile2 in writing mode
         if(cfWritingFilePointer == NULL)
         {
-            printf("Error in opening a file.. %s", outputFile2);
+            printf("Error in opening a file.. %s", featureFileName);
             exit(1);
         }
 
-        char outputFile3[200];
-        sprintf(outputFile3,"%s%s",path,ruleFileName);
-        fileClassifierPopulation=fopen(outputFile3, "w"); //open outputFile3 in writing mode
+        fileClassifierPopulation=fopen((output_path + ruleFileName).c_str(), "w"); //open outputFile3 in writing mode
         if (fileClassifierPopulation == NULL)
         {
-            printf("Error in opening a file.. %s", outputFile3);
+            printf("Error in opening a file.. %s", ruleFileName);
             exit(1);
         }
-        char testFile[100];
-        sprintf(testFile,"%s%s",path,"/test_4626sts_10k_100k_200CF_33_testing_1k_1034.txt");
-        testPerformance = fopen(testFile, "w"); //open outputFile1 in writing mode
+        testPerformance = fopen((output_path + "/test_4626sts_10k_100k_200CF_33_testing_1k_1034.txt").c_str(), "w"); //open outputFile1 in writing mode
         if (testPerformance == NULL)
         {
-            printf("Error in opening a file.. %s", testFile);
+            printf("Error in opening a file.. %s", "test File");
             exit(1);
         }
-        if (currentProblemLevel>1)
+        if (use_kb)
         {
             char inputFile[200];
-            sprintf(inputFile,"%s%s",path,"/Previous_features.txt");
+            sprintf(inputFile,"%s%s",output_path.c_str(),"/Previous_features.txt");
             cfReadingFilePointer=fopen(inputFile, "r"); //open inputFile in reading mode
             if(cfReadingFilePointer == NULL)
             {

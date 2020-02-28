@@ -107,6 +107,10 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
                 break;
             }
         }
+    }else{
+        std::string error("Error opening input file: ");
+        error.append(inputFile).append(", could not load data!");
+        throw std::runtime_error(error);
     }
     infile.close();
     //updateRange(inputArray,totalNumInstances);
