@@ -4,13 +4,16 @@
 #include <math.h>
 #include <assert.h>
 #include <fstream>
+#include <vector>
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "classifier.h"
 
 int countNewCFs = 0;
-double predictionArray[numActions]; //prediction array
-double sumClfrFitnessInPredictionArray[numActions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
+std::vector<double> predictionArray(2,0); //= [numActions]; //prediction array
+std::vector<double> sumClfrFitnessInPredictionArray(2,0); //[numActions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
+
+
 
 void setInitialVariables(Classifier *clfr, double setSize, int time){
     clfr->prediction = predictionIni;
