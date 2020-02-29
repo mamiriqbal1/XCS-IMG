@@ -143,7 +143,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
     } //end while fgets
     //printf("\n%s",previousCFContents);
     numPreviousCFs = numReadPreviousCFs; //number of distint CFs
-    //printf("\n%d\n",numPreviousCFs);
+    printf("\nPrevious CFs loaded: %d\n",numPreviousCFs);
     fclose(cfReadingFilePointer); //close
     //exit(0);
 

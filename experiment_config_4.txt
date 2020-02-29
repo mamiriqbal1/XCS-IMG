@@ -1,0 +1,8 @@
+train_file_name=../data/mnist/mnist_train_3_8_5_6.txt
+test_file_name=../data/mnist/mnist_test_3_8_5_6.txt
+num_actions=4
+use_kb=yes
+kb_file=output/kb_file.txt
+output_path=output/
+train_num_instances=23321
+test_num_instences=3834

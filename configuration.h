@@ -1,15 +1,14 @@
 extern bool use_kb;
 extern std::string kb_file;
 extern std::string output_path;
-extern std::string input_path;
 extern int numActions; // = 2; //0 or 1
-const int trainNumInstances = 11982;
-const int testNumInstances = 1984;
-const int totalNumInstances = trainNumInstances + testNumInstances;//4; //for review analysis
+extern int trainNumInstances;// = 11982;
+extern int testNumInstances;// = 1984;
+extern int totalNumInstances;// = trainNumInstances + testNumInstances;//4; //for review analysis
 
 const int condLength = 784; //512; //256; //4626; //for review analysis 300, 500, 1000, 1500, 2000, 2257
 const int maxPopSize=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
-const int maxProblems = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
+extern int maxProblems;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 const double maxPayoff = 1000;
 const int clfrCondLength = 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 const int run = 1;
@@ -21,7 +20,7 @@ const bool Testing = true;
 //const int currentProblemLevel = 1; //must be set coz previous level and current level file names are adjusted
 
 const int precisionDigits = 2;
-const int testFrequency = trainNumInstances; // 1034;
+extern int testFrequency;// = trainNumInstances; // 1034;
 
 const char outputFileName[] = "output_training.txt";
 const char featureFileName[] = "feature_codefragments.txt";

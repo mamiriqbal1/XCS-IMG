@@ -61,6 +61,25 @@ void updateRange(DataSource data[],int totalRows){
         }
 }
 
+// This is my improved re-written function for laoding data
+int LoadDataFromFile(DataSource data[], const char inputFile[])
+{
+    std::string line;
+    std::ifstream infile(inputFile);
+
+    if(infile.is_open()){
+        while(getline(infile, line)){
+            std::stringstream line_stream(line);
+
+        }
+    }else{
+        std::string error("Error opening input file: ");
+        error.append(inputFile).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+}
+
+
 // my function
 void loadDataFromFile(DataSource data[], const char inputFile[], const int numInstances){
 
@@ -619,13 +638,6 @@ void splitData(DataSource allData[],DataSource trainData[], DataSource testData[
 //	//std::cout<<"class21train:"<<class21train<<"---class22train:"<<class22train<<"---class23train:"<<class23train<<"\n";
 }
 
-bool isIntegerInArray(int integer, int array[totalNumInstances], int highestPosition){
-	for(int i=0; i<highestPosition; i++){
-		if(array[i]==integer)
-			return true;
-	}
-	return false;
-}
 
 
 /*

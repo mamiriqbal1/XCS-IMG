@@ -23,13 +23,15 @@
 
 bool use_kb = false;
 int numActions = 2;
-std::string inputTrainingFile("../data/mnist/mnist_train_3_8.txt");
-std::string inputTestFile("../data/mnist/mnist_test_3_8.txt");
+std::string inputTrainingFile;
+std::string inputTestFile;
 std::string kb_file;
 std::string output_path;
-std::string input_path;
-
-
+int trainNumInstances=0;// = 11982;
+int testNumInstances=0;// = 1984;
+int totalNumInstances=0;// = trainNumInstances + testNumInstances;//4; //for review analysis
+int maxProblems=0;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
+int testFrequency=0;// = trainNumInstances; // 1034;
 
 struct distanceInputClassifier{
   int posClassifier;
@@ -429,8 +431,8 @@ void startXCS(){
     testingData = new DataSource[testNumInstances];
     initializeInput(trainingData,trainNumInstances);
     initializeInput(testingData,testNumInstances);
-    loadDataFromFile(trainingData, (input_path + inputTrainingFile).c_str(), trainNumInstances);
-    loadDataFromFile(testingData, (input_path + inputTestFile).c_str(), testNumInstances);
+    loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
+    loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
     updateRange(trainingData,trainNumInstances);
     updateRange(testingData,testNumInstances);
 
@@ -453,6 +455,27 @@ void startXCS(){
     delete []trainingData;
 
 }//end startXCS
+
+int CountLines(const char* file)
+{
+    int count=0;
+    // std::ifstream is RAII, i.e. no need to call close
+    std::ifstream cFile (file);
+    if (cFile.is_open()){
+        std::string line;
+        while(getline(cFile, line)){
+            count++;
+        }
+    }
+    else {
+        std::string error("Error opening input file: ");
+        error.append(file).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+    return count;
+}
+
+
 
 void LoadConfig(char* file)
 {
@@ -478,24 +501,29 @@ void LoadConfig(char* file)
             }if(name == "use_kb"){
                 if(value == "no"){
                     use_kb = false;
-                }else if(name == "yes"){
+                }else if(value == "yes"){
                     use_kb = true;
                 }
             }else if(name == "kb_file"){
                 kb_file = value;
             }else if(name == "output_path"){
                 output_path = value;
-            }else if(name == "input_path"){
-                input_path = value;
             }
 
             std::cout << name << " " << value << '\n';
         }
-
     }
     else {
-        std::cerr << "Couldn't open config file for reading.\n";
+        std::string error("Error opening input file: ");
+        error.append(file).append(", could not load data!");
+        throw std::runtime_error(error);
     }
+    // calculate the number of train and test instances
+    trainNumInstances = CountLines(inputTrainingFile.c_str());
+    testNumInstances = CountLines(inputTestFile.c_str());
+    totalNumInstances = trainNumInstances + testNumInstances;
+    maxProblems = trainNumInstances;
+    testFrequency = trainNumInstances;
 }
 
 int main(int argc, char **argv){
@@ -540,12 +568,10 @@ int main(int argc, char **argv){
         }
         if (use_kb)
         {
-            char inputFile[200];
-            sprintf(inputFile,"%s%s",output_path.c_str(),"/Previous_features.txt");
-            cfReadingFilePointer=fopen(inputFile, "r"); //open inputFile in reading mode
+            cfReadingFilePointer=fopen(kb_file.c_str(), "r"); //open inputFile in reading mode
             if(cfReadingFilePointer == NULL)
             {
-                printf("Error in opening a file.. %s", inputFile);
+                printf("Error in opening a file.. %s", kb_file.c_str());
                 exit(1);
             }
         }
