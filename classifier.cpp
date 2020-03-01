@@ -10,8 +10,8 @@
 #include "classifier.h"
 
 int countNewCFs = 0;
-double predictionArray[10]; //prediction array
-double sumClfrFitnessInPredictionArray[10]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
+double predictionArray[max_actions]; //prediction array
+double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
 
 
 void setInitialVariables(Classifier *clfr, double setSize, int time){

@@ -638,7 +638,7 @@ inline opType leafOpCode(const int r){
 
 inline opType randomLeaf(){
     opType leaf = OPNOP;
-    if(numPreviousCFs==0 || use_kb)
+    if(numPreviousCFs==0 || !use_kb)
     {
         leaf = irand(condLength);
         //printf("leaf_1 %d\n",leaf);

@@ -32,6 +32,9 @@ int testNumInstances=0;// = 1984;
 int totalNumInstances=0;// = trainNumInstances + testNumInstances;//4; //for review analysis
 int maxProblems=0;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 int testFrequency=0;// = trainNumInstances; // 1034;
+int maxPopSize=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
+
+
 
 struct distanceInputClassifier{
   int posClassifier;
@@ -378,42 +381,10 @@ void doOneSingleStepTest(ClassifierSet *population){
     std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
     //std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN<<std::endl;
     std::cout<<"Accuracy: "<< (correctCounter)*1.0/(testNumInstances);
-
-    // For two classes
-	//wLine = NumberToString(correctCounter) + " " + NumberToString(tmpnotmatched) + " " + NumberToString(TP) + " " + NumberToString(TN)  + " " + NumberToString(FP)  + " " + NumberToString(FN) + "\n";
-	//resFile<<wLine;
-	// for multiple classes
-	//wLine = NumberToString(correctCounter) + " " + NumberToString(cc) + " " + NumberToString(class1TP) + " " + NumberToString(class1FP)  + " " + NumberToString(class2TP) + " " + NumberToString(class2FP) +" " + NumberToString(class3TP) + " " + NumberToString(class3FP)+ " " +NumberToString(class4TP) + " " + NumberToString(class4FP)+ " " + NumberToString(class5TP) + " " + NumberToString(class5FP);
-	//" " + NumberToString(class6TP) + " " + NumberToString(class6FP)  + " " + NumberToString(class7TP) + " " + NumberToString(class7FP) +" " + NumberToString(class8TP) + " " + NumberToString(class8FP)+ " " +NumberToString(class9TP) + " " + NumberToString(class9FP)+ " " + NumberToString(class10TP) + " " + NumberToString(class10FP);
-	//+ " " + NumberToString(class11TP) + " " + NumberToString(class11FP)  + " " + NumberToString(class12TP) + " " + NumberToString(class12FP) +" " + NumberToString(class13TP) + " " + NumberToString(class13FP)+ " " +NumberToString(class14TP) + " " + NumberToString(class14FP)+ " " + NumberToString(class15TP) + " " + NumberToString(class15FP)+
-	//+ " " + NumberToString(class16TP) + " " + NumberToString(class16FP)  + " " + NumberToString(class17TP) + " " + NumberToString(class17FP) +" " + NumberToString(class18TP) + " " + NumberToString(class18FP)+ " " +NumberToString(class19TP) + " " + NumberToString(class19FP)+ " " + NumberToString(class20TP) + " " + NumberToString(class20FP)+ " " + NumberToString(class21TP) + " " + NumberToString(class21FP) + " " + NumberToString(class22TP) + " " + NumberToString(class22FP) +" " + NumberToString(class23TP) + " " + NumberToString(class23FP) + "\n";
-	//resFile<<wLine;
-	//resFile.close();
-}
-
-void loadDataFile(DataSource inputArray[]){
-
-    loadData(inputArray);
-    if (Testing)
-    {
-		std::cout<<"split Data"<<std::endl;
-        trainingData = new DataSource[trainNumInstances];
-        testingData = new DataSource[testNumInstances];
-        splitData(inputArray,trainingData,testingData);
-        updateRange(trainingData,trainNumInstances);
-        updateRange(testingData,testNumInstances);
-        //writeData(trainingData,trainNumInstances,trainingFile);
-        //writeData(testingData,testNumInstances,testingFile);
-
-    }
-    else
-    {
-        updateRange(inputArray,totalNumInstances);
-    }
 }
 
 
-//void startXCS(int inputFile[][condLength+1])
+
 void startXCS(){
     startTimer();
     ClassifierSet *population;
@@ -479,6 +450,7 @@ int CountLines(const char* file)
 
 void LoadConfig(char* file)
 {
+    int epochs = 0;
     // std::ifstream is RAII, i.e. no need to call close
     std::ifstream cFile (file);
     if (cFile.is_open())
@@ -508,8 +480,11 @@ void LoadConfig(char* file)
                 kb_file = value;
             }else if(name == "output_path"){
                 output_path = value;
+            }else if(name == "max_population_size"){
+                maxPopSize = atoi(value.c_str());
+            }else if(name == "epochs"){
+                epochs = atoi(value.c_str());
             }
-
             std::cout << name << " " << value << '\n';
         }
     }
@@ -524,6 +499,8 @@ void LoadConfig(char* file)
     totalNumInstances = trainNumInstances + testNumInstances;
     maxProblems = trainNumInstances;
     testFrequency = trainNumInstances;
+    // calculate number of training examples to be presented based on epochs
+    maxProblems = trainNumInstances * epochs;
 }
 
 int main(int argc, char **argv){
