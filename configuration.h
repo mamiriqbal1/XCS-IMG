@@ -29,9 +29,9 @@ const char featureFileName[] = "feature_codefragments.txt";
 const char ruleFileName[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
-const int cfMaxDepth = 2;
+const int cfMaxDepth = 4;
 const int cfMinDepth = 0;
-const int cfMaxLength = 8;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
+const int cfMaxLength = 32;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 
@@ -49,7 +49,7 @@ const opType OPNOT = -105;
 const int totalFunctions = 5;
 const opType functionCodes[] = {OPAND,OPOR,OPNAND,OPNOR,OPNOT};
 
-const int numLeaf = 4;
+const int numLeaf = 16;
 
 struct Leaf
 {

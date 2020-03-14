@@ -539,7 +539,9 @@ return cf;
 
 }
 
-int evaluateCF(CodeFragment cf, float state[]){
+
+
+int evaluateCF_old(CodeFragment cf, float state[]){
     //printCF(cf);
     int stack[cfMaxStack];
     stack[0] = 0;
@@ -607,6 +609,38 @@ int evaluateCF(CodeFragment cf, float state[]){
     return value;
 }
 
+
+int evaluateCF(CodeFragment cf, float state[]){
+    // set featureNumber appropriately and then call evaluateCF_old
+    int width = 28;  // image width
+    int height = 28;
+    int size = 4;  // filter size
+    int index[size*size];
+
+    for(int i=0; i<width - size; i++){
+        for(int j=0; j<height - size; j++){
+           for(int k=0; k<size; k++){
+               for(int l=0; l<size; l++){
+                   index[k*size+l] = i*width+j;
+                   cf.leaf[k*size+l].featureNumber = i*width+j;
+               }
+           }
+           if(evaluateCF_old(cf, state) == 1){
+               // reset after evaluation
+               for(int m=0; m<size*size; m++){
+                   cf.leaf[m].featureNumber = 0;
+               }
+               return 1;
+           }
+        }
+    }
+    // reset after evaluation
+    for(int m=0; m<size*size; m++){
+        cf.leaf[m].featureNumber = 0;
+    }
+    return 0;
+}
+
 bool isPreviousLevelsCode(const opType code){
     if(use_kb)
     {
@@ -640,14 +674,14 @@ inline opType randomLeaf(){
     opType leaf = OPNOP;
     if(numPreviousCFs==0 || !use_kb)
     {
-        leaf = irand(condLength);
+        leaf = 0; // feature number is no more used irand(condLength);
         //printf("leaf_1 %d\n",leaf);
         return leaf;
     }
     double p = drand();
     if(p < 0.5)
     {
-        leaf = irand(condLength);
+        leaf =  0; // feature number is no more irand(condLength);
         //printf("leaf_2 %d\n",leaf);
         return leaf;
     }

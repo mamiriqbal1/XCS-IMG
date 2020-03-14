@@ -559,7 +559,7 @@ int main(int argc, char **argv){
 
 
   //      printf("%d have %d\n", omp_get_thread_num(), j);
-        printf("%dText Classification : %d\n",condLength,j);
+        //printf("%dText Classification : %d\n",condLength,j);
         startXCS();
         printf("Done\n");
         Exit(filePerformance);

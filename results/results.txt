@@ -106,3 +106,133 @@ Total Number of Instances = 3834
 Number of KNNs = 0
 Number of correct Instances = 2635
 Accuracy: 0.687272Done
+
+#
+# experiment
+#
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 3
+test_frequency 1000
+784Text Classification : 0
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.543  error: 474.52  set size: 997
+iteration: 2000  accuracy: 0.59  error: 458.69  set size: 993
+iteration: 3000  accuracy: 0.669  error: 429.183  set size: 998
+iteration: 4000  accuracy: 0.76  error: 375.826  set size: 995
+iteration: 5000  accuracy: 0.834  error: 323.02  set size: 1000
+iteration: 6000  accuracy: 0.84  error: 302.167  set size: 991
+iteration: 7000  accuracy: 0.87  error: 241.459  set size: 992
+iteration: 8000  accuracy: 0.866  error: 248.043  set size: 998
+iteration: 9000  accuracy: 0.878  error: 218.154  set size: 995
+iteration: 10000  accuracy: 0.867  error: 210.472  set size: 997
+iteration: 11000  accuracy: 0.884  error: 197.252  set size: 995
+iteration: 12000  accuracy: 0.908  error: 165.109  set size: 995
+iteration: 13000  accuracy: 0.868  error: 185.297  set size: 997
+iteration: 14000  accuracy: 0.872  error: 201.606  set size: 992
+iteration: 15000  accuracy: 0.868  error: 202.641  set size: 994
+iteration: 16000  accuracy: 0.872  error: 184.054  set size: 988
+iteration: 17000  accuracy: 0.868  error: 190.009  set size: 994
+iteration: 18000  accuracy: 0.885  error: 200.928  set size: 994
+iteration: 19000  accuracy: 0.883  error: 181.148  set size: 985
+iteration: 20000  accuracy: 0.899  error: 168.578  set size: 990
+iteration: 21000  accuracy: 0.884  error: 190.241  set size: 994
+iteration: 22000  accuracy: 0.88  error: 190.107  set size: 991
+iteration: 23000  accuracy: 0.891  error: 176.844  set size: 994
+iteration: 24000  accuracy: 0.879  error: 185.358  set size: 993
+iteration: 25000  accuracy: 0.887  error: 171.23  set size: 992
+iteration: 26000  accuracy: 0.852  error: 189.142  set size: 992
+iteration: 27000  accuracy: 0.86  error: 196.915  set size: 984
+iteration: 28000  accuracy: 0.876  error: 190.146  set size: 990
+iteration: 29000  accuracy: 0.867  error: 191.336  set size: 990
+iteration: 30000  accuracy: 0.883  error: 176.574  set size: 987
+iteration: 31000  accuracy: 0.876  error: 176.528  set size: 993
+iteration: 32000  accuracy: 0.891  error: 165.055  set size: 981
+iteration: 33000  accuracy: 0.896  error: 166.792  set size: 995
+iteration: 34000  accuracy: 0.86  error: 188.578  set size: 988
+iteration: 35000  accuracy: 0.866  error: 174.61  set size: 983
+35946/35946
+Testing
+iteration: 1984  accuracy: 0.89869  error: 166.565  set size: 986
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1783
+Accuracy: 0.89869Done
+
+
+
+#
+# experiment
+#
+
+# with 16 leaves instead of 4
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 3
+test_frequency 1000
+784Text Classification : 0
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.547  error: 486.756  set size: 1000
+iteration: 2000  accuracy: 0.59  error: 480.451  set size: 996
+iteration: 3000  accuracy: 0.704  error: 463.416  set size: 998
+iteration: 4000  accuracy: 0.722  error: 410.592  set size: 997
+iteration: 5000  accuracy: 0.744  error: 385.389  set size: 999
+iteration: 6000  accuracy: 0.799  error: 340.065  set size: 999
+iteration: 7000  accuracy: 0.814  error: 296.002  set size: 997
+iteration: 8000  accuracy: 0.834  error: 284.857  set size: 995
+iteration: 9000  accuracy: 0.833  error: 269.4  set size: 996
+iteration: 10000  accuracy: 0.839  error: 271.146  set size: 996
+iteration: 11000  accuracy: 0.878  error: 235.852  set size: 994
+iteration: 12000  accuracy: 0.873  error: 212.975  set size: 995
+iteration: 13000  accuracy: 0.877  error: 228.691  set size: 996
+iteration: 14000  accuracy: 0.871  error: 227.586  set size: 988
+iteration: 15000  accuracy: 0.851  error: 243.246  set size: 992
+iteration: 16000  accuracy: 0.871  error: 215.637  set size: 995
+iteration: 17000  accuracy: 0.875  error: 225.458  set size: 991
+iteration: 18000  accuracy: 0.884  error: 216.526  set size: 995
+iteration: 19000  accuracy: 0.881  error: 193.695  set size: 986
+iteration: 20000  accuracy: 0.87  error: 200.207  set size: 986
+iteration: 21000  accuracy: 0.88  error: 213.925  set size: 994
+iteration: 22000  accuracy: 0.893  error: 192.657  set size: 991
+iteration: 23000  accuracy: 0.897  error: 193.665  set size: 989
+iteration: 24000  accuracy: 0.874  error: 194.096  set size: 993
+iteration: 25000  accuracy: 0.886  error: 199.168  set size: 996
+iteration: 26000  accuracy: 0.897  error: 200.012  set size: 993
+iteration: 27000  accuracy: 0.881  error: 183.224  set size: 995
+iteration: 28000  accuracy: 0.913  error: 177.352  set size: 984
+iteration: 29000  accuracy: 0.88  error: 195.699  set size: 981
+iteration: 30000  accuracy: 0.899  error: 167.597  set size: 993
+iteration: 31000  accuracy: 0.899  error: 183.854  set size: 989
+iteration: 32000  accuracy: 0.903  error: 182.976  set size: 987
+iteration: 33000  accuracy: 0.903  error: 173.197  set size: 993
+iteration: 34000  accuracy: 0.886  error: 196.784  set size: 989
+iteration: 35000  accuracy: 0.901  error: 175.426  set size: 990
+35946/35946
+Testing
+iteration: 1984  accuracy: 0.904738  error: 163.469  set size: 990
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1795
+Accuracy: 0.904738Done
