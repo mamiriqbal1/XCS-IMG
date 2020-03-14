@@ -3,7 +3,8 @@ test_file_name=../data/mnist/mnist_test_3_8_5_6.txt
 num_actions=4
 use_kb=yes
 kb_file=output/kb_file.txt
-output_path=output_4_1/
+output_path=output_4_3/
 max_population_size=2000
 # ecpochs are multiplied by number of training examples to calculate total problems to be presented
-epochs=1
+epochs=3
+test_frequency=1000

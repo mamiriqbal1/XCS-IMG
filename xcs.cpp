@@ -484,6 +484,8 @@ void LoadConfig(char* file)
                 maxPopSize = atoi(value.c_str());
             }else if(name == "epochs"){
                 epochs = atoi(value.c_str());
+            }else if(name == "test_frequency"){
+                testFrequency= atoi(value.c_str());
             }
             std::cout << name << " " << value << '\n';
         }
@@ -498,7 +500,9 @@ void LoadConfig(char* file)
     testNumInstances = CountLines(inputTestFile.c_str());
     totalNumInstances = trainNumInstances + testNumInstances;
     maxProblems = trainNumInstances;
-    testFrequency = trainNumInstances;
+    if(testFrequency == 0) {
+        testFrequency = trainNumInstances;
+    }
     // calculate number of training examples to be presented based on epochs
     maxProblems = trainNumInstances * epochs;
 }

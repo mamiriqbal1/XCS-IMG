@@ -1,0 +1,108 @@
+#
+# experiment
+#
+
+train_file_name ../data/mnist/mnist_train_3_8_5_6.txt
+test_file_name ../data/mnist/mnist_test_3_8_5_6.txt
+num_actions 4
+use_kb yes
+kb_file output/kb_file.txt
+output_path output/
+max_population_size 2000
+epochs 1
+Loading Previous Population! Please wait ....
+Previous CFs loaded: 8329
+Loading Input! Please wait ....
+It is in progress! Please wait ....
+iteration: 23321  accuracy: 0.544359  error: 454.551  set size: 1981
+23321/23321
+Testing
+iteration: 3834  accuracy: 0.686228  error: 443.007  set size: 1981
+N = 2000
+P# = 0.33
+Total Number of Instances = 3834
+Number of KNNs = 0
+Number of correct Instances = 2631
+Accuracy: 0.686228Done
+
+
+#
+# experiment
+#
+
+train_file_name ../data/mnist/mnist_train_3_8_5_6.txt
+test_file_name ../data/mnist/mnist_test_3_8_5_6.txt
+num_actions 4
+use_kb no
+kb_file output/kb_file.txt
+output_path output_4_1_nokb/
+max_population_size 2000
+epochs 1
+Loading Input! Please wait ....
+It is in progress! Please wait ....
+iteration: 23321  accuracy: 0.468976  error: 438.845  set size: 1977
+23321/23321
+Testing
+iteration: 3834  accuracy: 0.549035  error: 414.136  set size: 1977
+N = 2000
+P# = 0.33
+Total Number of Instances = 3834
+Number of KNNs = 0
+Number of correct Instances = 2105
+Accuracy: 0.549035Done
+
+
+#
+# experiment
+#
+
+train_file_name ../data/mnist/mnist_train_3_8_5_6.txt
+test_file_name ../data/mnist/mnist_test_3_8_5_6.txt
+num_actions 4
+use_kb yes
+kb_file output/kb_file.txt
+output_path output_4_2_nokb/
+max_population_size 2000
+epochs 2
+Loading Previous Population! Please wait ....
+Previous CFs loaded: 8329
+Loading Input! Please wait ....
+It is in progress! Please wait ....
+iteration: 23321  accuracy: 0.544359  error: 454.551  set size: 1981
+iteration: 46642  accuracy: 0.711762  error: 386.545  set size: 1977
+46642/46642
+Testing
+iteration: 3834  accuracy: 0.733959  error: 368.661  set size: 1977
+N = 2000
+P# = 0.33
+Total Number of Instances = 3834
+Number of KNNs = 0
+Number of correct Instances = 2814
+Accuracy: 0.733959Done
+
+
+#
+# experiment
+#
+
+train_file_name ../data/mnist/mnist_train_3_8_5_6.txt
+test_file_name ../data/mnist/mnist_test_3_8_5_6.txt
+num_actions 4
+use_kb no
+kb_file output/kb_file.txt
+output_path output_4_2_nokb/
+max_population_size 2000
+epochs 2
+Loading Input! Please wait ....
+It is in progress! Please wait ....
+iteration: 23321  accuracy: 0.468976  error: 438.845  set size: 1977
+iteration: 46642  accuracy: 0.62716  error: 416.144  set size: 1979
+46642/46642
+Testing
+iteration: 3834  accuracy: 0.687272  error: 392.49  set size: 1979
+N = 2000
+P# = 0.33
+Total Number of Instances = 3834
+Number of KNNs = 0
+Number of correct Instances = 2635
+Accuracy: 0.687272Done
