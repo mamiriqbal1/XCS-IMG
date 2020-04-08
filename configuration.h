@@ -12,7 +12,7 @@ const int condLength = 784; //512; //256; //4626; //for review analysis 300, 500
 extern int maxPopSize; //=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 extern int maxProblems;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 const double maxPayoff = 1000;
-const int clfrCondLength = 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
+const int clfrCondLength = 32; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 const int run = 1;
 //const char inputFile[] = "features1.txt";
 extern std::string inputTrainingFile; //[] = "../data/mnist/3_8_train_mnist.txt";
@@ -29,11 +29,12 @@ const char featureFileName[] = "feature_codefragments.txt";
 const char ruleFileName[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
-const int cfMaxDepth = 4;
-const int cfMinDepth = 0;
-const int cfMaxLength = 32;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
+const int cfMaxDepth = 2;
+const int cfMinDepth = 2;
+const int cfMaxLength = 8;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
+const int numLeaf = 4;
 
 typedef int opType;
 const int opSize = sizeof(opType);
@@ -46,10 +47,9 @@ const opType OPNOR = -104;
 const opType OPNOT = -105;
 //const opType OPUNITY = -106;
 
-const int totalFunctions = 5;
-const opType functionCodes[] = {OPAND,OPOR,OPNAND,OPNOR,OPNOT};
+const int totalFunctions = 4;
+const opType functionCodes[] = {OPAND,OPOR,OPNAND,OPNOR};
 
-const int numLeaf = 16;
 
 struct Leaf
 {

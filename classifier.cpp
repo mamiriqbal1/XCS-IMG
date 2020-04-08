@@ -111,13 +111,16 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
         {
             if(coveredActions[i]==false)  // make sure that all actions are covered!
             {
-                //std::cout<<covering++<<std::endl;
-                coverClfr = matchingCondAndSpecifiedAct(state,i,setSize+1,itTime);
-                //printClassifier(coverClfr);
-                addNewClassifierToSet(coverClfr,&mset);
-                setSize++;
-                addNewClassifierToSet(coverClfr,population);
-                popSize++;
+                // add large number of classifier in case of filter approach in covering
+                int add = 1;
+                for(int j=0; j<add; j++) {
+                    coverClfr = matchingCondAndSpecifiedAct(state, i, setSize + 1, itTime);
+                    //printClassifier(coverClfr);
+                    addNewClassifierToSet(coverClfr, &mset);
+                    setSize++;
+                    addNewClassifierToSet(coverClfr, population);
+                    popSize++;
+                }
             }
         }
 
@@ -216,7 +219,7 @@ void createMatchingCondition(CodeFragment cond[], float state[])
                 opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
                 validateDepth(tempCF.codeFragment,end); //validate depth
                 /////////////
-                tempCF = addLeafCF(tempCF);
+                tempCF = addLeafCF(tempCF, state);
                 //std::cout<<"No of eval: "<<coun++<<"\n";
                 //printCF(tempCF);
 
@@ -820,7 +823,7 @@ bool applyNicheMutation(Classifier *clfr, float state[])
                     opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
                     validateDepth(tempCF.codeFragment,end); //validate depth
                     ////////
-                    tempCF = addLeafCF(tempCF);
+                    tempCF = addLeafCF(tempCF, state);
                     ////////
                 }
                 while( evaluateCF(tempCF, state)!=1 );
@@ -896,7 +899,7 @@ bool applyNicheMutation2(Classifier *clfr, float state[])
                     opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
                     validateDepth(tempCF.codeFragment,end); //validate depth
                     ////////
-                    tempCF = addLeafCF(tempCF);
+                    tempCF = addLeafCF(tempCF, state);
                     ////////
                 }
                 while( evaluateCF(tempCF, state)!=1 );
@@ -920,7 +923,7 @@ bool applyNicheMutation2(Classifier *clfr, float state[])
  * Mutates the condition of the classifier. If one allele is mutated depends on the constant pM.
  * This mutation is a general mutation.
  */
-bool applyGeneralMutation(Classifier *clfr, int state[])
+bool applyGeneralMutation(Classifier *clfr, float state[])
 {
     bool changed = false;
     for(int i=0; i<clfrCondLength; i++)
@@ -936,7 +939,7 @@ bool applyGeneralMutation(Classifier *clfr, int state[])
                 opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
                 validateDepth(tempCF.codeFragment,end); //validate depth
                 //////
-                tempCF = addLeafCF(tempCF);
+                tempCF = addLeafCF(tempCF, state);
                 //////
                 memmove(&clfr->condition[i],&tempCF,sizeof(CodeFragment));
                 countNewCFs++;
@@ -1138,7 +1141,7 @@ void subsumeCFs(Classifier *clfr, float state[])
                 opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
                 validateDepth(tempCF.codeFragment,end); //validate depth
                 ////////
-                tempCF = addLeafCF(tempCF);
+                tempCF = addLeafCF(tempCF, state);
                 ////////
             }
             while( evaluateCF(tempCF, state)!=1 );

@@ -499,7 +499,10 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
     fflush(cfWritingFilePointer);
     delete[] previousCFPopulation;
 }
-CodeFragment addLeafCF(CodeFragment cf){
+
+
+
+CodeFragment addLeafCF(CodeFragment cf, float state[]){
     int leafNum = 0;
     for(int i=0; i<cfMaxLength; i++)
     {
@@ -539,6 +542,53 @@ return cf;
 
 }
 
+
+// function modified to consider state while adding leafs
+CodeFragment addLeafCF_new(CodeFragment cf, float state[]){
+
+    int width = 28;  // image width
+    int height = 28;
+    int size = (int)sqrt(numLeaf);  // filter size
+    int index[size*size];  // index for holding the pixel numbers for creating filter.
+
+    // randomly select a location in the image for creating a filter
+    int horizontal_location = irand(width-size);
+    int vertical_location = irand(height-size);
+    int index_i = 0;
+    // TBD reverse x and y loops
+    for(int y=vertical_location; y<vertical_location + size; y++){
+        for(int x=horizontal_location; x<horizontal_location + size; x++){
+            index[index_i] = y*width+x;
+            float value = state[y*width+x];
+            float delta = drand()/4;
+            float lower = std::fmax(0.0, value - delta);
+            float upper = std::fmin(1.0, value + delta);
+            cf.leaf[index_i].lowerBound = roundRealValue(lower,precisionDigits);
+            cf.leaf[index_i].upperBound = roundRealValue(upper,precisionDigits);
+            index_i++;
+        }
+    }
+
+
+    int leafNum = 0;
+    for(int i=0; i<cfMaxLength; i++)
+    {
+        const opType opcode = cf.codeFragment[i];
+        if(opcode == OPNOP)
+        {
+            break;
+        }
+        if(0<=opcode && opcode<condLength)  //condition bit
+        {
+            cf.leaf[leafNum].featureNumber = opcode;
+            cf.codeFragment[i] = leafNum;
+            leafNum++;
+        }
+    }
+
+
+    return cf;
+}
 
 
 int evaluateCF_old(CodeFragment cf, float state[]){
@@ -614,15 +664,15 @@ int evaluateCF(CodeFragment cf, float state[]){
     // set featureNumber appropriately and then call evaluateCF_old
     int width = 28;  // image width
     int height = 28;
-    int size = 4;  // filter size
+    int size = (int)sqrt(numLeaf);  // filter size
     int index[size*size];
 
     for(int i=0; i<width - size; i++){
         for(int j=0; j<height - size; j++){
            for(int k=0; k<size; k++){
                for(int l=0; l<size; l++){
-                   index[k*size+l] = i*width+j;
-                   cf.leaf[k*size+l].featureNumber = i*width+j;
+                   index[k*size+l] = i*width+j + k*width+l;
+                   cf.leaf[k*size+l].featureNumber = i*width+j + k*width+l;
                }
            }
            if(evaluateCF_old(cf, state) == 1){
@@ -631,6 +681,8 @@ int evaluateCF(CodeFragment cf, float state[]){
                    cf.leaf[m].featureNumber = 0;
                }
                return 1;
+           }else{
+               continue;
            }
         }
     }
