@@ -500,9 +500,51 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
     delete[] previousCFPopulation;
 }
 
-
-
+// new function that randomly selects a position on filter and create a matching filter at that position
 CodeFragment addLeafCF(CodeFragment cf, float state[]){
+    // randomly selects a position in the image to create filter bounds
+    int filter_size = (int)sqrt(numLeaf);  // filter size
+    int pixel_values[numLeaf];
+    float sum = 0;
+    do{
+        sum = 0;
+        int index = 0;
+        int x_position = irand(image_width-filter_size);
+        int y_position = irand(image_height-filter_size);
+        for(int y=y_position; y<y_position+filter_size; y++){
+            for(int x=x_position; x<x_position+filter_size; x++){
+                pixel_values[index] = state[y*image_width+x];
+                sum += pixel_values[index];
+                index++;
+            }
+        }
+    }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
+
+    int leafNum = 0;
+    for(int i=0; i<cfMaxLength; i++)
+    {
+        const opType opcode = cf.codeFragment[i];
+        //printf("%d ",opcode);
+        if(opcode == OPNOP)
+        {
+            break;
+        }
+        if(0<=opcode && opcode<condLength)  //condition bit
+        {
+            cf.leaf[leafNum].featureNumber = opcode;
+            float delta = drand();
+            cf.leaf[leafNum].lowerBound = roundRealValue(fmax(pixel_values[leafNum] - delta, 0), precisionDigits);
+            cf.leaf[leafNum].upperBound = roundRealValue(fmin(pixel_values[leafNum]+delta, 1),precisionDigits);
+            cf.codeFragment[i] = leafNum;
+            leafNum++;
+        }
+    }
+    return cf;
+}
+
+
+
+CodeFragment addLeafCF_old(CodeFragment cf, float state[]){
     int leafNum = 0;
     for(int i=0; i<cfMaxLength; i++)
     {
@@ -662,17 +704,15 @@ int evaluateCF_old(CodeFragment cf, float state[]){
 
 int evaluateCF(CodeFragment cf, float state[]){
     // set featureNumber appropriately and then call evaluateCF_old
-    int width = 28;  // image width
-    int height = 28;
     int size = (int)sqrt(numLeaf);  // filter size
     int index[size*size];
 
-    for(int i=0; i<width - size; i++){
-        for(int j=0; j<height - size; j++){
+    for(int i=0; i<image_height - size; i++){
+        for(int j=0; j<image_width - size; j++){
            for(int k=0; k<size; k++){
                for(int l=0; l<size; l++){
-                   index[k*size+l] = i*width+j + k*width+l;
-                   cf.leaf[k*size+l].featureNumber = i*width+j + k*width+l;
+                   index[k*size+l] = i*image_width+j + k*image_width+l;
+                   cf.leaf[k*size+l].featureNumber = i*image_width+j + k*image_width+l;
                }
            }
            if(evaluateCF_old(cf, state) == 1){

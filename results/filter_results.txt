@@ -1,0 +1,41 @@
+# with filter 78% training accuracy speed is slow
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 10
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.591  error: 469.983  set size: 966
+iteration: 2000  accuracy: 0.623  error: 434.261  set size: 941
+iteration: 3000  accuracy: 0.66  error: 432.26  set size: 930
+iteration: 4000  accuracy: 0.708  error: 415.594  set size: 903
+iteration: 5000  accuracy: 0.7  error: 408.798  set size: 863
+iteration: 6000  accuracy: 0.74  error: 409.6  set size: 858
+iteration: 7000  accuracy: 0.709  error: 422.874  set size: 835
+iteration: 8000  accuracy: 0.742  error: 402.244  set size: 816
+iteration: 9000  accuracy: 0.705  error: 428.959  set size: 810
+iteration: 10000  accuracy: 0.784  error: 386.658  set size: 785
+iteration: 11000  accuracy: 0.784  error: 382.235  set size: 782
+iteration: 12000  accuracy: 0.782  error: 374.238  set size: 773
+iteration: 13000  accuracy: 0.741  error: 396.235  set size: 774
+iteration: 14000  accuracy: 0.773  error: 401.152  set size: 746
+iteration: 15000  accuracy: 0.763  error: 381.121  set size: 758
+iteration: 16000  accuracy: 0.764  error: 418.103  set size: 744
+iteration: 17000  accuracy: 0.764  error: 384.333  set size: 733
+iteration: 18000  accuracy: 0.755  error: 402.736  set size: 697
+iteration: 19000  accuracy: 0.737  error: 401.063  set size: 715
+iteration: 20000  accuracy: 0.773  error: 386.768  set size: 721
+20197/11982^C
+
+real	48m44.060s
+user	48m43.615s
+sys	0m0.144s
+

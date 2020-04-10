@@ -105,6 +105,12 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
     }
     representedActions = nrActionsInSet(mset,coveredActions);
 
+    // TEMP: insert filters every time
+    representedActions = 0;
+    coveredActions[0] = false;
+    coveredActions[1] = false;
+
+
     while(representedActions < numActions)  // create covering classifiers, if not all actions are covered
     {
         for(int i=0; i<numActions; i++)
