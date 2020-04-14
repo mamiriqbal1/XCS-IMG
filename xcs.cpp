@@ -211,7 +211,6 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
     DataSource *state = NULL;
     //int counter = 0;
     //int index = 0;
-
     for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC+=explore)
     {
         std::cout<<exploreProbC<<"/"<<maxProblems<<"\r";
@@ -486,6 +485,8 @@ void LoadConfig(char* file)
                 epochs = atoi(value.c_str());
             }else if(name == "test_frequency"){
                 testFrequency= atoi(value.c_str());
+            }else if(name == "max_problems"){
+                maxProblems= atoi(value.c_str());
             }
             std::cout << name << " " << value << '\n';
         }
@@ -499,12 +500,13 @@ void LoadConfig(char* file)
     trainNumInstances = CountLines(inputTrainingFile.c_str());
     testNumInstances = CountLines(inputTestFile.c_str());
     totalNumInstances = trainNumInstances + testNumInstances;
-    maxProblems = trainNumInstances;
     if(testFrequency == 0) {
         testFrequency = trainNumInstances;
     }
     // calculate number of training examples to be presented based on epochs
-    maxProblems = trainNumInstances * epochs;
+    if(maxProblems == 0) {
+        maxProblems = trainNumInstances * epochs;
+    }
 }
 
 int main(int argc, char **argv){

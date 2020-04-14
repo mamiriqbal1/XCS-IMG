@@ -106,9 +106,11 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
     representedActions = nrActionsInSet(mset,coveredActions);
 
     // TEMP: insert filters every time
-    representedActions = 0;
-    coveredActions[0] = false;
-    coveredActions[1] = false;
+    if(popSize < maxPopSize/2) {
+        representedActions = 0;
+        coveredActions[0] = false;
+        coveredActions[1] = false;
+    }
 
 
     while(representedActions < numActions)  // create covering classifiers, if not all actions are covered
@@ -117,6 +119,7 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
         {
             if(coveredActions[i]==false)  // make sure that all actions are covered!
             {
+                // TEMP: boost covering
                 // add large number of classifier in case of filter approach in covering
                 int add = 1;
                 for(int j=0; j<add; j++) {
