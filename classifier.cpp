@@ -8,6 +8,7 @@
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "classifier.h"
+#include "env.h"
 
 int countNewCFs = 0;
 double predictionArray[max_actions]; //prediction array
@@ -86,6 +87,10 @@ int getNumFitterCFs(ClassifierSet *set, double avgFitness){
  * present in the match set. Thus, it is made sure that all actions
  * are present in the match set.
  */
+ /*
+  * Code review
+  * Overall flow is as per algorithm
+  */
  int covering = 0;
 ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime){
     ClassifierSet *mset=NULL, *poppointer;
@@ -348,6 +353,9 @@ ClassifierSet* getActionSet(int action, ClassifierSet *ms)  // constructs an act
  * @param maxPrediction The maximum prediction value in the successive prediction array (should be set to zero in single step environments).
  * @param reward The actual resulting reward after the execution of an action.
  */
+ /*
+  * The formulas needs to be reviewed and corrected as per the algorithm.
+  */
 void updateActionSet(ClassifierSet **aset, double maxPrediction, double reward, ClassifierSet **pop, ClassifierSet **killset)
 {
     double P, setsize=0.0;
@@ -445,7 +453,7 @@ void discoveryComponent(ClassifierSet **set, ClassifierSet **pop, ClassifierSet 
     setTimeStamps(*set, itTime);
 
     selectTwoClassifiers(cl, parents, *set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
-    crossover(cl,crossoverType); // do crossover on the two selected classifiers
+    crossover(cl, situation); // do crossover on the two selected classifiers
     for(i=0; i<2; i++)  // do mutation
     {
         mutation(cl[i], situation);
@@ -712,7 +720,49 @@ Classifier* selectClassifierUsingRWS(ClassifierSet *set, double fitsum)
 
 // ########################## crossover and mutation ########################################
 
-bool crossover(Classifier **cl, int crossoverType)  // Determines if crossover is applied and calls then the selected crossover type.
+void crossover_filter(Leaf parent1[], Leaf parent2[])
+{
+    int point1 = irand(numLeaf);
+    int point2 = irand(numLeaf);
+
+    if(point1 > point2){
+        int temp = point1;
+        point1 = point2;
+        point2 = temp;
+    }
+
+    Leaf temp;
+    for(int i=point1; i<point2; i++){
+        memmove(&temp, &parent1[i], sizeof(Leaf));
+        memmove(&parent1[i], &parent2[i],  sizeof(Leaf));
+        memmove(&parent2[i], &temp, sizeof(Leaf));
+    }
+}
+
+
+bool crossover(Classifier **cl, float situation[])  // Determines if crossover is applied and calls then the selected crossover type.
+{
+    Leaf previous1[numLeaf];
+    Leaf previous2[numLeaf];
+    if(drand() < pX) {
+        for (int i = 0; i < clfrCondLength; i++) {
+            if (!isDontcareCF(cl[0]->condition[i]) && !isDontcareCF(cl[1]->condition[i])) {
+                memmove(&previous1, &cl[0]->condition[i].leaf, sizeof(previous1));
+                memmove(&previous2, &cl[1]->condition[i].leaf, sizeof(previous2));
+                crossover_filter(cl[0]->condition[i].leaf, cl[1]->condition[i].leaf);
+                // revert if the resultant classifiers do not satisfies the situation
+                if(!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)){
+                    memmove(&cl[0]->condition[i].leaf, &previous1, sizeof(previous1));
+                    memmove(&cl[1]->condition[i].leaf, &previous2, sizeof(previous2));
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
+bool crossover_old(Classifier **cl, int crossoverType)  // Determines if crossover is applied and calls then the selected crossover type.
 {
     bool changed = false;
     if(drand()<pX)
@@ -794,7 +844,7 @@ void twoPointCrossover(Classifier **cl){  // Crosses the two received classifier
  * If niche mutation is applied, 'state' is considered to constrain mutation.
  * returns if the condition was changed.
  */
-bool mutation(Classifier *clfr, float state[])
+bool mutation_old(Classifier *clfr, float state[])
 {
     bool changedCond = false, changedAct = false;
     if(mutationType == 0)
@@ -808,6 +858,48 @@ bool mutation(Classifier *clfr, float state[])
     changedAct = mutateAction(clfr);
     return (changedCond || changedAct);
 }
+
+void apply_filter_mutation(Leaf filter[], float state[])
+{
+
+    float delta = drand()*m;
+    if(drand() < 0.5){  // revert sign with 50% probability
+        delta *= -1;
+    }
+
+    for(int i=0; i<numLeaf; i++){
+        if(drand() < pM) {
+            if(drand() < 0.5){
+                filter[i].lowerBound = roundRealValue(fmax(filter[i].lowerBound + delta, 0), precisionDigits);
+            }else{
+                filter[i].upperBound = roundRealValue( fmin( filter[i].upperBound + delta, 1), precisionDigits);
+            }
+        }
+    }
+
+
+}
+
+bool mutation(Classifier *clfr, float state[])
+{
+    Leaf previous[numLeaf];
+
+    for(int i=0; i<clfrCondLength; i++){
+        memmove(&previous, &clfr->condition[i].leaf,sizeof(previous));
+        if(!isDontcareCF(clfr->condition[i]) ) {
+            do {
+                memmove(&clfr->condition[i].leaf, &previous, sizeof(previous));
+                apply_filter_mutation(clfr->condition[i].leaf, state);
+            }while(!evaluateCF(clfr->condition[i], state));
+        }
+    }
+
+    return true;
+}
+
+
+
+
 /**
  * Mutates the condition of the classifier. If one allele is mutated depends on the constant pM.
  * This mutation is a niche mutation. It assures that the resulting classifier still matches the current situation.
@@ -1135,6 +1227,10 @@ bool isSubsumer(Classifier *cl)
 // function added by me in new code
 // To subsume a CF to more general CF
 // filhal randomly selected two CFs, In future will select CFs based on their Fitness
+/*
+ * code review notes
+ * this function recreate a new CF if it sumbsumed by another CF after randomly selecting two CFs
+ */
 void subsumeCFs(Classifier *clfr, float state[])
 {
     int tmpindex1 = rand() % clfrCondLength;
@@ -1159,11 +1255,53 @@ void subsumeCFs(Classifier *clfr, float state[])
             //countNewCFs++;
     }
 }
+
+bool is_filter_general(Leaf filter_general[], Leaf filter_to_check[])
+{
+    int filter_size = (int)sqrt(numLeaf);  // filter size
+    for(int i=0; i<filter_size*filter_size; i++){
+
+            if(filter_to_check[i].lowerBound<filter_general[i].lowerBound || filter_to_check[i].upperBound > filter_general[i].upperBound){
+                return false;
+            }
+    }
+    return true;
+}
+
+bool is_filter_covered_by_condition(Leaf filter_to_check[], CodeFragment code_fragments[])
+{
+    for(int i=0; i<clfrCondLength; i++){
+        if(is_filter_general(code_fragments[i].leaf, filter_to_check)){
+           return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Returns if the classifier clfr1 is more general than the classifier clfr2. It is made sure that the classifier is indeed more general and
  * not equally general as well as that the more specific classifier is completely included in the more general one (do not specify overlapping regions)
  */
-bool isMoreGeneral(Classifier *clfr1, Classifier *clfr2)
+
+// Writing by amir
+
+ bool isMoreGeneral(Classifier *clfr1, Classifier *clfr2)
+ {
+     for(int i=0; i<clfrCondLength; i++)
+     {
+         if(!is_filter_covered_by_condition(clfr2->condition[i].leaf, clfr1->condition)){
+             return false;
+         }
+     }
+    return true;
+ }
+
+/*
+  * Code review notes
+  * It appears the isMmoreGeneral does not actually check the the generality but the equality
+  * It needs to be updated.
+  */
+ bool isMoreGeneral_old(Classifier *clfr1, Classifier *clfr2)
 {
     /* clfr1 is more general than clfr2 if:
      * Number of dontcares in clfr1 > Number of dontcares in clfr2, and

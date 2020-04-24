@@ -31,7 +31,7 @@ Classifier* selectClassifierUsingRWS(ClassifierSet *set, double fitsum);
 
 void subsumeCFs(Classifier *clfr, float state[]);
 
-bool crossover(Classifier **cl, int crossoverType);
+bool crossover(Classifier **cl, float situation[]);
 void uniformCrossover(Classifier **cl);
 void onePointCrossover(Classifier **cl);
 void twoPointCrossover(Classifier **cl);

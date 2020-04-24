@@ -47,3 +47,5 @@ char* opchar(opType code);
 void outprog_bin(const opType* prog, int size);
 void outprog(CodeFragment prog,int size, FILE *fp);
 /////////////
+
+

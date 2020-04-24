@@ -14,7 +14,7 @@ const double pX = 0.8; //The probability of applying crossover in an offspring c
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 const double pM = 0.04; //The probability of mutating one allele and the action in an offspring classifier.
 const int mutationType = 0; // 0 niche, and 1 general mutation.
-const double P_dontcare = 0.33; //The probability of using a don't care symbol in an allele when covering.
+const double P_dontcare = 0; //0.33; //The probability of using a don't care symbol in an allele when covering.
 const double predictionErrorReduction = 1.0;//0.25; //The reduction of the prediction error when generating an offspring classifier.
 const double fitnessReduction=0.1; //The reduction of the fitness when generating an offspring classifier.
 const int theta_sub = 20; //The experience of a classifier required to be a subsumer.
@@ -29,6 +29,7 @@ const bool doGAErrorBasedSelect = false;
 const double selectTolerance = 0.0;
 const char dontcare='#'; //The don't care symbol (normally '#')
 const float m_0 = 0.5; //to be used in mutation
+const float m = 0.1; // how much to mutuate one single ellel
 
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).

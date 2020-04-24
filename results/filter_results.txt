@@ -113,13 +113,7 @@ P# = 0.33
 Total Number of Instances = 1984
 Number of KNNs = 0
 Number of correct Instances = 1777
-Accuracy: 0.895665Done
-
-Shutting down...
-act-PC
- Seed: 1171145719 Fri Apr 10 17:41:19 2020
-Elapsed Time: 5268.380499  Secs
-
+Accuracy: 0.895665
 real	87m49.061s
 user	87m46.608s
 sys	0m0.956s
@@ -191,13 +185,7 @@ P# = 0.33
 Total Number of Instances = 1984
 Number of KNNs = 0
 Number of correct Instances = 1736
-Accuracy: 0.875Done
-
-Shutting down...
-act-PC
- Seed: 1485794688 Sat Apr 11 15:28:54 2020
-Elapsed Time: 6887.942880  Secs
-
+Accuracy: 0.875
 real	114m48.007s
 user	114m45.188s
 sys	0m1.088s
@@ -211,6 +199,7 @@ sys	0m1.088s
 # condition has 4 filters
 # with only one function AND
 # with covering to stop when numerositySum is more than maxPopulation/2
+
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
 test_file_name ../data/mnist/mnist_test_3_8.txt
@@ -244,13 +233,7 @@ P# = 0.33
 Total Number of Instances = 1984
 Number of KNNs = 0
 Number of correct Instances = 1786
-Accuracy: 0.900202Done
-
-Shutting down...
-act-PC
- Seed: 1373652802 Sun Apr 12 17:43:48 2020
-Elapsed Time: 2681.365245  Secs
-
+Accuracy: 0.900202
 real	44m41.429s
 user	44m40.603s
 sys	0m0.280s
@@ -295,13 +278,7 @@ P# = 0.33
 Total Number of Instances = 1984
 Number of KNNs = 0
 Number of correct Instances = 1742
-Accuracy: 0.878024Done
-
-Shutting down...
-act-PC
- Seed: 1641661389 Sun Apr 12 19:08:04 2020
-Elapsed Time: 2384.829407  Secs
-
+Accuracy: 0.87802
 real	39m44.908s
 user	39m44.033s
 sys	0m0.172s
@@ -346,13 +323,7 @@ P# = 0.33
 Total Number of Instances = 1984
 Number of KNNs = 0
 Number of correct Instances = 1585
-Accuracy: 0.798891Done
-
-Shutting down...
-act-PC
- Seed: 1401876640 Sun Apr 12 19:40:35 2020
-Elapsed Time: 1758.519238  Secs
-
+Accuracy: 0.798891
 real	29m18.604s
 user	29m15.066s
 sys	0m0.988s
@@ -388,3 +359,336 @@ iteration: 4000  accuracy: 0.77  error: 386.559  set size: 4730
 real	128m39.513s
 user	128m21.880s
 sys	0m2.387s
+
+
+# with filter 
+# condition has 4 filters
+# with only four functions AND, or, nad, nor
+# with default continuous covering and maxpopulationsize 5000
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.529  error: 488.635  set size: 552
+iteration: 2000  accuracy: 0.549  error: 486.551  set size: 602
+iteration: 3000  accuracy: 0.582  error: 472.951  set size: 658
+iteration: 4000  accuracy: 0.626  error: 468.457  set size: 629
+iteration: 5000  accuracy: 0.652  error: 437.857  set size: 591
+5326/11^C2
+real	8m6.836s
+user	8m5.937s
+sys	0m0.257s
+
+
+
+# with filter 
+# condition has 4 filters
+# with only one function AND
+# with covering to stop when numerositySum is more than maxPopulation/2
+# after correction in add leaf (float instead of int is used)
+
+======================================================================================
+best so far
+======================================================================================
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.703  error: 428.795  set size: 669
+iteration: 2000  accuracy: 0.824  error: 372.996  set size: 638
+iteration: 3000  accuracy: 0.854  error: 306.143  set size: 555
+iteration: 4000  accuracy: 0.869  error: 279.93  set size: 512
+iteration: 5000  accuracy: 0.859  error: 278.735  set size: 497
+iteration: 6000  accuracy: 0.881  error: 278.466  set size: 453
+iteration: 7000  accuracy: 0.876  error: 239.172  set size: 471
+iteration: 8000  accuracy: 0.906  error: 188.281  set size: 462
+iteration: 9000  accuracy: 0.918  error: 224.026  set size: 459
+iteration: 10000  accuracy: 0.889  error: 224.102  set size: 460
+iteration: 11000  accuracy: 0.886  error: 223.935  set size: 465
+11982/11982
+Testing
+iteration: 1984  accuracy: 0.902722  error: 208.708  set size: 457
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1791
+Accuracy: 0.902722
+real	47m1.266s
+user	47m0.730s
+sys	0m0.164s
+
+
+-------------------------------------
+
+above experiment with four operators and or nand and nor - produced poor results
+
+----------------------------------
+
+
+# with filter 
+# condition has 4 filters
+# with only one function AND
+# with covering to stop when numerositySum is more than maxPopulation/2
+# after correction in add leaf (float instead of int is used)
+# with precision of 4 digits - no advantage
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.736  error: 429.326  set size: 699
+iteration: 2000  accuracy: 0.839  error: 370.99  set size: 636
+iteration: 3000  accuracy: 0.847  error: 306.956  set size: 551
+iteration: 4000  accuracy: 0.86  error: 295.798  set size: 516
+iteration: 5000  accuracy: 0.871  error: 265.017  set size: 459
+iteration: 6000  accuracy: 0.876  error: 233.736  set size: 442
+iteration: 7000  accuracy: 0.914  error: 226.996  set size: 421
+iteration: 8000  accuracy: 0.899  error: 247.931  set size: 437
+iteration: 9000  accuracy: 0.899  error: 226.865  set size: 423
+iteration: 10000  accuracy: 0.906  error: 211.47  set size: 408
+iteration: 11000  accuracy: 0.895  error: 201.634  set size: 416
+11982/11982
+Testing
+iteration: 1984  accuracy: 0.904234  error: 165.504  set size: 412
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 5
+Number of correct Instances = 1794
+Accuracy: 0.904234
+real	48m48.989s
+user	48m47.092s
+sys	0m0.840s
+
+
+# after implementing new isGeneric function for subsumption.
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.703  error: 428.795  set size: 669
+iteration: 2000  accuracy: 0.806  error: 366.636  set size: 614
+iteration: 3000  accuracy: 0.865  error: 298.156  set size: 536
+iteration: 4000  accuracy: 0.864  error: 293.012  set size: 497
+iteration: 5000  accuracy: 0.872  error: 275.539  set size: 478
+iteration: 6000  accuracy: 0.853  error: 272.599  set size: 484
+iteration: 7000  accuracy: 0.877  error: 255.677  set size: 462
+iteration: 8000  accuracy: 0.882  error: 240.377  set size: 470
+iteration: 9000  accuracy: 0.901  error: 232.946  set size: 465
+iteration: 10000  accuracy: 0.89  error: 217.339  set size: 445
+iteration: 11000  accuracy: 0.883  error: 234.566  set size: 423
+11982/11982
+Testing
+iteration: 1984  accuracy: 0.899194  error: 216.815  set size: 454
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1784
+Accuracy: 0.899194
+real	48m3.856s
+user	48m0.523s
+sys	0m0.869s
+
+
+# after changing precision to 4 digits
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_3_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.736  error: 429.326  set size: 699
+iteration: 2000  accuracy: 0.819  error: 380.525  set size: 621
+iteration: 3000  accuracy: 0.814  error: 342.734  set size: 524
+iteration: 4000  accuracy: 0.848  error: 288.66  set size: 508
+iteration: 5000  accuracy: 0.882  error: 265.138  set size: 466
+iteration: 6000  accuracy: 0.867  error: 265.408  set size: 466
+iteration: 7000  accuracy: 0.868  error: 240.667  set size: 475
+iteration: 8000  accuracy: 0.888  error: 253.734  set size: 498
+iteration: 9000  accuracy: 0.878  error: 239.595  set size: 477
+iteration: 10000  accuracy: 0.899  error: 220.153  set size: 458
+iteration: 11000  accuracy: 0.885  error: 227.218  set size: 449
+11982/11982  447/1000
+Testing
+iteration: 1984  accuracy: 0.900706  error: 197.24  set size: 449
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 1
+Number of correct Instances = 1787
+Accuracy: 0.900706
+real	48m50.965s
+user	48m49.250s
+sys	0m0.469s
+
+# with only one filter per classifier. It reaches 80% instead of 90% 
+# compact classifiers only 87 generic classifiers
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.656  error: 448.885  set size: 498
+iteration: 2000  accuracy: 0.755  error: 414.229  set size: 479
+iteration: 3000  accuracy: 0.714  error: 431.766  set size: 354
+iteration: 4000  accuracy: 0.735  error: 423.205  set size: 257
+iteration: 5000  accuracy: 0.795  error: 398.307  set size: 188
+iteration: 6000  accuracy: 0.769  error: 369.34  set size: 150
+iteration: 7000  accuracy: 0.782  error: 380.334  set size: 122
+iteration: 8000  accuracy: 0.823  error: 367.562  set size: 104
+iteration: 9000  accuracy: 0.781  error: 372.894  set size: 91
+iteration: 10000  accuracy: 0.791  error: 374.514  set size: 91
+iteration: 11000  accuracy: 0.81  error: 364.556  set size: 87
+11982/11982  83/1000
+Testing
+iteration: 1984  accuracy: 0.810484  error: 346.255  set size: 83
+N = 1000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1608
+Accuracy: 0.810484
+real	13m34.346s
+user	13m33.610s
+sys	0m0.232s
+
+
+
+# after implementing filter mutation
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.619  error: 471.806  set size: 572
+iteration: 2000  accuracy: 0.719  error: 441.977  set size: 632
+iteration: 3000  accuracy: 0.741  error: 404.274  set size: 562
+iteration: 4000  accuracy: 0.812  error: 369.721  set size: 498
+iteration: 5000  accuracy: 0.824  error: 332.766  set size: 464
+iteration: 6000  accuracy: 0.842  error: 355.47  set size: 475
+iteration: 7000  accuracy: 0.837  error: 345.924  set size: 486
+iteration: 8000  accuracy: 0.85  error: 347.316  set size: 492
+iteration: 9000  accuracy: 0.832  error: 342.227  set size: 505
+iteration: 10000  accuracy: 0.841  error: 357.582  set size: 508
+iteration: 11000  accuracy: 0.875  error: 313.459  set size: 490
+11982/11982  460/1000
+Testing
+iteration: 1984  accuracy: 0.850806  error: 330.693  set size: 460
+N = 1000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1688
+Accuracy: 0.850806
+real	36m7.653s
+user	36m5.246s
+sys	0m0.277s
+
+# after implementing filter crossover
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.624  error: 470.713  set size: 571
+iteration: 2000  accuracy: 0.719  error: 420.041  set size: 655
+iteration: 3000  accuracy: 0.736  error: 417.369  set size: 572
+iteration: 4000  accuracy: 0.776  error: 406.342  set size: 510
+iteration: 5000  accuracy: 0.794  error: 397.788  set size: 517
+iteration: 6000  accuracy: 0.783  error: 379.641  set size: 540
+iteration: 7000  accuracy: 0.852  error: 366.353  set size: 538
+iteration: 8000  accuracy: 0.853  error: 359.438  set size: 542
+iteration: 9000  accuracy: 0.871  error: 349.195  set size: 540
+iteration: 10000  accuracy: 0.855  error: 336.562  set size: 540
+iteration: 11000  accuracy: 0.837  error: 367.683  set size: 542
+11982/11982  558/1000
+Testing
+iteration: 1984  accuracy: 0.862399  error: 288.407  set size: 558
+N = 1000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1711
+Accuracy: 0.862399
+real	42m37.705s
+user	42m33.463s
+sys	0m0.840s

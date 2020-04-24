@@ -504,7 +504,7 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
 CodeFragment addLeafCF(CodeFragment cf, float state[]){
     // randomly selects a position in the image to create filter bounds
     int filter_size = (int)sqrt(numLeaf);  // filter size
-    int pixel_values[numLeaf];
+    float pixel_values[numLeaf];
     float sum = 0;
     do{
         sum = 0;

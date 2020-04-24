@@ -151,6 +151,10 @@ void writeTestPerformance(ClassifierSet *population, int performance[], double s
 
 
 /**************************** Single Step Experiments ***************************/
+/*
+ * Code review notes
+ * The overall flow is according to the algorithm
+ */
 void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter){ // Executes one main learning loop for a single step problem.
 
     bool wasCorrect = false;
@@ -201,7 +205,13 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
     freeSet(&mset);
 }
 
-
+/*
+ * Code review notes:
+ * Instead of using epsilon-greedy strategy for exploration and exploitation, the code is doing
+ * only exploration. However it always performs a second pass for monitoring the performance.
+ * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
+ * modified to calculate training and validation accuracies after every epoch.
+ */
  void doOneSingleStepExperiment(ClassifierSet **population){  //Executes one single-step experiment monitoring the performance.
 
     int explore=0;
@@ -213,7 +223,9 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
     //int index = 0;
     for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC+=explore)
     {
-        std::cout<<exploreProbC<<"/"<<maxProblems<<"\r";
+        int pop_size = getSetSize(*population);
+        int pop_numerosity = getNumerositySum(*population);
+        std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         explore = (explore+1)%2;
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
@@ -379,7 +391,7 @@ void doOneSingleStepTest(ClassifierSet *population){
     std::cout<<"Number of KNNs = "<<cc<<std::endl;
     std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
     //std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN<<std::endl;
-    std::cout<<"Accuracy: "<< (correctCounter)*1.0/(testNumInstances);
+    std::cout<<"\nAccuracy: "<< (correctCounter)*1.0/(testNumInstances) << "\n";
 }
 
 
@@ -563,8 +575,7 @@ int main(int argc, char **argv){
   //      printf("%d have %d\n", omp_get_thread_num(), j);
         //printf("%dText Classification : %d\n",condLength,j);
         startXCS();
-        printf("Done\n");
-        Exit(filePerformance);
+        //Exit(filePerformance);
 
     }
 
