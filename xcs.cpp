@@ -160,7 +160,7 @@ void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *objec
     bool wasCorrect = false;
     ClassifierSet *mset, *aset, *killset=NULL;
 
-    mset = getMatchSet(population,&killset,object->state,counter);
+    mset = getMatchSet(population,&killset,object->state,counter, object->action);
     freeSet(&killset);
     //cout<<"test2";
     //getchar();
@@ -184,7 +184,7 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
     bool wasCorrect = false;
     ClassifierSet *mset, *killset=NULL;
 
-    mset = getMatchSet(population,&killset,object->state,counter);
+    mset = getMatchSet(population,&killset,object->state,counter, object->action);
     freeSet(&killset);
 
     getPredictionArray(mset);

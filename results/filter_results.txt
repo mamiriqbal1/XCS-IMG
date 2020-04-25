@@ -655,6 +655,7 @@ user	36m5.246s
 sys	0m0.277s
 
 # after implementing filter crossover
+# covering till popsize/2, one filter per classifier
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
 test_file_name ../data/mnist/mnist_test_3_8.txt
@@ -692,3 +693,417 @@ Accuracy: 0.862399
 real	42m37.705s
 user	42m33.463s
 sys	0m0.840s
+
+
+# with 4 filters per classifier, new crossover and new mutation
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.706  error: 418.566  set size: 773
+iteration: 2000  accuracy: 0.793  error: 369.74  set size: 813
+iteration: 3000  accuracy: 0.822  error: 340.245  set size: 808
+iteration: 4000  accuracy: 0.848  error: 328.478  set size: 800
+iteration: 5000  accuracy: 0.864  error: 296.692  set size: 780
+iteration: 6000  accuracy: 0.892  error: 277.096  set size: 765
+iteration: 7000  accuracy: 0.892  error: 271.026  set size: 783
+iteration: 8000  accuracy: 0.902  error: 240.752  set size: 778
+iteration: 9000  accuracy: 0.879  error: 244.52  set size: 810
+iteration: 10000  accuracy: 0.911  error: 242.896  set size: 813
+iteration: 11000  accuracy: 0.916  error: 230.218  set size: 775
+11982/11982  783/1000
+Testing
+iteration: 1984  accuracy: 0.908266  error: 227.145  set size: 783
+N = 1000
+P# = 0.33
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1802
+
+Accuracy: 0.908266
+
+real	87m50.349s
+user	87m33.585s
+sys	0m1.992s
+
+
+# running with 4 filters and old crossover and .33 don't care prob does not improve accuracy
+
+
+
+
+# now running one filter with continuous covering new crossover and new mutation
+# results with one filter improved from 86% to 89%
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 1000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.674  error: 452.039  set size: 944
+iteration: 2000  accuracy: 0.777  error: 410.571  set size: 916
+iteration: 3000  accuracy: 0.857  error: 372.913  set size: 900
+iteration: 4000  accuracy: 0.814  error: 398.939  set size: 918
+iteration: 5000  accuracy: 0.867  error: 368.936  set size: 910
+iteration: 6000  accuracy: 0.857  error: 375.875  set size: 915
+iteration: 7000  accuracy: 0.86  error: 348.557  set size: 915
+iteration: 8000  accuracy: 0.852  error: 343.866  set size: 914
+iteration: 9000  accuracy: 0.863  error: 372.875  set size: 920
+iteration: 10000  accuracy: 0.87  error: 376.477  set size: 902
+iteration: 11000  accuracy: 0.852  error: 365.814  set size: 878
+11982/11982  903/1000
+Testing
+iteration: 1984  accuracy: 0.897177  error: 302.191  set size: 903
+N = 1000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1780
+
+Accuracy: 0.897177
+
+real	68m37.492s
+user	68m30.413s
+sys	0m1.097s
+
+
+# now running with popSize 2000 and covering till popSize/2
+# improved from to 86% to 92% with popSize/2 covering
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 2000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.619  error: 479.1  set size: 1040
+iteration: 2000  accuracy: 0.752  error: 431.781  set size: 1156
+iteration: 3000  accuracy: 0.811  error: 394.731  set size: 1264
+iteration: 4000  accuracy: 0.829  error: 386.273  set size: 1244
+iteration: 5000  accuracy: 0.809  error: 390.114  set size: 1132
+iteration: 6000  accuracy: 0.835  error: 366.389  set size: 1058
+iteration: 7000  accuracy: 0.838  error: 367.804  set size: 995
+iteration: 8000  accuracy: 0.856  error: 330.871  set size: 979
+iteration: 9000  accuracy: 0.875  error: 316.368  set size: 995
+iteration: 10000  accuracy: 0.895  error: 309.874  set size: 976
+iteration: 11000  accuracy: 0.896  error: 278.258  set size: 929
+11982/11982  925/2000
+Testing
+iteration: 1984  accuracy: 0.928931  error: 309.49  set size: 925
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1843
+
+Accuracy: 0.928931
+
+real	80m47.717s
+user	80m34.845s
+sys	0m2.023s
+
+
+# now running  with popSize 2000 and continuous covering
+# no improvement on previous
+
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 2000
+epochs 1
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.647  error: 457.419  set size: 1910
+iteration: 2000  accuracy: 0.819  error: 415.284  set size: 1772
+iteration: 3000  accuracy: 0.845  error: 383.316  set size: 1752
+iteration: 4000  accuracy: 0.864  error: 368.114  set size: 1700
+iteration: 5000  accuracy: 0.861  error: 355.288  set size: 1686
+iteration: 6000  accuracy: 0.877  error: 354.034  set size: 1673
+iteration: 7000  accuracy: 0.877  error: 361  set size: 1698
+iteration: 8000  accuracy: 0.877  error: 337.091  set size: 1725
+iteration: 9000  accuracy: 0.916  error: 330.503  set size: 1675
+iteration: 10000  accuracy: 0.913  error: 347.474  set size: 1674
+iteration: 11000  accuracy: 0.882  error: 341.805  set size: 1667
+11982/11982  1663/2000
+Testing
+iteration: 1984  accuracy: 0.90373  error: 379.946  set size: 1663
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1793
+
+Accuracy: 0.90373
+
+real	128m33.630s
+user	128m24.775s
+sys	0m0.940s
+
+
+=======================================================================================
+best so far with one filter 
+# popSize 2000 and covering till popSize/2
+# improved from to 86% to 92% with popSize/2 covering
+=======================================================================================
+
+# above with following
+# In covering only create classifier according to action
+# Subsume in population before covering and after GA
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.639  error: 442.977  set size: 1000
+iteration: 2000  accuracy: 0.683  error: 423.533  set size: 1121
+iteration: 3000  accuracy: 0.757  error: 382.62  set size: 1247
+iteration: 4000  accuracy: 0.768  error: 375.146  set size: 1289
+iteration: 5000  accuracy: 0.759  error: 361.251  set size: 1208
+iteration: 6000  accuracy: 0.803  error: 323.938  set size: 1159
+iteration: 7000  accuracy: 0.827  error: 327.844  set size: 1104
+iteration: 8000  accuracy: 0.815  error: 334.559  set size: 1076
+iteration: 9000  accuracy: 0.856  error: 299.96  set size: 1053
+iteration: 10000  accuracy: 0.877  error: 276.316  set size: 1047
+iteration: 11000  accuracy: 0.853  error: 295.973  set size: 993
+iteration: 12000  accuracy: 0.867  error: 267.268  set size: 955
+iteration: 13000  accuracy: 0.888  error: 265.955  set size: 963
+iteration: 14000  accuracy: 0.871  error: 269.087  set size: 952
+iteration: 15000  accuracy: 0.833  error: 276.498  set size: 976
+iteration: 16000  accuracy: 0.883  error: 252.574  set size: 946
+iteration: 17000  accuracy: 0.889  error: 260.365  set size: 948
+iteration: 18000  accuracy: 0.895  error: 259.586  set size: 975
+iteration: 19000  accuracy: 0.896  error: 249.108  set size: 983
+iteration: 20000  accuracy: 0.884  error: 251.966  set size: 1011
+iteration: 21000  accuracy: 0.903  error: 257.376  set size: 1010
+iteration: 22000  accuracy: 0.899  error: 258.223  set size: 996
+iteration: 23000  accuracy: 0.913  error: 224.649  set size: 986
+23964/23964  977/2000
+Testing
+iteration: 1984  accuracy: 0.894153  error: 301.566  set size: 977
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1774
+
+Accuracy: 0.894153
+
+real	144m21.072s
+user	144m16.875s
+sys	0m0.732s
+
+
+# above with continuous coverinng
+# no improvement aborted
+
+
+=======================================================================================
+best so far with one filter 
+# popSize 2000 and covering till popSize/2
+# covering reverted to both actions
+# population submsumption stays at both GA and covering (did not make any difference)
+
+
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_1_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.619  error: 479.1  set size: 1040
+iteration: 2000  accuracy: 0.752  error: 431.781  set size: 1156
+iteration: 3000  accuracy: 0.811  error: 394.731  set size: 1264
+iteration: 4000  accuracy: 0.829  error: 386.273  set size: 1244
+iteration: 5000  accuracy: 0.809  error: 390.114  set size: 1132
+iteration: 6000  accuracy: 0.835  error: 366.389  set size: 1058
+iteration: 7000  accuracy: 0.838  error: 367.804  set size: 995
+iteration: 8000  accuracy: 0.856  error: 330.871  set size: 979
+iteration: 9000  accuracy: 0.875  error: 316.368  set size: 995
+iteration: 10000  accuracy: 0.895  error: 309.874  set size: 976
+iteration: 11000  accuracy: 0.896  error: 278.258  set size: 929
+iteration: 12000  accuracy: 0.889  error: 294.467  set size: 925
+iteration: 13000  accuracy: 0.892  error: 268.059  set size: 915
+iteration: 14000  accuracy: 0.911  error: 259.195  set size: 905
+iteration: 15000  accuracy: 0.911  error: 230.775  set size: 902
+iteration: 16000  accuracy: 0.927  error: 235.142  set size: 918
+iteration: 17000  accuracy: 0.92  error: 222.972  set size: 933
+iteration: 18000  accuracy: 0.917  error: 233.356  set size: 922
+iteration: 19000  accuracy: 0.933  error: 232.156  set size: 981
+iteration: 20000  accuracy: 0.92  error: 227.294  set size: 964
+iteration: 21000  accuracy: 0.934  error: 230.053  set size: 899
+iteration: 22000  accuracy: 0.938  error: 200.278  set size: 905
+iteration: 23000  accuracy: 0.929  error: 201.882  set size: 879
+23964/23964  856/2000
+Testing
+iteration: 1984  accuracy: 0.939516  error: 152.823  set size: 855
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1864
+
+Accuracy: 0.939516
+
+real	138m25.967s
+user	138m22.926s
+sys	0m0.748s
+
+
+
+=======================================================================================
+best so far with one filter 
+# popSize 2000 and covering till popSize/2
+# covering reverted to both actions
+# population submsumption stays at both GA and covering (did not make any difference)
+# now running same experiment with 6 epochs instead of 2
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.619  error: 479.1  set size: 1040
+iteration: 2000  accuracy: 0.752  error: 431.781  set size: 1156
+iteration: 3000  accuracy: 0.811  error: 394.731  set size: 1264
+iteration: 4000  accuracy: 0.829  error: 386.273  set size: 1244
+iteration: 5000  accuracy: 0.809  error: 390.114  set size: 1132
+iteration: 6000  accuracy: 0.835  error: 366.389  set size: 1058
+iteration: 7000  accuracy: 0.838  error: 367.804  set size: 995
+iteration: 8000  accuracy: 0.856  error: 330.871  set size: 979
+iteration: 9000  accuracy: 0.875  error: 316.368  set size: 995
+iteration: 10000  accuracy: 0.895  error: 309.874  set size: 976
+iteration: 11000  accuracy: 0.896  error: 278.258  set size: 929
+iteration: 12000  accuracy: 0.889  error: 294.467  set size: 925
+iteration: 13000  accuracy: 0.892  error: 268.059  set size: 915
+iteration: 14000  accuracy: 0.911  error: 259.195  set size: 905
+iteration: 15000  accuracy: 0.911  error: 230.775  set size: 902
+iteration: 16000  accuracy: 0.927  error: 235.142  set size: 918
+iteration: 17000  accuracy: 0.92  error: 222.972  set size: 933
+iteration: 18000  accuracy: 0.917  error: 233.356  set size: 922
+iteration: 19000  accuracy: 0.933  error: 232.156  set size: 981
+iteration: 20000  accuracy: 0.92  error: 227.294  set size: 964
+iteration: 21000  accuracy: 0.934  error: 230.053  set size: 899
+iteration: 22000  accuracy: 0.938  error: 200.278  set size: 905
+iteration: 23000  accuracy: 0.929  error: 201.882  set size: 879
+iteration: 24000  accuracy: 0.952  error: 193.749  set size: 858
+iteration: 25000  accuracy: 0.931  error: 219.757  set size: 902
+iteration: 26000  accuracy: 0.95  error: 179.394  set size: 919
+iteration: 27000  accuracy: 0.938  error: 185.08  set size: 893
+iteration: 28000  accuracy: 0.941  error: 185.31  set size: 889
+iteration: 29000  accuracy: 0.927  error: 189.442  set size: 880
+iteration: 30000  accuracy: 0.945  error: 199.667  set size: 919
+iteration: 31000  accuracy: 0.935  error: 188.867  set size: 928
+iteration: 32000  accuracy: 0.943  error: 171.26  set size: 920
+iteration: 33000  accuracy: 0.957  error: 170.098  set size: 932
+iteration: 34000  accuracy: 0.935  error: 168.67  set size: 890
+iteration: 35000  accuracy: 0.941  error: 171.623  set size: 871
+iteration: 36000  accuracy: 0.932  error: 167.723  set size: 839
+iteration: 37000  accuracy: 0.936  error: 164.263  set size: 844
+iteration: 38000  accuracy: 0.944  error: 174.488  set size: 874
+iteration: 39000  accuracy: 0.935  error: 167.408  set size: 837
+iteration: 40000  accuracy: 0.938  error: 177.733  set size: 822
+iteration: 41000  accuracy: 0.949  error: 181.371  set size: 882
+iteration: 42000  accuracy: 0.935  error: 172.196  set size: 857
+iteration: 43000  accuracy: 0.94  error: 185.285  set size: 882
+iteration: 44000  accuracy: 0.945  error: 166.324  set size: 852
+iteration: 45000  accuracy: 0.953  error: 167.582  set size: 846
+iteration: 46000  accuracy: 0.941  error: 179.561  set size: 866
+iteration: 47000  accuracy: 0.953  error: 168.933  set size: 889
+iteration: 48000  accuracy: 0.957  error: 155.964  set size: 915
+iteration: 49000  accuracy: 0.954  error: 170.108  set size: 864
+iteration: 50000  accuracy: 0.95  error: 146.846  set size: 871
+iteration: 51000  accuracy: 0.944  error: 161.816  set size: 862
+iteration: 52000  accuracy: 0.936  error: 154.393  set size: 873
+iteration: 53000  accuracy: 0.943  error: 158.537  set size: 879
+iteration: 54000  accuracy: 0.958  error: 158.558  set size: 844
+iteration: 55000  accuracy: 0.95  error: 166.968  set size: 898
+iteration: 56000  accuracy: 0.953  error: 149.405  set size: 879
+iteration: 57000  accuracy: 0.946  error: 152.225  set size: 859
+iteration: 58000  accuracy: 0.942  error: 169.777  set size: 862
+iteration: 59000  accuracy: 0.951  error: 168.661  set size: 889
+iteration: 60000  accuracy: 0.953  error: 169.237  set size: 887
+iteration: 61000  accuracy: 0.95  error: 158.232  set size: 877
+iteration: 62000  accuracy: 0.941  error: 179.875  set size: 862
+iteration: 63000  accuracy: 0.96  error: 153.668  set size: 895
+iteration: 64000  accuracy: 0.944  error: 152.484  set size: 885
+iteration: 65000  accuracy: 0.946  error: 159.093  set size: 901
+iteration: 66000  accuracy: 0.943  error: 141.923  set size: 923
+iteration: 67000  accuracy: 0.952  error: 159.55  set size: 898
+iteration: 68000  accuracy: 0.951  error: 154.304  set size: 885
+iteration: 69000  accuracy: 0.941  error: 156.362  set size: 897
+iteration: 70000  accuracy: 0.94  error: 174.186  set size: 913
+iteration: 71000  accuracy: 0.936  error: 186.848  set size: 899
+71892/71892  877/2000
+Testing
+iteration: 1984  accuracy: 0.950605  error: 165.767  set size: 877
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1886
+
+Accuracy: 0.950605
+
+real	403m55.776s
+user	403m44.721s
+sys	0m2.212s

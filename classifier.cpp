@@ -92,7 +92,7 @@ int getNumFitterCFs(ClassifierSet *set, double avgFitness){
   * Overall flow is as per algorithm
   */
  int covering = 0;
-ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime){
+ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime, int action){
     ClassifierSet *mset=NULL, *poppointer;
     Classifier *killedp, *coverClfr;
     int popSize=0, setSize=0, representedActions;
@@ -129,11 +129,14 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
                 int add = 1;
                 for(int j=0; j<add; j++) {
                     coverClfr = matchingCondAndSpecifiedAct(state, i, setSize + 1, itTime);
-                    //printClassifier(coverClfr);
-                    addNewClassifierToSet(coverClfr, &mset);
-                    setSize++;
-                    addNewClassifierToSet(coverClfr, population);
-                    popSize++;
+                    // before inserting the new classifier into the population check for subsumption by a generic one
+                    // todo: setSize and popSize needs to be incremented in case of subsumption?
+                    if(!subsumeClassifierToSet(coverClfr,*population)) {
+                        addNewClassifierToSet(coverClfr, &mset);
+                        setSize++;
+                        addNewClassifierToSet(coverClfr, population);
+                        popSize++;
+                    }
                 }
             }
         }
@@ -742,6 +745,9 @@ void crossover_filter(Leaf parent1[], Leaf parent2[])
 
 bool crossover(Classifier **cl, float situation[])  // Determines if crossover is applied and calls then the selected crossover type.
 {
+//    twoPointCrossover(cl);
+//    return true;
+
     Leaf previous1[numLeaf];
     Leaf previous2[numLeaf];
     if(drand() < pX) {
@@ -1174,12 +1180,14 @@ void subsumeClassifier(Classifier *cl, Classifier **parents, ClassifierSet *locs
         {
             parents[i]->numerosity++;
             freeClassifier(cl);
+            // code review notes: It appears that code fragments are being subsumed within a classifier
             //Here code for subsume of CFs of Parants
-            subsumeCFs(parents[i], state);
+            //subsumeCFs(parents[i], state);
             return;
         }
     }
-    if(subsumeClassifierToSet(cl,locset))
+    // changed from action set subsumption to population subsumption
+    if(subsumeClassifierToSet(cl,*pop))
     {
         return;
     }
@@ -1230,6 +1238,7 @@ bool isSubsumer(Classifier *cl)
 /*
  * code review notes
  * this function recreate a new CF if it sumbsumed by another CF after randomly selecting two CFs
+ * it essentially creating a new code fragment if it is already covered by another in the same classifer
  */
 void subsumeCFs(Classifier *clfr, float state[])
 {

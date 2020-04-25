@@ -5,7 +5,7 @@ int getSetSize(ClassifierSet *set);
 double getAvgFitness(ClassifierSet *set);
 int getNumFitterCFs(ClassifierSet *set, double avgFitness);
 
-ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime);
+ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime, int action);
 int nrActionsInSet(ClassifierSet *set, bool coveredActions[]);
 bool isConditionMatched(CodeFragment clfrCond[], float state[]);
 Classifier* matchingCondAndSpecifiedAct(float state[], int act, int setSize, int time);
