@@ -19,9 +19,16 @@
 #include "xcs.h"
 #include <algorithm>
 
+#include "xtensor/xtensor.hpp"
+#include "xtensor/xcsv.hpp"
+#include "xtensor/xview.hpp"
+
+
+
 //using namespace std;
 
 bool use_kb = false;
+bool Testing = true;
 int numActions = 2;
 std::string inputTrainingFile;
 std::string inputTestFile;
@@ -33,8 +40,8 @@ int totalNumInstances=0;// = trainNumInstances + testNumInstances;//4; //for rev
 int maxProblems=0;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 int testFrequency=0;// = trainNumInstances; // 1034;
 int maxPopSize=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
-
-
+bool analyze = false;
+std::string analyze_path;
 
 struct distanceInputClassifier{
   int posClassifier;
@@ -499,6 +506,20 @@ void LoadConfig(char* file)
                 testFrequency= atoi(value.c_str());
             }else if(name == "max_problems"){
                 maxProblems= atoi(value.c_str());
+            }else if(name == "analyze"){
+                if(value == "no"){
+                    analyze = false;
+                }else{
+                    analyze = true;
+                }
+            }else if(name == "analyze_path"){
+                analyze_path = value;
+            }if (name == "testing") {
+                if (value == "no") {
+                    Testing = false;
+                } else if (value == "yes") {
+                    Testing = true;
+                }
             }
             std::cout << name << " " << value << '\n';
         }
@@ -521,6 +542,78 @@ void LoadConfig(char* file)
     }
 }
 
+
+void copy_filter_to_condition(Classifier *classifer, xt::xtensor<float, 1> filter)
+{
+     Leaf *leaf = classifer->condition[0].leaf;
+
+     for (int i = 0; i < numLeaf; i++) {
+        leaf[i].lowerBound = filter(i*2);
+        leaf[i].upperBound = filter(i*2+1);
+     }
+}
+
+void count_matches_for_filters(xt::xtensor<float, 2> good_filters, xt::xtensor<float, 2> good_actions)
+{
+
+    int num_filters = good_actions.shape()[0];
+    Classifier *classifier;
+    // create a dummy classifier condition and reuse for all filters later
+    DataSource *obj = &trainingData[0];
+    classifier = matchingCondAndSpecifiedAct(obj->state, 0, 1, 1);
+    CodeFragment *cfs = classifier->condition;
+
+    for (int i = 0; i < num_filters; i++) {
+        int match_0 = 0;
+        int match_1 = 0;
+        int matched = 0;
+
+        copy_filter_to_condition(classifier, xt::view(good_filters, i, xt::all()));
+        for (int j = 0; j < trainNumInstances; j++) {
+            obj = &trainingData[j];
+            if(isConditionMatched(cfs, obj->state)){
+                matched++;
+                if(obj->action == 0){
+                    match_0++;
+                }else{
+                    match_1++;
+                }
+            }
+        }
+
+        std::cout << good_actions(i,0) << " , " << matched << " , " << match_0 << " , " << match_1 << std::endl;
+    }
+}
+
+
+void analyze_rules()
+{
+
+    trainingData = new DataSource[trainNumInstances];
+    testingData = new DataSource[testNumInstances];
+    initializeInput(trainingData,trainNumInstances);
+    initializeInput(testingData,testNumInstances);
+    loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
+    loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
+    updateRange(trainingData,trainNumInstances);
+    updateRange(testingData,testNumInstances);
+
+    // load good filters
+    std::ifstream filters_file;
+    filters_file.open(analyze_path + "good_filters.txt");
+    auto good_filters = xt::load_csv<float>(filters_file);
+    std::ifstream actions_file;
+    actions_file.open(analyze_path + "good_actions.txt");
+    auto good_actions = xt::load_csv<float>(actions_file);
+
+
+    count_matches_for_filters(good_filters, good_actions);
+
+
+
+}
+
+
 int main(int argc, char **argv){
 
     if(argc == 1){
@@ -528,6 +621,10 @@ int main(int argc, char **argv){
         return -1;
     }
     LoadConfig(argv[1]);
+    if(analyze){
+        analyze_rules();
+        return 0;
+    }
 
     for(int j=0; j<run; j++)
     {
