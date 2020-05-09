@@ -1741,13 +1741,13 @@ void fprintClassifier(FILE *fp, Classifier *classifier)
     fwrite(buf,strlen(buf),1,fp);
     free(buf);
 
-    len = snprintf(NULL,0,"Prediction Error: %f ",classifier->predictionError);
+    len = snprintf(NULL,0,"PredictionError: %f ",classifier->predictionError);
     if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
     {
         printf("\nError in file writing ...\n");
         exit(0);
     }
-    len = snprintf(buf,len+1,"Prediction Error: %f ",classifier->predictionError);
+    len = snprintf(buf,len+1,"PredictionError: %f ",classifier->predictionError);
     fwrite(buf,strlen(buf),1,fp);
     free(buf);
 
@@ -1771,13 +1771,33 @@ void fprintClassifier(FILE *fp, Classifier *classifier)
     fwrite(buf,strlen(buf),1,fp);
     free(buf);
 
-    len = snprintf(NULL,0,"Specificness: %d\n",classifier->specificness);
+    len = snprintf(NULL,0,"Specificness: %d ",classifier->specificness);
     if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
     {
         printf("\nError in file writing ...\n");
         exit(0);
     }
-    len = snprintf(buf,len+1,"Specificness: %d\n",classifier->specificness);
+    len = snprintf(buf,len+1,"Specificness: %d ",classifier->specificness);
+    fwrite(buf,strlen(buf),1,fp);
+    free(buf);
+
+    len = snprintf(NULL,0,"ActionSetSize: %f ",classifier->actionSetSize);
+    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
+    {
+        printf("\nError in file writing ...\n");
+        exit(0);
+    }
+    len = snprintf(buf,len+1,"ActionSetSize: %f ",classifier->actionSetSize);
+    fwrite(buf,strlen(buf),1,fp);
+    free(buf);
+
+    len = snprintf(NULL,0,"TimeStamp: %d\n",classifier->timeStamp);
+    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
+    {
+        printf("\nError in file writing ...\n");
+        exit(0);
+    }
+    len = snprintf(buf,len+1,"TimeStamp: %d\n",classifier->timeStamp);
     fwrite(buf,strlen(buf),1,fp);
     free(buf);
 

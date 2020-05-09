@@ -20,7 +20,7 @@ const int run = 1;
 extern std::string inputTrainingFile; //[] = "../data/mnist/3_8_train_mnist.txt";
 extern std::string inputTestFile; //[] = "../data/mnist/3_8_test_mnist.txt";
 //const char testFile[] = "";
-const bool Testing = true;
+extern bool Testing;
 //const int currentProblemLevel = 1; //must be set coz previous level and current level file names are adjusted
 
 const int precisionDigits = 2;

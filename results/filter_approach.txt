@@ -1,0 +1,61 @@
+Asslam o Alaikum Dr. Iqbal and Dr Irfan,
+
+I have been working on devising possible strategies for performing image classification using classifier system.
+
+Adapting the c++ code (RCFC) provided by Dr. Iqbal I have done some experiments using a new representation for classifier condition which I call "filter" approach.
+
+The classifier condition is now represented as a 2d filter (e.g. 4x4) in my current experiments. The filter consists of same lower and upper bound of real numbers. The idea is to extract useful features from images automatically for classification purposes. 
+ 
+An input image matches a filter using the following mechanism
+
+- Starting from top left corner the 2d filter is matched with the corresponding area of the input image. If the image pixels matches with the filter it is included in the match set. It is a similar mechanism of sliding filter as found in a CNN.
+
+In this way we hope to evolve useful features describing image characteristics that can be used for classification. The same filters can also be used for transfer learning scenarios.
+
+I have executed experiments for classification of digits 3 and 8 of MNIST digit dataset using this approach. The transfer learning experiments are not done yet. Following are the main modifications done in the original RCFC code:
+
+1. The condition now consists of only one 4x4 filter (The operator AND is used to ensure that all pixels of a particular region match the filter)
+2. Covering is done more aggressively initially which means that the new filters are produced from the input images as long as the total numbers of classifiers are less than maxPopSize/2
+3. New mutation implementation is done for mutating individual alleles of the filters
+4. New crossover implementation is also done for crossover of two filters
+5. For subsumption the code was only checking for equality which is now changed to checking of generality.
+
+Following are the results of the best experiment so far
+
+Parameters:
+N=2000
+Training set size: ~11k images
+Epochs=6 (~70k training images presented) 
+Test Frequency = 1000
+
+Maximum training accuracy = 95.7%
+Test accuracy = 95%
+Total time taken for execution: 403 minutes
+
+Accuracy and error graphs are attached below
+
+
+My observations:
+
+- It was difficult to surpass the barrier of 90% accuracy 
+- Ideally we should be able to reach 99% with this simple problem of MNIST digits
+- The time complexity of the filter method is quite high.
+- Good news is that we are able to reach reasonable accuracy while directly working on pixel level without using auto encoder.
+- The code fragment approach reached 90% and the filter approach is able to reach 95% accuracy
+- Still need to explore further strategies to increase the representation power of the method
+- Need to explore
+	- Hierarchical filters or composition of filters to be explored
+	- Filters of Multiple sizes (e.g. 3x3, 5x5 etc.) and their combinations 
+	- A filter might match multiple times in an image. Need to account for that
+	- An effective covering strategy is to be devised
+	- Multiple filters within the condition of a classifiers just like multiple code fragments
+	- Current approach has the characteristic of location invariance (a feature can occur anywhere in the image for filter to detect it)
+	- Work on size and rotation invariance strategies 
+	- work on increasing time efficiency of the algorithm
+
+
+I need your guidance for proceeding further. Do you think this result is good enough for our first publication on "Image classification using classifier systems". We have only worked on 2 digits yet. Classification of 10 digits might require transfer learning. MNIST itself is a toy problem but we do not have a precedence of solving it effectively with evolutionary methods before which makes it significant? 
+Our next avenue is to work on transfer learning. 
+
+Thank you very much.
+
