@@ -69,6 +69,7 @@ struct CodeFragment
 
 struct Classifier
 {
+    int id;
     CodeFragment condition[clfrCondLength];
     int action;
     double prediction;

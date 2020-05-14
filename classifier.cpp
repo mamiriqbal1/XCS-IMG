@@ -13,9 +13,10 @@
 int countNewCFs = 0;
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
-
+int gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 
 void setInitialVariables(Classifier *clfr, double setSize, int time){
+    clfr->id = gid++;
     clfr->prediction = predictionIni;
     clfr->predictionError = predictionErrorIni;
     clfr->accuracy = 0.0;
@@ -92,7 +93,7 @@ int getNumFitterCFs(ClassifierSet *set, double avgFitness){
   * Overall flow is as per algorithm
   */
  int covering = 0;
-ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime, int action){
+ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime, int action, int img_id){
     ClassifierSet *mset=NULL, *poppointer;
     Classifier *killedp, *coverClfr;
     int popSize=0, setSize=0, representedActions;
@@ -101,7 +102,7 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
     for(poppointer= *population; poppointer!=NULL; poppointer=poppointer->next)
     {
         popSize += poppointer->classifier->numerosity; // calculate the population size
-        if(isConditionMatched(poppointer->classifier->condition,state))
+        if(isConditionMatched(poppointer->classifier->condition,state, poppointer->classifier->id, img_id))
         {
             //std::cout<<"Previous\n";
             addNewClassifierToSet(poppointer->classifier, &mset); // add matching classifier to the matchset
@@ -192,13 +193,13 @@ float computeDistance(CodeFragment clfrCond[], float cond[]){
 }
 
 
-bool isConditionMatched(CodeFragment clfrCond[], float state[])
+bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id, int img_id)
 {
     for(int i=0; i<clfrCondLength; i++)
     {
         //std::cout<<"iscond\n";
         //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].codeFragment,state)==0 )
-        if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i],state)==0 )
+        if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i],state, cl_id, img_id)==0 )
         {
             return false;
         }
@@ -357,7 +358,7 @@ ClassifierSet* getActionSet(int action, ClassifierSet *ms)  // constructs an act
  * @param reward The actual resulting reward after the execution of an action.
  */
  /*
-  * The formulas needs to be reviewed and corrected as per the algorithm.
+  * The formulas are implemented in a slightly differnt form with same end result. Can be simplified as per the paper.
   */
 void updateActionSet(ClassifierSet **aset, double maxPrediction, double reward, ClassifierSet **pop, ClassifierSet **killset)
 {
@@ -539,6 +540,7 @@ void selectTwoClassifiers(Classifier **cl, Classifier **parents, ClassifierSet *
 
         memmove( &(cl[i]->condition),&(clp->condition),sizeof(clp->condition) );
 
+        cl[i]->id = gid++;
         cl[i]->action = clp->action;
         cl[i]->prediction = clp->prediction;
         cl[i]->predictionError = clp->predictionError;
@@ -1645,7 +1647,7 @@ void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierSet *head)
     {
         fprintClassifier(fpClfr, set->classifier);
     }
-
+    std::cout << "Global Classifier ID: " << gid << std::endl;
     storeCFs(head,fpCF);
 }
 
@@ -1708,6 +1710,16 @@ void fprintClassifier(FILE *fp, Classifier *classifier)
         exit(0);
     }
     len = snprintf(buf,len+1,"Action: %d\n",classifier->action);
+    fwrite(buf,strlen(buf),1,fp);
+    free(buf);
+
+    len = snprintf(NULL,0,"id: %d ",classifier->id);
+    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
+    {
+        printf("\nError in file writing ...\n");
+        exit(0);
+    }
+    len = snprintf(buf,len+1,"id: %d ",classifier->id);
     fwrite(buf,strlen(buf),1,fp);
     free(buf);
 

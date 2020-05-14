@@ -162,12 +162,12 @@ void writeTestPerformance(ClassifierSet *population, int performance[], double s
  * Code review notes
  * The overall flow is according to the algorithm
  */
-void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter){ // Executes one main learning loop for a single step problem.
+void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter, int img_id){ // Executes one main learning loop for a single step problem.
 
     bool wasCorrect = false;
     ClassifierSet *mset, *aset, *killset=NULL;
 
-    mset = getMatchSet(population,&killset,object->state,counter, object->action);
+    mset = getMatchSet(population,&killset,object->state,counter, object->action, img_id);
     freeSet(&killset);
     //cout<<"test2";
     //getchar();
@@ -186,12 +186,12 @@ void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *objec
     freeSet(&aset);
 }
 
-void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *object, int counter, int correct[], double sysError[]){  //Executes one main performance evaluation loop for a single step problem.
+void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *object, int counter, int correct[], double sysError[], int img_id){  //Executes one main performance evaluation loop for a single step problem.
 
     bool wasCorrect = false;
     ClassifierSet *mset, *killset=NULL;
 
-    mset = getMatchSet(population,&killset,object->state,counter, object->action);
+    mset = getMatchSet(population,&killset,object->state,counter, object->action, img_id);
     freeSet(&killset);
 
     getPredictionArray(mset);
@@ -237,7 +237,8 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
-        state = &trainingData[irand(trainNumInstances)];
+        int img_id = irand(trainNumInstances);
+        state = &trainingData[img_id];
 
         //std::cout<<index<<" ";
         /*for (int i=0;i<condLength;i++)
@@ -250,11 +251,11 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
 
         if(explore==1)
         {
-            doOneSingleStepProblemExplore(population,state,exploreProbC);
+            doOneSingleStepProblemExplore(population,state,exploreProbC, img_id);
         }
         else
         {
-            doOneSingleStepProblemExploit(population,state,exploreProbC, correct, sysError);
+            doOneSingleStepProblemExploit(population,state,exploreProbC, correct, sysError, img_id);
         }
         if(exploreProbC%testFrequency==0 && explore==0 && exploreProbC>0)
         {
@@ -339,7 +340,7 @@ void doOneSingleStepTest(ClassifierSet *population){
 
         for(poppointer= population; poppointer!=NULL; poppointer=poppointer->next)
         {
-            if(isConditionMatched(poppointer->classifier->condition,testState->state))
+            if(isConditionMatched(poppointer->classifier->condition,testState->state, -1, -1))
             {
                 isMatched = true;tmpcorrectcounter++;
                 addNewClassifierToSet(poppointer->classifier, &mset); // add matching classifier to the matchset
@@ -571,7 +572,7 @@ void count_matches_for_filters(xt::xtensor<float, 2> good_filters, xt::xtensor<f
         copy_filter_to_condition(classifier, xt::view(good_filters, i, xt::all()));
         for (int j = 0; j < trainNumInstances; j++) {
             obj = &trainingData[j];
-            if(isConditionMatched(cfs, obj->state)){
+            if(isConditionMatched(cfs, obj->state, -1, -1)){
                 matched++;
                 if(obj->action == 0){
                     match_0++;
@@ -600,10 +601,10 @@ void analyze_rules()
 
     // load good filters
     std::ifstream filters_file;
-    filters_file.open(analyze_path + "good_filters.txt");
+    filters_file.open(analyze_path + "all_filters.txt");
     auto good_filters = xt::load_csv<float>(filters_file);
     std::ifstream actions_file;
-    actions_file.open(analyze_path + "good_actions.txt");
+    actions_file.open(analyze_path + "all_actions.txt");
     auto good_actions = xt::load_csv<float>(actions_file);
 
 

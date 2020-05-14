@@ -16,8 +16,8 @@ void writePerformance(ClassifierSet *population, int performance[], double sysEr
 
 void startXCS();
 void doOneSingleStepExperiment(ClassifierSet **population);
-void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter);
-void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *object, int counter, int correct[], double sysError[]);
+void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter, int img_id);
+void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *object, int counter, int correct[], double sysError[], int img_id);
 void doOneSingleStepExperiment(ClassifierSet **population,DataSource inputArray[]);
 
 DataSource resetState(DataSource inputArray[],int index);

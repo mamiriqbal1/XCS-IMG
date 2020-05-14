@@ -6,10 +6,10 @@ kb_file=output/kb_file.txt
 output_path=output_2_1_nokb/
 max_population_size=2000
 # ecpochs are multiplied by number of training examples to calculate total problems to be presented
-epochs=1
+epochs=2
 # if max_problems are provided then epochs are ignored.
 max_problems=100
 test_frequency=1000
-analyze=no
-analyze_path=../cmake-build-debug/output_2_6_2000_nokb_save/analyze/
+analyze=yes
+analyze_path=../cmake-build-debug/output_2_6_2000_nokb_save_optimized/analyze/
 testing=no

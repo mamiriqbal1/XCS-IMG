@@ -24,7 +24,7 @@ bool isGeneralCF(CodeFragment cf1, CodeFragment cf2);
 bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2);
 
 //int evaluateCF(opType cf[], int state[]);
-int evaluateCF(CodeFragment cf, float state[]);
+int evaluateCF(CodeFragment cf, float state[], int cl_id=-1, int img_id=-1);
 bool isPreviousLevelsCode(const opType code);
 
 int getNumberOfArguments(const opType opcode);

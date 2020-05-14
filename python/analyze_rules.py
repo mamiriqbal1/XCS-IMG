@@ -3,7 +3,9 @@ import math
 
 filter_size = 4  # 4x4
 
-rules_file = open("../cmake-build-debug/output_2_6_2000_nokb_save/rule_with_codefragements.txt")
+base_path = "../cmake-build-debug/output_2_6_2000_nokb_save_optimized/"
+
+rules_file = open(base_path + "rule_with_codefragements.txt")
 
 
 def parse_condition(line):
@@ -28,10 +30,13 @@ def parse_attributes(line):
     values.append((float(tokens[1])))
     values.append((float(tokens[3])))
     values.append((float(tokens[5])))
-    values.append((float(tokens[8])))
-    values.append((float(tokens[10])))
-    values.append((float(tokens[12])))
-    values.append((float(tokens[14])))
+    values.append((float(tokens[7])))
+    values.append((float(tokens[9])))
+    values.append((float(tokens[11])))
+    values.append((float(tokens[13])))
+    values.append((float(tokens[15])))
+    values.append((float(tokens[17])))
+    values.append((float(tokens[19])))
     return values
 
 
@@ -93,15 +98,18 @@ for line in rules_file:
 filters_np = np.array(filters)
 actions_np = np.array(actions)
 attributes_np = np.array(attributes)
-fitness = attributes_np[:,2]
+fitness = attributes_np[:,3]
 average_fitness = np.average(fitness)
 good_index = fitness > average_fitness
 good_filters = filters_np[good_index]
 good_actions = actions_np[good_index]
 good_attributes = attributes_np[good_index]
-# np.savetxt('../cmake-build-debug/output_2_6_2000_nokb_save/analyze/good_filters.txt', good_filters, delimiter=',')
-# np.savetxt('../cmake-build-debug/output_2_6_2000_nokb_save/analyze/good_actions.txt', good_actions, delimiter=',')
-# np.savetxt('../cmake-build-debug/output_2_6_2000_nokb_save/analyze/good_attributes.txt', good_attributes, delimiter=',')
-count_matches_for_filter(good_filters, good_actions)
+# np.savetxt(base_path + 'analyze/good_filters.txt', good_filters, delimiter=',')
+# np.savetxt(base_path + 'analyze/good_actions.txt', good_actions, delimiter=',')
+# np.savetxt(base_path + 'analyze/good_attributes.txt', good_attributes, delimiter=',')
+np.savetxt(base_path + 'analyze/all_filters.txt', filters_np, delimiter=',')
+np.savetxt(base_path + 'analyze/all_actions.txt', actions_np, delimiter=',')
+np.savetxt(base_path + 'analyze/all_attributes.txt', attributes_np, delimiter=',')
+# count_matches_for_filter(good_filters, good_actions)
 
 print('done')

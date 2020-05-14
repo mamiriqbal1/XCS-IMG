@@ -10,6 +10,9 @@
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "env.h"
+#include <boost/functional/hash.hpp>
+#include <unordered_map>
+#include <utility>
 //using namespace std;
 
 char globalBuf[1000];
@@ -17,6 +20,10 @@ int numPreviousCFs = 0;     //When to set
 int startingPreviousCFID = 0;   //what is this value
 
 CodeFragment *previousCFPopulation;
+
+typedef std::pair<int, int> pair;
+std::unordered_map<pair,int,boost::hash<pair>> evaluation_map;
+
 
 void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *cfWritingFilePointer)
 {
@@ -702,13 +709,22 @@ int evaluateCF_old(CodeFragment cf, float state[]){
 }
 
 
-int evaluateCF(CodeFragment cf, float state[]){
+int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
+    // if cl_id or img_id is -1 then do not check evaluation  map otherwise check for prior results
+    if(cl_id >=0 and img_id >=0){
+        // return prior result if it is found
+        if(evaluation_map.find(pair(cl_id, img_id)) != evaluation_map.end()){  // if found
+            return evaluation_map[pair(cl_id, img_id)];
+        }
+    }
     // set featureNumber appropriately and then call evaluateCF_old
     int size = (int)sqrt(numLeaf);  // filter size
     int index[size*size];
+    bool done = false;
+    int return_value = 0;
 
-    for(int i=0; i<image_height - size; i++){
-        for(int j=0; j<image_width - size; j++){
+    for(int i=0; i<image_height - size && !done; i++){
+        for(int j=0; j<image_width - size && !done; j++){
            for(int k=0; k<size; k++){
                for(int l=0; l<size; l++){
                    index[k*size+l] = i*image_width+j + k*image_width+l;
@@ -716,11 +732,8 @@ int evaluateCF(CodeFragment cf, float state[]){
                }
            }
            if(evaluateCF_old(cf, state) == 1){
-               // reset after evaluation
-               for(int m=0; m<size*size; m++){
-                   cf.leaf[m].featureNumber = 0;
-               }
-               return 1;
+               done = true;
+               return_value = 1;
            }else{
                continue;
            }
@@ -730,7 +743,11 @@ int evaluateCF(CodeFragment cf, float state[]){
     for(int m=0; m<size*size; m++){
         cf.leaf[m].featureNumber = 0;
     }
-    return 0;
+    // set hasmap entry for re-using evaluation across epochs
+    if(cl_id >=0 and img_id >=0) {
+        evaluation_map[pair(cl_id, img_id)] = return_value;
+    }
+    return return_value;
 }
 
 bool isPreviousLevelsCode(const opType code){

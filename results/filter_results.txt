@@ -1107,3 +1107,108 @@ Accuracy: 0.950605
 real	403m55.776s
 user	403m44.721s
 sys	0m2.212s
+
+
+
+# above experiment with optimization of reusing has map of evaluations
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.619  error: 479.1  set size: 1040
+iteration: 2000  accuracy: 0.752  error: 431.781  set size: 1156
+iteration: 3000  accuracy: 0.811  error: 394.731  set size: 1264
+iteration: 4000  accuracy: 0.829  error: 386.273  set size: 1244
+iteration: 5000  accuracy: 0.809  error: 390.114  set size: 1132
+iteration: 6000  accuracy: 0.835  error: 366.389  set size: 1058
+iteration: 7000  accuracy: 0.838  error: 367.804  set size: 995
+iteration: 8000  accuracy: 0.856  error: 330.871  set size: 979
+iteration: 9000  accuracy: 0.875  error: 316.368  set size: 995
+iteration: 10000  accuracy: 0.895  error: 309.874  set size: 976
+iteration: 11000  accuracy: 0.896  error: 278.258  set size: 929
+iteration: 12000  accuracy: 0.889  error: 294.467  set size: 925
+iteration: 13000  accuracy: 0.892  error: 268.059  set size: 915
+iteration: 14000  accuracy: 0.911  error: 259.195  set size: 905
+iteration: 15000  accuracy: 0.911  error: 230.775  set size: 902
+iteration: 16000  accuracy: 0.927  error: 235.142  set size: 918
+iteration: 17000  accuracy: 0.92  error: 222.972  set size: 933
+iteration: 18000  accuracy: 0.917  error: 233.356  set size: 922
+iteration: 19000  accuracy: 0.933  error: 232.156  set size: 981
+iteration: 20000  accuracy: 0.92  error: 227.294  set size: 964
+iteration: 21000  accuracy: 0.934  error: 230.053  set size: 899
+iteration: 22000  accuracy: 0.938  error: 200.278  set size: 905
+iteration: 23000  accuracy: 0.929  error: 201.882  set size: 879
+iteration: 24000  accuracy: 0.952  error: 193.749  set size: 858
+iteration: 25000  accuracy: 0.931  error: 219.757  set size: 902
+iteration: 26000  accuracy: 0.95  error: 179.394  set size: 919
+iteration: 27000  accuracy: 0.938  error: 185.08  set size: 893
+iteration: 28000  accuracy: 0.941  error: 185.31  set size: 889
+iteration: 29000  accuracy: 0.927  error: 189.442  set size: 880
+iteration: 30000  accuracy: 0.945  error: 199.667  set size: 919
+iteration: 31000  accuracy: 0.935  error: 188.867  set size: 928
+iteration: 32000  accuracy: 0.943  error: 171.26  set size: 920
+iteration: 33000  accuracy: 0.957  error: 170.098  set size: 932
+iteration: 34000  accuracy: 0.935  error: 168.67  set size: 890
+iteration: 35000  accuracy: 0.941  error: 171.623  set size: 871
+iteration: 36000  accuracy: 0.932  error: 167.723  set size: 839
+iteration: 37000  accuracy: 0.936  error: 164.263  set size: 844
+iteration: 38000  accuracy: 0.944  error: 174.488  set size: 874
+iteration: 39000  accuracy: 0.935  error: 167.408  set size: 837
+iteration: 40000  accuracy: 0.938  error: 177.733  set size: 822
+iteration: 41000  accuracy: 0.949  error: 181.371  set size: 882
+iteration: 42000  accuracy: 0.935  error: 172.196  set size: 857
+iteration: 43000  accuracy: 0.94  error: 185.285  set size: 882
+iteration: 44000  accuracy: 0.945  error: 166.324  set size: 852
+iteration: 45000  accuracy: 0.953  error: 167.582  set size: 846
+iteration: 46000  accuracy: 0.941  error: 179.561  set size: 866
+iteration: 47000  accuracy: 0.953  error: 168.933  set size: 889
+iteration: 48000  accuracy: 0.957  error: 155.964  set size: 915
+iteration: 49000  accuracy: 0.954  error: 170.108  set size: 864
+iteration: 50000  accuracy: 0.95  error: 146.846  set size: 871
+iteration: 51000  accuracy: 0.944  error: 161.816  set size: 862
+iteration: 52000  accuracy: 0.936  error: 154.393  set size: 873
+iteration: 53000  accuracy: 0.943  error: 158.537  set size: 879
+iteration: 54000  accuracy: 0.958  error: 158.558  set size: 844
+iteration: 55000  accuracy: 0.95  error: 166.968  set size: 898
+iteration: 56000  accuracy: 0.953  error: 149.405  set size: 879
+iteration: 57000  accuracy: 0.946  error: 152.225  set size: 859
+iteration: 58000  accuracy: 0.942  error: 169.777  set size: 862
+iteration: 59000  accuracy: 0.951  error: 168.661  set size: 889
+iteration: 60000  accuracy: 0.953  error: 169.237  set size: 887
+iteration: 61000  accuracy: 0.95  error: 158.232  set size: 877
+iteration: 62000  accuracy: 0.941  error: 179.875  set size: 862
+iteration: 63000  accuracy: 0.96  error: 153.668  set size: 895
+iteration: 64000  accuracy: 0.944  error: 152.484  set size: 885
+iteration: 65000  accuracy: 0.946  error: 159.093  set size: 901
+iteration: 66000  accuracy: 0.943  error: 141.923  set size: 923
+iteration: 67000  accuracy: 0.952  error: 159.55  set size: 898
+iteration: 68000  accuracy: 0.951  error: 154.304  set size: 885
+iteration: 69000  accuracy: 0.941  error: 156.362  set size: 897
+iteration: 70000  accuracy: 0.94  error: 174.186  set size: 913
+iteration: 71000  accuracy: 0.936  error: 186.848  set size: 899
+71892/71892  877/2000
+Testing
+iteration: 1984  accuracy: 0.950605  error: 165.767  set size: 877
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1886
+
+Accuracy: 0.950605
+Global Classifier ID: 63208
+
+real	247m35.352s
+user	247m24.868s
+sys	0m5.403s
