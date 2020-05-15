@@ -1212,3 +1212,176 @@ Global Classifier ID: 63208
 real	247m35.352s
 user	247m24.868s
 sys	0m5.403s
+
+
+# Three changes done after code review
+# 1. fitness/numerosity is replaced by fitness only for tournament selection and setting fitness of 2 selected child classifiers for GA
+# 2. Prediction, prediction error and fitness is only updated if crossover is done instead of always
+# 3. Prediction error reduction is changed from 1.0 to 0.25 as per paper
+# The result is the same after reverting 3rd change
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.661  error: 457.764  set size: 1045
+iteration: 2000  accuracy: 0.762  error: 413.27  set size: 1148
+iteration: 3000  accuracy: 0.748  error: 412.256  set size: 1259
+iteration: 4000  accuracy: 0.808  error: 402.385  set size: 1191
+iteration: 5000  accuracy: 0.811  error: 375.886  set size: 1057
+iteration: 6000  accuracy: 0.832  error: 366.27  set size: 930
+iteration: 7000  accuracy: 0.863  error: 326.514  set size: 899
+iteration: 8000  accuracy: 0.858  error: 325.546  set size: 870
+iteration: 9000  accuracy: 0.872  error: 334.001  set size: 858
+iteration: 10000  accuracy: 0.88  error: 340.491  set size: 824
+iteration: 11000  accuracy: 0.888  error: 300.006  set size: 832
+iteration: 12000  accuracy: 0.877  error: 311.787  set size: 819
+iteration: 13000  accuracy: 0.881  error: 313.978  set size: 800
+iteration: 14000  accuracy: 0.888  error: 277.991  set size: 806
+iteration: 15000  accuracy: 0.901  error: 273.643  set size: 803
+iteration: 16000  accuracy: 0.897  error: 263.898  set size: 781
+iteration: 17000  accuracy: 0.908  error: 265.95  set size: 781
+iteration: 18000  accuracy: 0.87  error: 284.707  set size: 788
+iteration: 19000  accuracy: 0.905  error: 256.791  set size: 802
+iteration: 20000  accuracy: 0.901  error: 275.457  set size: 799
+iteration: 21000  accuracy: 0.886  error: 249.002  set size: 768
+iteration: 22000  accuracy: 0.894  error: 254.353  set size: 785
+iteration: 23000  accuracy: 0.91  error: 251.139  set size: 783
+23964/23964  797/2000
+Testing
+iteration: 1984  accuracy: 0.896673  error: 287.893  set size: 796
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1779
+
+Accuracy: 0.896673
+Global Classifier ID: 16080
+
+real	89m59.458s
+user	77m51.886s
+sys	0m1.204s
+
+
+
+# now running with reverting last 2 changes
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.656  error: 475.796  set size: 1039
+iteration: 2000  accuracy: 0.759  error: 417.079  set size: 1147
+iteration: 3000  accuracy: 0.794  error: 385.469  set size: 1252
+iteration: 4000  accuracy: 0.802  error: 404.315  set size: 1201
+iteration: 5000  accuracy: 0.835  error: 357.372  set size: 1052
+iteration: 6000  accuracy: 0.818  error: 389.85  set size: 953
+iteration: 7000  accuracy: 0.873  error: 348.484  set size: 898
+iteration: 8000  accuracy: 0.859  error: 334.26  set size: 837
+iteration: 9000  accuracy: 0.873  error: 352.475  set size: 819
+iteration: 10000  accuracy: 0.884  error: 315.092  set size: 759
+iteration: 11000  accuracy: 0.873  error: 308.839  set size: 750
+iteration: 12000  accuracy: 0.879  error: 309.479  set size: 795
+iteration: 13000  accuracy: 0.89  error: 298.716  set size: 755
+iteration: 14000  accuracy: 0.894  error: 296.589  set size: 762
+iteration: 15000  accuracy: 0.89  error: 264.938  set size: 750
+iteration: 16000  accuracy: 0.898  error: 277.803  set size: 785
+iteration: 17000  accuracy: 0.892  error: 284.509  set size: 824
+iteration: 18000  accuracy: 0.902  error: 261.961  set size: 799
+iteration: 19000  accuracy: 0.899  error: 231.426  set size: 804
+iteration: 20000  accuracy: 0.89  error: 233.513  set size: 808
+iteration: 21000  accuracy: 0.92  error: 244.813  set size: 800
+iteration: 22000  accuracy: 0.924  error: 215.545  set size: 823
+iteration: 23000  accuracy: 0.915  error: 227.643  set size: 755
+23964/23964  739/2000
+Testing
+iteration: 1984  accuracy: 0.927923  error: 200.399  set size: 739
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1841
+
+Accuracy: 0.927923
+Global Classifier ID: 15805
+
+real	76m9.998s
+user	76m7.415s
+sys	0m1.156s
+
+
+# now running with improved mutation. delta and sign for every filter location
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.717  error: 411.862  set size: 1046
+iteration: 2000  accuracy: 0.822  error: 401.037  set size: 1159
+iteration: 3000  accuracy: 0.839  error: 360.632  set size: 1273
+iteration: 4000  accuracy: 0.812  error: 362.923  set size: 1199
+iteration: 5000  accuracy: 0.876  error: 335.866  set size: 1057
+iteration: 6000  accuracy: 0.871  error: 337.119  set size: 978
+iteration: 7000  accuracy: 0.883  error: 316.363  set size: 933
+iteration: 8000  accuracy: 0.897  error: 290.389  set size: 899
+iteration: 9000  accuracy: 0.893  error: 290.978  set size: 865
+iteration: 10000  accuracy: 0.922  error: 250.192  set size: 849
+iteration: 11000  accuracy: 0.921  error: 275.639  set size: 812
+iteration: 12000  accuracy: 0.904  error: 235.689  set size: 802
+iteration: 13000  accuracy: 0.911  error: 250.643  set size: 810
+iteration: 14000  accuracy: 0.91  error: 245.105  set size: 785
+iteration: 15000  accuracy: 0.921  error: 234.389  set size: 802
+iteration: 16000  accuracy: 0.919  error: 208.461  set size: 794
+iteration: 17000  accuracy: 0.905  error: 236.444  set size: 762
+iteration: 18000  accuracy: 0.921  error: 222.375  set size: 769
+iteration: 19000  accuracy: 0.922  error: 208.536  set size: 760
+iteration: 20000  accuracy: 0.921  error: 236.241  set size: 805
+iteration: 21000  accuracy: 0.922  error: 217.164  set size: 772
+iteration: 22000  accuracy: 0.924  error: 207.46  set size: 730
+iteration: 23000  accuracy: 0.939  error: 218.674  set size: 749
+23964/23964  744/2000
+Testing
+iteration: 1984  accuracy: 0.933468  error: 214.038  set size: 744
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1852
+
+Accuracy: 0.933468
+Global Classifier ID: 17802
+
+real	79m43.717s
+user	79m41.926s
+sys	0m1.145s

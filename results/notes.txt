@@ -1,0 +1,13 @@
+initial fitness .01
+fintess reduction .1
+check action  set subsumption
+
+prediction error reduction is 1 instead of .25 as in the paper
+
+
+still open question:
+why the fitness of classifiers with zero TP can be highest?
+wrong action: reward 0 , prediction 0 , accuracy high, fitness high?
+
+
+Todo: Revisit mutation and do + or - in every iteration

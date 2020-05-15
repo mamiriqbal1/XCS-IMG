@@ -358,6 +358,7 @@ ClassifierSet* getActionSet(int action, ClassifierSet *ms)  // constructs an act
  * @param reward The actual resulting reward after the execution of an action.
  */
  /*
+  * code review notes
   * The formulas are implemented in a slightly differnt form with same end result. Can be simplified as per the paper.
   */
 void updateActionSet(ClassifierSet **aset, double maxPrediction, double reward, ClassifierSet **pop, ClassifierSet **killset)
@@ -398,6 +399,10 @@ void updateActionSet(ClassifierSet **aset, double maxPrediction, double reward, 
 }
 
 // update the fitnesses of an action set (the previous [A] in multi-step envs or the current [A] in single-step envs.)
+/*
+ * code review notes
+ * correctly implementation
+ */
 void updateFitness(ClassifierSet *aset)
 {
     ClassifierSet *setp;
@@ -457,20 +462,21 @@ void discoveryComponent(ClassifierSet **set, ClassifierSet **pop, ClassifierSet 
     setTimeStamps(*set, itTime);
 
     selectTwoClassifiers(cl, parents, *set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
-    crossover(cl, situation); // do crossover on the two selected classifiers
+    if(crossover(cl, situation) || true){
+        cl[0]->prediction   = (cl[0]->prediction + cl[1]->prediction) / 2.0;
+        cl[0]->predictionError = predictionErrorReduction * ( (cl[0]->predictionError + cl[1]->predictionError) / 2.0 );
+        cl[0]->fitness = fitnessReduction * ( (cl[0]->fitness + cl[1]->fitness) / 2.0 );
+
+        cl[1]->prediction = cl[0]->prediction;
+        cl[1]->predictionError = cl[0]->predictionError;
+        cl[1]->fitness = cl[0]->fitness;
+    }
     for(i=0; i<2; i++)  // do mutation
     {
         mutation(cl[i], situation);
     }
 
-    cl[0]->prediction   = (cl[0]->prediction + cl[1]->prediction) / 2.0;
-    cl[0]->predictionError = predictionErrorReduction * ( (cl[0]->predictionError + cl[1]->predictionError) / 2.0 );
-    cl[0]->fitness = fitnessReduction * ( (cl[0]->fitness + cl[1]->fitness) / 2.0 );
     cl[0]->specificness = numberOfNonDontcares(cl[0]->condition);
-
-    cl[1]->prediction = cl[0]->prediction;
-    cl[1]->predictionError = cl[0]->predictionError;
-    cl[1]->fitness = cl[0]->fitness;
     cl[1]->specificness = numberOfNonDontcares(cl[1]->condition);
 
     // get the length of the population to check if clasifiers have to be deleted
@@ -546,7 +552,7 @@ void selectTwoClassifiers(Classifier **cl, Classifier **parents, ClassifierSet *
         cl[i]->predictionError = clp->predictionError;
         cl[i]->accuracy = clp->accuracy;
         cl[i]->specificness = clp->specificness;
-        cl[i]->fitness = clp->fitness/(double)clp->numerosity;
+        cl[i]->fitness = clp->fitness;
         cl[i]->numerosity = 1;
         cl[i]->experience = 0;
         cl[i]->actionSetSize = clp->actionSetSize;
@@ -600,7 +606,7 @@ Classifier* selectClassifierUsingTournamentSelection(ClassifierSet *set, int set
         {
             if(setp->classifier != notMe)
             {
-                if(fitness < setp->classifier->fitness/setp->classifier->numerosity)
+                if(fitness < setp->classifier->fitness)
                 {
                     for(j=0; j<setp->classifier->numerosity; j++)
                     {
@@ -608,7 +614,7 @@ Classifier* selectClassifierUsingTournamentSelection(ClassifierSet *set, int set
                         {
                             freeSet(&winnerSet);
                             addClassifierToPointerSet(setp->classifier, &winnerSet);
-                            fitness = setp->classifier->fitness/setp->classifier->numerosity;
+                            fitness = setp->classifier->fitness;
                             break; /* go to next classifier since this one is already a winner*/
                         }
                     }
@@ -631,7 +637,7 @@ Classifier* selectClassifierUsingTournamentSelection(ClassifierSet *set, int set
                 if(setp->classifier != notMe)   /* do not reselect the same classifier -> this only applies if forcedDifferentInTournament is set!*/
                 {
                     value = setp->classifier->predictionError;
-                    if(winnerSet==NULL || (!doGAErrorBasedSelect && fitness - selectTolerance <= setp->classifier->fitness/setp->classifier->numerosity) || (doGAErrorBasedSelect && fitness + selectTolerance * maxPayoff >= value))
+                    if(winnerSet==NULL || (!doGAErrorBasedSelect && fitness - selectTolerance <= setp->classifier->fitness) || (doGAErrorBasedSelect && fitness + selectTolerance * maxPayoff >= value))
                     {
                         /* if his fitness is worse then do not bother */
                         for(i=0; i<setp->classifier->numerosity; i++)
@@ -650,14 +656,14 @@ Classifier* selectClassifierUsingTournamentSelection(ClassifierSet *set, int set
                                     }
                                     else
                                     {
-                                        fitness = setp->classifier->fitness/setp->classifier->numerosity;
+                                        fitness = setp->classifier->fitness;
                                     }
                                     size=1;
                                 }
                                 else
                                 {
                                     /* another guy in the tournament */
-                                    if( (!doGAErrorBasedSelect && fitness + selectTolerance > setp->classifier->fitness/setp->classifier->numerosity) ||(doGAErrorBasedSelect && fitness - selectTolerance * maxPayoff < value))
+                                    if( (!doGAErrorBasedSelect && fitness + selectTolerance > setp->classifier->fitness) ||(doGAErrorBasedSelect && fitness - selectTolerance * maxPayoff < value))
                                     {
                                         /* both classifiers in tournament have a similar fitness/error */
                                         size += addClassifierToPointerSet(setp->classifier, &winnerSet);
@@ -674,7 +680,7 @@ Classifier* selectClassifierUsingTournamentSelection(ClassifierSet *set, int set
                                         }
                                         else
                                         {
-                                            fitness = setp->classifier->fitness/setp->classifier->numerosity;
+                                            fitness = setp->classifier->fitness;
                                         }
                                         size=1;
                                     }
@@ -765,8 +771,10 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
                 }
             }
         }
+        return true;
+    }else{
+        return false;
     }
-    return true;
 }
 
 
@@ -869,14 +877,14 @@ bool mutation_old(Classifier *clfr, float state[])
 
 void apply_filter_mutation(Leaf filter[], float state[])
 {
-
-    float delta = drand()*m;
-    if(drand() < 0.5){  // revert sign with 50% probability
-        delta *= -1;
-    }
+    float delta = 0;
 
     for(int i=0; i<numLeaf; i++){
-        if(drand() < pM) {
+        if(drand() < pM) {  // mutation based on mutation probability
+            delta = drand()*m;  // how much to mutate
+            if(drand() < 0.5){  // revert sign with 50% probability
+                delta *= -1;
+            }
             if(drand() < 0.5){
                 filter[i].lowerBound = roundRealValue(fmax(filter[i].lowerBound + delta, 0), precisionDigits);
             }else{
@@ -1835,7 +1843,7 @@ ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type)
         /* check the classifier set cls for the next maximum -> already inserted classifier are referenced by the NULL pointer */
         for( clsp=*cls, maxcl=NULL; clsp!=NULL; clsp=clsp->next )
         {
-            if(clsp->classifier!=NULL && (maxcl==NULL || ((type==0 && clsp->classifier->numerosity>max) || (type==1 && clsp->classifier->prediction>max) || (type==2 && clsp->classifier->fitness/clsp->classifier->numerosity > max) || (type==3 && -1.0*(clsp->classifier->predictionError) > max))))
+            if(clsp->classifier!=NULL && (maxcl==NULL || ((type==0 && clsp->classifier->numerosity>max) || (type==1 && clsp->classifier->prediction>max) || (type==2 && clsp->classifier->fitness > max) || (type==3 && -1.0*(clsp->classifier->predictionError) > max))))
             {
                 if(type==0)
                 {
@@ -1847,7 +1855,7 @@ ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type)
                 }
                 else if (type==2)
                 {
-                    max=clsp->classifier->fitness/clsp->classifier->numerosity;
+                    max=clsp->classifier->fitness;
                 }
                 else if(type==3)
                 {
