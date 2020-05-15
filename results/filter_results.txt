@@ -1385,3 +1385,61 @@ Global Classifier ID: 17802
 real	79m43.717s
 user	79m41.926s
 sys	0m1.145s
+
+
+
+
+# now reverted all three changes done initially. The only difference now is improved mutation
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_6_2000_nokb/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.698  error: 441.036  set size: 1050
+iteration: 2000  accuracy: 0.792  error: 417.031  set size: 1150
+iteration: 3000  accuracy: 0.784  error: 406.619  set size: 1279
+iteration: 4000  accuracy: 0.811  error: 380.32  set size: 1228
+iteration: 5000  accuracy: 0.837  error: 354.597  set size: 1133
+iteration: 6000  accuracy: 0.864  error: 342.429  set size: 1049
+iteration: 7000  accuracy: 0.842  error: 345.054  set size: 1026
+iteration: 8000  accuracy: 0.889  error: 299.276  set size: 998
+iteration: 9000  accuracy: 0.91  error: 296.167  set size: 1014
+iteration: 10000  accuracy: 0.895  error: 316.525  set size: 1017
+iteration: 11000  accuracy: 0.87  error: 287.734  set size: 1020
+iteration: 12000  accuracy: 0.923  error: 267.886  set size: 980
+iteration: 13000  accuracy: 0.921  error: 222.843  set size: 952
+iteration: 14000  accuracy: 0.916  error: 244.391  set size: 964
+iteration: 15000  accuracy: 0.916  error: 207.537  set size: 964
+iteration: 16000  accuracy: 0.923  error: 196.876  set size: 976
+iteration: 17000  accuracy: 0.906  error: 218.44  set size: 939
+iteration: 18000  accuracy: 0.917  error: 230.744  set size: 960
+iteration: 19000  accuracy: 0.929  error: 220.921  set size: 983
+iteration: 20000  accuracy: 0.924  error: 184.9  set size: 951
+iteration: 21000  accuracy: 0.939  error: 177.209  set size: 953
+iteration: 22000  accuracy: 0.915  error: 198.748  set size: 987
+iteration: 23000  accuracy: 0.925  error: 185.375  set size: 952
+23964/23964  935/2000
+Testing
+iteration: 1984  accuracy: 0.935484  error: 219.19  set size: 935
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1856
+
+Accuracy: 0.935484
+Global Classifier ID: 19327
+
+real	108m58.845s
+user	108m38.009s
+sys	0m6.754s
