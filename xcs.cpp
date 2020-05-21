@@ -212,6 +212,64 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
     freeSet(&mset);
 }
 
+// new unified single step using epsilon greedy strategy
+void doOneSingleStepProblem(ClassifierSet **population, DataSource *object, int counter, int img_id, int correct[], double sysError[]){
+
+    bool wasCorrect = false;
+    ClassifierSet *mset, *aset, *killset=NULL;
+
+    mset = getMatchSet(population,&killset,object->state,counter, object->action, img_id);
+    freeSet(&killset);
+    //cout<<"test2";
+    //getchar();
+    getPredictionArray(mset);
+
+    int actionWinner;
+    double reward;
+    bool explore = false;
+
+    if(drand() < epsilon){
+        explore = true;
+    }else{
+        explore = false;
+    }
+
+    if(explore) {
+        actionWinner = randomActionWinner();
+    }else{
+        actionWinner = bestActionWinner();
+    }
+    aset = getActionSet(actionWinner,mset);
+    reward = executeAction(actionWinner,object->action,wasCorrect);
+
+    updateActionSet(&aset,0.0,reward,population,&killset);
+    freeSet(&killset);
+
+    // apply GA only with exploration step
+    if(explore) {
+        discoveryComponent(&aset, population, &killset, counter, object->state);
+        freeSet(&killset);
+    }
+
+    // get best action for statistics
+    actionWinner = bestActionWinner();
+    reward = executeAction(actionWinner,object->action,wasCorrect);
+
+    if(wasCorrect)
+    {
+        correct[counter%testFrequency]=1;
+    }
+    else
+    {
+        correct[counter%testFrequency]=0;
+    }
+    sysError[counter%testFrequency] = absoluteValue(reward - getBestValue());
+
+    freeSet(&mset);
+    freeSet(&aset);
+}
+
+
 /*
  * Code review notes:
  * Instead of using epsilon-greedy strategy for exploration and exploitation, the code is doing
@@ -221,19 +279,17 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
  */
  void doOneSingleStepExperiment(ClassifierSet **population){  //Executes one single-step experiment monitoring the performance.
 
-    int explore=0;
     int correct[testFrequency];
     double sysError[testFrequency];
 
     DataSource *state = NULL;
     //int counter = 0;
     //int index = 0;
-    for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC+=explore)
+    for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC++)
     {
         int pop_size = getSetSize(*population);
         int pop_numerosity = getNumerositySum(*population);
         std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
-        explore = (explore+1)%2;
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
@@ -249,15 +305,9 @@ void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *objec
         std::cout<<std::endl;
         getchar();*/
 
-        if(explore==1)
-        {
-            doOneSingleStepProblemExplore(population,state,exploreProbC, img_id);
-        }
-        else
-        {
-            doOneSingleStepProblemExploit(population,state,exploreProbC, correct, sysError, img_id);
-        }
-        if(exploreProbC%testFrequency==0 && explore==0 && exploreProbC>0)
+        doOneSingleStepProblem(population,state,exploreProbC, img_id, correct, sysError);
+
+       if(exploreProbC%testFrequency==0 && exploreProbC>0)
         {
             writePerformance(*population,correct,sysError,exploreProbC);
         }

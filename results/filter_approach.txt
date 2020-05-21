@@ -59,3 +59,33 @@ Our next avenue is to work on transfer learning.
 
 Thank you very much.
 
+
+
+Generalization of rules:
+Total Training Images: 11982
+Class 0 images (digit 3): 6131
+Class 1 images (digit 8): 5851
+
+Total rules 877 (sum of numerosity = N = 2000)
+Average fitness 0.05
+Number of rules above average fitness: 272 (sum of numerosity = 1066
+
+Following are some observations about the rules:
+- Top 10 rules with highest fitness (from .51 to .30) have two kinds of rules.
+a. All rules have low prediction error
+b. There are 6 rules with with prediction value 0. Also they only match the images of opposite class (zero true positives). I think it is because these rules only appear in action set when the random action selected is opposite to that of actual class of the image.
+c. 4 rules have high prediction (almost equal to max prediction value) but they have very low true positive (close to or less than 1% only). 
+
+- If we look at the rules with highest true positive (from 42% to 21%) we wee
+a. Rules have low prediction error
+a. Rules have highest prediction (close to 1000)
+b. However the fitness is low (between .05 and .18)
+
+ Question is what kinds of rules are better, the  ones with high fitness but low true positive or with high true positive but low fitness.
+
+Please let me know if further analysis is to be done about the rules 
+
+I have shared the working sheet with you if you  want to see all the attributes of the rules. 
+
+
+

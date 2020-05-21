@@ -10,6 +10,6 @@ epochs=2
 # if max_problems are provided then epochs are ignored.
 max_problems=100
 test_frequency=1000
-analyze=yes
+analyze=no
 analyze_path=../cmake-build-debug/output_2_6_2000_nokb_save_optimized/analyze/
 testing=no

@@ -31,6 +31,7 @@ const double selectTolerance = 0.0;
 const char dontcare='#'; //The don't care symbol (normally '#')
 const float m_0 = 0.5; //to be used in mutation
 const float m = 0.1; // how much to mutuate one single ellel
+const float epsilon = 0.5; // the probability of exploration for epsilon greedy strategy
 
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).

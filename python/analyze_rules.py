@@ -107,9 +107,9 @@ good_attributes = attributes_np[good_index]
 # np.savetxt(base_path + 'analyze/good_filters.txt', good_filters, delimiter=',')
 # np.savetxt(base_path + 'analyze/good_actions.txt', good_actions, delimiter=',')
 # np.savetxt(base_path + 'analyze/good_attributes.txt', good_attributes, delimiter=',')
-np.savetxt(base_path + 'analyze/all_filters.txt', filters_np, delimiter=',')
-np.savetxt(base_path + 'analyze/all_actions.txt', actions_np, delimiter=',')
-np.savetxt(base_path + 'analyze/all_attributes.txt', attributes_np, delimiter=',')
-# count_matches_for_filter(good_filters, good_actions)
+# np.savetxt(base_path + 'analyze/all_filters.txt', filters_np, delimiter=',')
+# np.savetxt(base_path + 'analyze/all_actions.txt', actions_np, delimiter=',')
+# np.savetxt(base_path + 'analyze/all_attributes.txt', attributes_np, delimiter=',')
+count_matches_for_filter(good_filters, good_actions)
 
 print('done')
