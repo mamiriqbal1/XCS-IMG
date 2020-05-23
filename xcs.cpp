@@ -19,11 +19,6 @@
 #include "xcs.h"
 #include <algorithm>
 
-#include "xtensor/xtensor.hpp"
-#include "xtensor/xcsv.hpp"
-#include "xtensor/xview.hpp"
-
-
 
 //using namespace std;
 
@@ -593,7 +588,7 @@ void LoadConfig(char* file)
     }
 }
 
-
+/*
 void copy_filter_to_condition(Classifier *classifer, xt::xtensor<float, 1> filter)
 {
      Leaf *leaf = classifer->condition[0].leaf;
@@ -635,7 +630,7 @@ void count_matches_for_filters(xt::xtensor<float, 2> good_filters, xt::xtensor<f
         std::cout << good_actions(i,0) << " , " << matched << " , " << match_0 << " , " << match_1 << std::endl;
     }
 }
-
+*/
 
 void analyze_rules()
 {
@@ -650,15 +645,15 @@ void analyze_rules()
     updateRange(testingData,testNumInstances);
 
     // load good filters
-    std::ifstream filters_file;
-    filters_file.open(analyze_path + "all_filters.txt");
-    auto good_filters = xt::load_csv<float>(filters_file);
-    std::ifstream actions_file;
-    actions_file.open(analyze_path + "all_actions.txt");
-    auto good_actions = xt::load_csv<float>(actions_file);
+//    std::ifstream filters_file;
+//    filters_file.open(analyze_path + "all_filters.txt");
+//    auto good_filters = xt::load_csv<float>(filters_file);
+//    std::ifstream actions_file;
+//    actions_file.open(analyze_path + "all_actions.txt");
+//    auto good_actions = xt::load_csv<float>(actions_file);
 
 
-    count_matches_for_filters(good_filters, good_actions);
+    //count_matches_for_filters(good_filters, good_actions);
 
 
 
