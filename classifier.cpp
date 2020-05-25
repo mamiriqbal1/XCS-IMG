@@ -221,34 +221,27 @@ void createMatchingCondition(CodeFragment cond[], float state[])
     //printf("in.......\n");
     for(int i=0; i<clfrCondLength; i++)
     {
-        if(drand()<P_dontcare)
+       CodeFragment tempCF;
+        do
         {
-            memmove(&cond[i],&dontcareCF,sizeof(CodeFragment));
+            //ramped half-and-half, check end for sanity only
+
+            //std::cout<<getNumPreviousCFs();
+            tempCF = createNewCF(getNumPreviousCFs()+countNewCFs);
+            opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
+            validateDepth(tempCF.codeFragment,end); //validate depth
+            /////////////
+            tempCF = addLeafCF(tempCF, state);
+            //std::cout<<"No of eval: "<<coun++<<"\n";
+            //printCF(tempCF);
+
+            /////////////
         }
-        else
-        {
-            CodeFragment tempCF;
-            do
-            {
-                //ramped half-and-half, check end for sanity only
-
-                //std::cout<<getNumPreviousCFs();
-                tempCF = createNewCF(getNumPreviousCFs()+countNewCFs);
-                opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
-                validateDepth(tempCF.codeFragment,end); //validate depth
-                /////////////
-                tempCF = addLeafCF(tempCF, state);
-                //std::cout<<"No of eval: "<<coun++<<"\n";
-                //printCF(tempCF);
-
-                /////////////
-            }
-            while( evaluateCF(tempCF,state)!=1 );
+        while( evaluateCF(tempCF,state)!=1 );
 //            coun  = 0;
-            //while( evaluateCF(tempCF.codeFragment,state)!=1 );
-            memmove(&cond[i],&tempCF,sizeof(CodeFragment));
-            countNewCFs++;
-        }
+        //while( evaluateCF(tempCF.codeFragment,state)!=1 );
+        memmove(&cond[i],&tempCF,sizeof(CodeFragment));
+        countNewCFs++;
     }
     //printf("out.......\n");
 }
@@ -756,6 +749,9 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
 //    twoPointCrossover(cl);
 //    return true;
 
+    // todo: disable crossover for now. It should probably be implemented at codefragment level instead of filter level
+    return false;
+/*
     Leaf previous1[numLeaf];
     Leaf previous2[numLeaf];
     if(drand() < pX) {
@@ -775,6 +771,7 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
     }else{
         return false;
     }
+*/
 }
 
 
@@ -860,6 +857,7 @@ void twoPointCrossover(Classifier **cl){  // Crosses the two received classifier
  * If niche mutation is applied, 'state' is considered to constrain mutation.
  * returns if the condition was changed.
  */
+/*
 bool mutation_old(Classifier *clfr, float state[])
 {
     bool changedCond = false, changedAct = false;
@@ -874,6 +872,7 @@ bool mutation_old(Classifier *clfr, float state[])
     changedAct = mutateAction(clfr);
     return (changedCond || changedAct);
 }
+*/
 
 void apply_filter_mutation(Leaf filter[], float state[])
 {
@@ -898,6 +897,8 @@ void apply_filter_mutation(Leaf filter[], float state[])
 
 bool mutation(Classifier *clfr, float state[])
 {
+    // todo: disable mutation for now while introducing filters at leaves
+/*
     Leaf previous[numLeaf];
 
     for(int i=0; i<clfrCondLength; i++){
@@ -911,6 +912,7 @@ bool mutation(Classifier *clfr, float state[])
     }
 
     return true;
+*/
 }
 
 
@@ -954,6 +956,7 @@ bool applyNicheMutation(Classifier *clfr, float state[])
    return changed;
 }
 
+/*
 // copy of original and using first alternative
 // Mutation code copied from XCSR code Hassan, although not being used even in that paper
 bool applyNicheMutation1(Classifier *clfr, float state[])
@@ -993,7 +996,9 @@ bool applyNicheMutation1(Classifier *clfr, float state[])
 
    return changed;
 }
+*/
 
+/*
 // copy of original and using 2nd alternative
 /////////// original code as per LML paper of Hassan /////////////////
 bool applyNicheMutation2(Classifier *clfr, float state[])
@@ -1034,12 +1039,13 @@ bool applyNicheMutation2(Classifier *clfr, float state[])
     }
     return changed;
 }
-
+*/
 
 /**
  * Mutates the condition of the classifier. If one allele is mutated depends on the constant pM.
  * This mutation is a general mutation.
  */
+/*
 bool applyGeneralMutation(Classifier *clfr, float state[])
 {
     bool changed = false;
@@ -1071,6 +1077,8 @@ bool applyGeneralMutation(Classifier *clfr, float state[])
     }
     return changed;
 }
+*/
+
 bool mutateAction(Classifier *clfr)  //Mutates the action of the classifier.
 {
     bool changed = false;
@@ -1275,22 +1283,23 @@ void subsumeCFs(Classifier *clfr, float state[])
     }
 }
 
-bool is_filter_general(Leaf filter_general[], Leaf filter_to_check[])
+bool is_filter_general(Filter* filter_general, Filter* filter_to_check)
 {
     int filter_size = (int)sqrt(numLeaf);  // filter size
     for(int i=0; i<filter_size*filter_size; i++){
 
-            if(filter_to_check[i].lowerBound<filter_general[i].lowerBound || filter_to_check[i].upperBound > filter_general[i].upperBound){
+            if(filter_to_check->lower_bounds[i] < filter_general->lower_bounds[i]
+            || filter_to_check->upper_bounds[i] > filter_general->upper_bounds[i]){
                 return false;
             }
     }
     return true;
 }
 
-bool is_filter_covered_by_condition(Leaf filter_to_check[], CodeFragment code_fragments[])
+bool is_filter_covered_by_condition(Filter* filter_to_check, CodeFragment code_fragments[])
 {
     for(int i=0; i<clfrCondLength; i++){
-        if(is_filter_general(code_fragments[i].leaf, filter_to_check)){
+        if(is_filter_general(code_fragments[i].filter, filter_to_check)){
            return true;
         }
     }
@@ -1308,7 +1317,7 @@ bool is_filter_covered_by_condition(Leaf filter_to_check[], CodeFragment code_fr
  {
      for(int i=0; i<clfrCondLength; i++)
      {
-         if(!is_filter_covered_by_condition(clfr2->condition[i].leaf, clfr1->condition)){
+         if(!is_filter_covered_by_condition(clfr2->condition[i].filter, clfr1->condition)){
              return false;
          }
      }
@@ -1629,6 +1638,7 @@ void freeClassifierSet(ClassifierSet **cls)
  */
 void freeClassifier(Classifier *cl)
 {
+    //delete [] cl->condition->filter;
     free(cl);
 }
 

@@ -2,7 +2,7 @@
 #include "configuration.h"
 #include "classifier.h"
 
-const CodeFragment dontcareCF = {{0,0,OPNOT,OPOR,OPNOP,OPNOP,OPNOP,OPNOP},{0,0,0,0},-1}; //dontcareCF: it is just for completeness, not evaluated at all. It's output value is always 1.
+//const CodeFragment dontcareCF = {{0,0,OPNOT,OPOR,OPNOP,OPNOP,OPNOP,OPNOP},{0,0,0,0},-1}; //dontcareCF: it is just for completeness, not evaluated at all. It's output value is always 1.
 //const CodeFragment dontcareCF = {{OPUNITY,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP},-1}; //dontcareCF: it is just for completeness, not evaluated at all. It's output value is always 1.
 CodeFragment addLeafCF(CodeFragment cf, float state[]);
 bool equalTwoLeaf(Leaf lf1, Leaf lf2);

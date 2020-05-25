@@ -99,7 +99,8 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
                 //int length = strlen(pch);
                 //std::cout<<"\n"<<length<<"\n";
                 //std::cout<<pch;
-                previousCF.leaf[lfNum] = leafNode(pch);
+                // todo: loading of previous CF to be adapted
+                //previousCF.leaf[lfNum] = leafNode(pch);
                 previousCF.codeFragment[i++] = lfNum;
                 lfNum++;
                 //std::cout<<"Pch with D: "<<pch<<std::endl;
@@ -222,6 +223,17 @@ bool isExists(CodeFragment newCF, CodeFragment cfPopulation[], int numCFs)
     }
     return false;
 }
+
+bool equal_two_filters(const Filter& f1, const Filter& f2)
+{
+    for(int i=0; i<filter_size*filter_size; i++){
+        if(f1.lower_bounds[i] != f2.lower_bounds[i] || f1.upper_bounds[i] != f2.upper_bounds[i]){
+            return false;
+        }
+    }
+    return true;
+}
+
 bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
 {
 
@@ -231,8 +243,7 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-            //std::cout<<"e"<<std::endl;
-                if(!equalTwoLeaf(cf1.leaf[cf1.codeFragment[i]], cf2.leaf[cf2.codeFragment[i]]))
+                if(!equal_two_filters(cf1.filter[cf1.codeFragment[i]], cf2.filter[cf2.codeFragment[i]]))
                     return false;
             }
         }else
@@ -243,19 +254,15 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
 
     return true;
 }
-bool equalTwoLeaf(Leaf lf1, Leaf lf2)
+
+bool is_more_general_filter(const Filter& general, const Filter& specific)
 {
-    if(lf1.featureNumber == lf2.featureNumber)
-    {
-        if(lf1.lowerBound==lf2.lowerBound && lf1.upperBound==lf2.upperBound)
-        {
-            return true;
-        }
-        else
+    for(int i=0; i<filter_size*filter_size; i++){
+        if(general.lower_bounds[i] > specific.lower_bounds[i] || general.upper_bounds[i] < specific.upper_bounds[i]){
             return false;
+        }
     }
-    else
-        return false;
+    return true;
 }
 
 // function added by me in new code
@@ -268,8 +275,7 @@ bool isGeneralCF(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-            //std::cout<<"e"<<std::endl;
-                if(!isMoreGeneralLeaf(cf1.leaf[cf1.codeFragment[i]], cf2.leaf[cf2.codeFragment[i]]))
+                if(!is_more_general_filter(cf1.filter[cf1.codeFragment[i]], cf2.filter[cf2.codeFragment[i]]))
                     return false;
             }
         }
@@ -282,36 +288,6 @@ bool isGeneralCF(CodeFragment cf1, CodeFragment cf2)
     return true;
 }
 
-// function added by me in new code
-bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2)
-{
-    if(lf1.featureNumber == lf2.featureNumber)
-    {
-        if( (lf1.lowerBound<lf2.lowerBound && lf1.upperBound>=lf2.upperBound) || (lf1.lowerBound<=lf2.lowerBound && lf1.upperBound>lf2.upperBound) )
-        //if(lf1.lowerBound==lf2.lowerBound && lf1.upperBound==lf2.upperBound)
-        {
-            return true;
-        }
-        else
-            return false;
-    }
-    else
-        return false;
-}
-
-/*
-bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
-{
-    for(int i=0; i<cfMaxLength; i++)
-    {
-        if(cf1.codeFragment[i] != cf2.codeFragment[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-*/
 int getNumPreviousCFs()
 {
     return numPreviousCFs;
@@ -344,8 +320,9 @@ void printCF(CodeFragment cf)
     {
         if (cf.codeFragment[j]>=0 && cf.codeFragment[j]<numLeaf)
         {
-            temp = leafname(cf.leaf[cf.codeFragment[j]]);
-            printf("%s ",temp);
+            // todo: to be revisited
+            //temp = "leaf name tbd"; // leafname(cf.leaf[cf.codeFragment[j]]);
+            printf("%s ","leaf name revisit");
         }
         else
         {
@@ -507,11 +484,12 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
     delete[] previousCFPopulation;
 }
 
-// new function that randomly selects a position on filter and create a matching filter at that position
-CodeFragment addLeafCF(CodeFragment cf, float state[]){
+// new function for setting filter bounds
+void set_filter_bounds(Filter& filter, float state[])
+{
     // randomly selects a position in the image to create filter bounds
-    int filter_size = (int)sqrt(numLeaf);  // filter size
-    float pixel_values[numLeaf];
+    //int filter_size = (int)sqrt(numLeaf);  // filter size
+    float pixel_values[filter_size*filter_size];
     float sum = 0;
     do{
         sum = 0;
@@ -527,131 +505,83 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
         }
     }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
 
-    int leafNum = 0;
-    for(int i=0; i<cfMaxLength; i++)
-    {
+    for(int i=0; i<filter_size*filter_size; i++){
+        float delta = drand();
+        filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
+        filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
+    }
+
+}
+
+// new function that randomly selects a position on filter and create a matching filter at that position
+CodeFragment addLeafCF(CodeFragment cf, float state[]){
+
+    // count number of leaves
+    int count = 0;
+    for(int i=0; i<cfMaxLength; i++){
         const opType opcode = cf.codeFragment[i];
-        //printf("%d ",opcode);
         if(opcode == OPNOP)
         {
             break;
         }
         if(0<=opcode && opcode<condLength)  //condition bit
         {
-            cf.leaf[leafNum].featureNumber = opcode;
-            float delta = drand();
-            cf.leaf[leafNum].lowerBound = roundRealValue(fmax(pixel_values[leafNum] - delta, 0), precisionDigits);
-            cf.leaf[leafNum].upperBound = roundRealValue(fmin(pixel_values[leafNum]+delta, 1),precisionDigits);
+            count++;
+        }
+    }
+    cf.num_filters = count;
+    //cf.filter = new Filter[count];
+
+    int leafNum = 0;
+    for(int i=0; i<cfMaxLength; i++)
+    {
+        const opType opcode = cf.codeFragment[i];
+        if(opcode == OPNOP)
+        {
+            break;
+        }
+        if(0<=opcode && opcode<condLength)  //condition bit
+        {
             cf.codeFragment[i] = leafNum;
+            set_filter_bounds(cf.filter[leafNum], state);
             leafNum++;
         }
     }
     return cf;
 }
 
-
-
-CodeFragment addLeafCF_old(CodeFragment cf, float state[]){
-    int leafNum = 0;
-    for(int i=0; i<cfMaxLength; i++)
-    {
-        const opType opcode = cf.codeFragment[i];
-        //printf("%d ",opcode);
-        if(opcode == OPNOP)
-        {
-            break;
+bool evaluate_filter(const Filter& filter, float state[])
+{
+    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
+    int k = 0;
+    int l = 0;
+    for(int i=0; i<image_height - filter_size; i++){
+        for(int j=0; j<image_width - filter_size; j++){
+            match_failed = false;
+            for(k=0; k<filter_size && !match_failed; k++){
+                for(l=0; l<filter_size && !match_failed; l++){
+                    if(state[i*image_width+j + k*image_width+l] < filter.lower_bounds[k*filter_size+l]
+                    || state[i*image_width+j + k*image_width+l] > filter.upper_bounds[k*filter_size+l]){
+                        match_failed = true;
+                    }
+                }
+            }
+            if(!match_failed){
+                return true;
+            }
         }
-        if(0<=opcode && opcode<condLength)  //condition bit
-        {
-            cf.leaf[leafNum].featureNumber = opcode;
-            float lower = drand();
-            float upper = drand();
-            if(lower<=upper)
-            {
-                cf.leaf[leafNum].lowerBound = roundRealValue(lower,precisionDigits);
-                cf.leaf[leafNum].upperBound = roundRealValue(upper,precisionDigits);
-            }
-            else
-            {
-                cf.leaf[leafNum].lowerBound = roundRealValue(upper,precisionDigits);
-                cf.leaf[leafNum].upperBound = roundRealValue(lower,precisionDigits);
-            }
-            cf.codeFragment[i] = leafNum;
-            leafNum++;
-        }/*
-        if(opcode>=condLength)
-        {
-            cf.leaf[leafNum].featureNumber = opcode;
-            cf.codeFragment[i] = leafNum;
-            leafNum++;
-        }*/
-
     }
-return cf;
-
+    return false;
 }
 
-
-// function modified to consider state while adding leafs
-CodeFragment addLeafCF_new(CodeFragment cf, float state[]){
-
-    int width = 28;  // image width
-    int height = 28;
-    int size = (int)sqrt(numLeaf);  // filter size
-    int index[size*size];  // index for holding the pixel numbers for creating filter.
-
-    // randomly select a location in the image for creating a filter
-    int horizontal_location = irand(width-size);
-    int vertical_location = irand(height-size);
-    int index_i = 0;
-    // TBD reverse x and y loops
-    for(int y=vertical_location; y<vertical_location + size; y++){
-        for(int x=horizontal_location; x<horizontal_location + size; x++){
-            index[index_i] = y*width+x;
-            float value = state[y*width+x];
-            float delta = drand()/4;
-            float lower = std::fmax(0.0, value - delta);
-            float upper = std::fmin(1.0, value + delta);
-            cf.leaf[index_i].lowerBound = roundRealValue(lower,precisionDigits);
-            cf.leaf[index_i].upperBound = roundRealValue(upper,precisionDigits);
-            index_i++;
-        }
-    }
-
-
-    int leafNum = 0;
-    for(int i=0; i<cfMaxLength; i++)
-    {
-        const opType opcode = cf.codeFragment[i];
-        if(opcode == OPNOP)
-        {
-            break;
-        }
-        if(0<=opcode && opcode<condLength)  //condition bit
-        {
-            cf.leaf[leafNum].featureNumber = opcode;
-            cf.codeFragment[i] = leafNum;
-            leafNum++;
-        }
-    }
-
-
-    return cf;
-}
-
-
-int evaluateCF_old(CodeFragment cf, float state[]){
-    //printCF(cf);
+int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
     int stack[cfMaxStack];
     stack[0] = 0;
     int SP = 0;
     int tmptmpfval1 = 0;
-    //int x = 0;
     for(int i=0; /*i<cfMaxLength*/; i++)
     {
         const opType opcode = cf.codeFragment[i];
-        //std::cout<<"opcode no: "<<opcode<<"\n";
-        //printf("%d ",opcode);
         if(opcode == OPNOP)
         {
             break;
@@ -665,7 +595,8 @@ int evaluateCF_old(CodeFragment cf, float state[]){
         else if(0<=opcode && opcode<numLeaf)  //condition bit
         {
 
-            if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
+            //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
+            if(evaluate_filter(cf.filter[opcode], state))
             {
                 stack[SP++] = 1;   //changed
             }
@@ -695,7 +626,7 @@ int evaluateCF_old(CodeFragment cf, float state[]){
             case OPNAND:
                 stack[SP++] = (sp1&&sp2)?0:1;
                 break;
-            case OPNOR:
+                case OPNOR:
                 stack[SP++] = (sp1||sp2)?0:1;
                 break;
             }//end switch
@@ -708,7 +639,7 @@ int evaluateCF_old(CodeFragment cf, float state[]){
     return value;
 }
 
-
+/*
 int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
     // if cl_id or img_id is -1 then do not check evaluation  map otherwise check for prior results
     if(cl_id >=0 and img_id >=0){
@@ -749,6 +680,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
     }
     return return_value;
 }
+*/
 
 bool isPreviousLevelsCode(const opType code){
     if(use_kb)
@@ -962,7 +894,9 @@ void outprog(CodeFragment prog, int size, FILE *fp){
         code = prog.codeFragment[j];
         if(0<=code && code<numLeaf)
         {
-            temp = leafInterval(prog.leaf[code]);
+            // todo: printing for filiter to be implemented
+            temp = new char[strlen("filter to be printed") + 1];
+            strcpy(temp, "filter to be printed");
 
             //temp = "D"+leafDes;
             //sprintf(temp,"D%d ",leafDes);

@@ -1,0 +1,12 @@
+train_file_name=../data/mnist/mnist_train_3_8_small_1000.txt
+test_file_name=../data/mnist/mnist_test_3_8_small_200.txt
+num_actions=2
+use_kb=no
+kb_file=output/kb_file.txt
+output_path=output_2_2_small/
+max_population_size=200
+# ecpochs are multiplied by number of training examples to calculate total problems to be presented
+epochs=6
+# if max_problems are provided then epochs are ignored.
+# max_problems=4000
+test_frequency=1000

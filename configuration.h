@@ -31,12 +31,13 @@ const char featureFileName[] = "feature_codefragments.txt";
 const char ruleFileName[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
-const int cfMaxDepth = 4;
-const int cfMinDepth = 4;
-const int cfMaxLength = 32;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
+const int cfMaxDepth = 0;
+const int cfMinDepth = 0;
+const int cfMaxLength = 2;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
-const int numLeaf = 16;
+const int numLeaf = 1;
+const int filter_size = 4;  // 3 for 3x3, 5 for 5x5 etc.
 
 typedef int opType;
 const int opSize = sizeof(opType);
@@ -52,6 +53,10 @@ const opType OPNOT = -105;
 const int totalFunctions = 1;
 const opType functionCodes[] = {OPAND};
 
+struct Filter{
+    float lower_bounds[filter_size*filter_size];
+    float upper_bounds[filter_size*filter_size];
+};
 
 struct Leaf
 {
@@ -63,7 +68,9 @@ struct Leaf
 struct CodeFragment
 {
     opType codeFragment[cfMaxLength];
-    Leaf leaf[numLeaf];
+    //Leaf leaf[numLeaf];
+    int num_filters; // equal to number of leaves to be determined at run time
+    Filter filter[numLeaf];
     int cfID;
 };
 
