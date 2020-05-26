@@ -18,4 +18,4 @@ add_executable(RCFC_kb
         xcs.cpp
         xcs.h
         xcsMacros.cpp
-        xcsMacros.h)
+        xcsMacros.h filter_list.cpp filter_list.h)

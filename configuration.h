@@ -1,3 +1,10 @@
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
+
+#include <string>
+#include <forward_list>
+#include "xcsMacros.h"
+
 extern bool use_kb;
 extern std::string kb_file;
 extern std::string output_path;
@@ -19,8 +26,7 @@ const int run = 1;
 //const char inputFile[] = "features1.txt";
 extern std::string inputTrainingFile; //[] = "../data/mnist/3_8_train_mnist.txt";
 extern std::string inputTestFile; //[] = "../data/mnist/3_8_test_mnist.txt";
-//const char testFile[] = "";
-extern bool Testing;
+//const char testFile[] = ""; extern bool Testing;
 //const int currentProblemLevel = 1; //must be set coz previous level and current level file names are adjusted
 
 const int precisionDigits = 2;
@@ -53,9 +59,18 @@ const opType OPNOT = -105;
 const int totalFunctions = 1;
 const opType functionCodes[] = {OPAND};
 
+
 struct Filter{
+    int id=-1; // uninitialized value
     float lower_bounds[filter_size*filter_size];
     float upper_bounds[filter_size*filter_size];
+};
+
+struct FilterList{
+    std::forward_list<Filter> filters;
+    int gid = 0;
+    int max_size_limit = N_filter_ol;
+    float fitness = 1.0; // initial fitness of the filter
 };
 
 struct Leaf
@@ -71,6 +86,7 @@ struct CodeFragment
     //Leaf leaf[numLeaf];
     int num_filters; // equal to number of leaves to be determined at run time
     Filter filter[numLeaf];
+    int filter_id[numLeaf];
     int cfID;
 };
 
@@ -106,3 +122,4 @@ struct DataSource{
 };
 
 
+#endif //CONFIGURATION_H

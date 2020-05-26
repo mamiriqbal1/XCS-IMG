@@ -9,11 +9,9 @@ still open question:
 why the fitness of classifiers with zero TP can be highest?
 wrong action: reward 0 , prediction 0 , accuracy high, fitness high?
 
+Investigation required:
+Why the accuracy is either 1 or less than .09?
 
-/*
- * Code review notes:
- * Instead of using epsilon-greedy strategy for exploration and exploitation, the code is doing
- * only exploration. However it always performs a second pass for monitoring the performance.
- * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
- * modified to calculate training and validation accuracies after every epoch.
- */
+todo:
+potential infinite loop in mutation and crossover to be handled
+mutation probability is being used at allele level, it should be at higher level?

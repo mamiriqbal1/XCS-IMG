@@ -10,6 +10,7 @@
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "env.h"
+#include "filter_list.h"
 #include <boost/functional/hash.hpp>
 #include <unordered_map>
 #include <utility>
@@ -320,7 +321,7 @@ void printCF(CodeFragment cf)
     {
         if (cf.codeFragment[j]>=0 && cf.codeFragment[j]<numLeaf)
         {
-            // todo: to be revisited
+            // todo: printing of CF to be revisited
             //temp = "leaf name tbd"; // leafname(cf.leaf[cf.codeFragment[j]]);
             printf("%s ","leaf name revisit");
         }
@@ -485,7 +486,7 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
 }
 
 // new function for setting filter bounds
-void set_filter_bounds(Filter& filter, float state[])
+void create_new_filter_from_input(Filter& filter, float *state)
 {
     // randomly selects a position in the image to create filter bounds
     //int filter_size = (int)sqrt(numLeaf);  // filter size
@@ -543,7 +544,11 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
         if(0<=opcode && opcode<condLength)  //condition bit
         {
             cf.codeFragment[i] = leafNum;
-            set_filter_bounds(cf.filter[leafNum], state);
+            create_new_filter_from_input(cf.filter[leafNum], state);
+            // todo: remove cf.filter array as it is replaced by cf.filter_id array
+//            Filter new_filter;
+//            create_new_filter_from_input(new_filter, state);
+//            cf.filter_id[i] = add_filter(new_filter);
             leafNum++;
         }
     }
@@ -626,7 +631,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
             case OPNAND:
                 stack[SP++] = (sp1&&sp2)?0:1;
                 break;
-                case OPNOR:
+            case OPNOR:
                 stack[SP++] = (sp1||sp2)?0:1;
                 break;
             }//end switch

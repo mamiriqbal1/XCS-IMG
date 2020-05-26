@@ -23,7 +23,7 @@ void setInitialVariables(Classifier *clfr, double setSize, int time){
     clfr->fitness = fitnessIni;
     clfr->numerosity = 1;
     clfr->experience = 0;
-    clfr->actionSetSize = setSize;
+    clfr->actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
     clfr->timeStamp = time;
     clfr->specificness = numberOfNonDontcares(clfr->condition);
 }
@@ -131,13 +131,13 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
                 for(int j=0; j<add; j++) {
                     coverClfr = matchingCondAndSpecifiedAct(state, i, setSize + 1, itTime);
                     // before inserting the new classifier into the population check for subsumption by a generic one
-                    // todo: setSize and popSize needs to be incremented in case of subsumption?
                     if(!subsumeClassifierToSet(coverClfr,*population)) {
                         addNewClassifierToSet(coverClfr, &mset);
-                        setSize++;
                         addNewClassifierToSet(coverClfr, population);
-                        popSize++;
                     }
+                    // increment popSize regardless of subsumptionn
+                    setSize++;
+                    popSize++;
                 }
             }
         }
@@ -455,6 +455,8 @@ void discoveryComponent(ClassifierSet **set, ClassifierSet **pop, ClassifierSet 
     setTimeStamps(*set, itTime);
 
     selectTwoClassifiers(cl, parents, *set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
+    // Prediction, prediction error and fitness is only updated if crossover is done instead of always
+    // (this is reverted because of slightly decreased performance)
     if(crossover(cl, situation) || true){
         cl[0]->prediction   = (cl[0]->prediction + cl[1]->prediction) / 2.0;
         cl[0]->predictionError = predictionErrorReduction * ( (cl[0]->predictionError + cl[1]->predictionError) / 2.0 );
@@ -724,7 +726,7 @@ Classifier* selectClassifierUsingRWS(ClassifierSet *set, double fitsum)
 
 // ########################## crossover and mutation ########################################
 
-void crossover_filter(Leaf parent1[], Leaf parent2[])
+void crossover_filter(Filter& parent1, Filter& parent2)
 {
     int point1 = irand(numLeaf);
     int point2 = irand(numLeaf);
@@ -735,43 +737,38 @@ void crossover_filter(Leaf parent1[], Leaf parent2[])
         point2 = temp;
     }
 
-    Leaf temp;
+    float temp_lower, temp_upper;
     for(int i=point1; i<point2; i++){
-        memmove(&temp, &parent1[i], sizeof(Leaf));
-        memmove(&parent1[i], &parent2[i],  sizeof(Leaf));
-        memmove(&parent2[i], &temp, sizeof(Leaf));
+        temp_lower = parent1.lower_bounds[i];
+        temp_upper = parent1.upper_bounds[i];
+        parent1.lower_bounds[i] = parent2.lower_bounds[i];
+        parent1.upper_bounds[i] = parent2.upper_bounds[i];
+        parent2.lower_bounds[i] = temp_lower;
+        parent2.upper_bounds[i] = temp_upper;
     }
 }
 
 
 bool crossover(Classifier **cl, float situation[])  // Determines if crossover is applied and calls then the selected crossover type.
 {
-//    twoPointCrossover(cl);
-//    return true;
 
-    // todo: disable crossover for now. It should probably be implemented at codefragment level instead of filter level
-    return false;
-/*
-    Leaf previous1[numLeaf];
-    Leaf previous2[numLeaf];
+    Filter previous1, previous2;
     if(drand() < pX) {
         for (int i = 0; i < clfrCondLength; i++) {
-            if (!isDontcareCF(cl[0]->condition[i]) && !isDontcareCF(cl[1]->condition[i])) {
-                memmove(&previous1, &cl[0]->condition[i].leaf, sizeof(previous1));
-                memmove(&previous2, &cl[1]->condition[i].leaf, sizeof(previous2));
-                crossover_filter(cl[0]->condition[i].leaf, cl[1]->condition[i].leaf);
-                // revert if the resultant classifiers do not satisfies the situation
-                if(!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)){
-                    memmove(&cl[0]->condition[i].leaf, &previous1, sizeof(previous1));
-                    memmove(&cl[1]->condition[i].leaf, &previous2, sizeof(previous2));
-                }
+            previous1 = cl[0]->condition->filter[0];
+            previous2 = cl[i]->condition->filter[0];
+            // todo: crossover implemented for only one filter for now
+            crossover_filter(cl[0]->condition[i].filter[0], cl[1]->condition[i].filter[0]);
+            // revert if the resultant classifiers do not satisfies the situation
+            if(!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)){
+                cl[0]->condition->filter[0] = previous1;
+                cl[i]->condition->filter[0] = previous2;
             }
         }
         return true;
     }else{
         return false;
     }
-*/
 }
 
 
@@ -874,47 +871,41 @@ bool mutation_old(Classifier *clfr, float state[])
 }
 */
 
-void apply_filter_mutation(Leaf filter[], float state[])
+void apply_filter_mutation(Filter& filter, float state[])
 {
     float delta = 0;
 
-    for(int i=0; i<numLeaf; i++){
+    for(int i=0; i<filter_size*filter_size; i++){
+        // todo: pM should be used only to initiate mutation. Prob of mutating each elle should be less?
         if(drand() < pM) {  // mutation based on mutation probability
             delta = drand()*m;  // how much to mutate
             if(drand() < 0.5){  // revert sign with 50% probability
                 delta *= -1;
             }
             if(drand() < 0.5){
-                filter[i].lowerBound = roundRealValue(fmax(filter[i].lowerBound + delta, 0), precisionDigits);
+                filter.lower_bounds[i] = roundRealValue(fmax(filter.lower_bounds[i] + delta, 0), precisionDigits);
             }else{
-                filter[i].upperBound = roundRealValue( fmin( filter[i].upperBound + delta, 1), precisionDigits);
+                filter.upper_bounds[i] = roundRealValue( fmin( filter.upper_bounds[i] + delta, 1), precisionDigits);
             }
         }
     }
-
-
 }
 
 bool mutation(Classifier *clfr, float state[])
 {
     // todo: disable mutation for now while introducing filters at leaves
-/*
-    Leaf previous[numLeaf];
+    Filter previous;
 
     for(int i=0; i<clfrCondLength; i++){
-        memmove(&previous, &clfr->condition[i].leaf,sizeof(previous));
-        if(!isDontcareCF(clfr->condition[i]) ) {
-            do {
-                memmove(&clfr->condition[i].leaf, &previous, sizeof(previous));
-                apply_filter_mutation(clfr->condition[i].leaf, state);
-            }while(!evaluateCF(clfr->condition[i], state));
-        }
+        previous = clfr->condition[i].filter[0]; // todo: for now it assume one CF and one filter for mutation
+        do {
+            clfr->condition[i].filter[0] = previous;
+            apply_filter_mutation(clfr->condition[i].filter[0], state);
+        }while(!evaluateCF(clfr->condition[i], state));
     }
 
     return true;
-*/
 }
-
 
 
 
@@ -1313,11 +1304,11 @@ bool is_filter_covered_by_condition(Filter* filter_to_check, CodeFragment code_f
 
 // Writing by amir
 
- bool isMoreGeneral(Classifier *clfr1, Classifier *clfr2)
+ bool isMoreGeneral(Classifier *clfr_general, Classifier *clfr_specific)
  {
      for(int i=0; i<clfrCondLength; i++)
      {
-         if(!is_filter_covered_by_condition(clfr2->condition[i].filter, clfr1->condition)){
+         if(!is_filter_covered_by_condition(clfr_general->condition[i].filter, clfr_specific->condition)){
              return false;
          }
      }

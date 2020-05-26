@@ -142,4 +142,114 @@ user	0m57.650s
 sys	0m0.028s
 
 
+//03
+Filter implemented at leaf level. No crossover, only mutation for one filter per code fragment. CF max depth =0. One CF per classifier
 
+train_file_name ../data/mnist/mnist_train_3_8_small_1000.txt
+test_file_name ../data/mnist/mnist_test_3_8_small_200.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2_small/
+max_population_size 200
+epochs 6
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.695  error: 382.711  set size: 139
+iteration: 2000  accuracy: 0.738  error: 360.742  set size: 158
+iteration: 3000  accuracy: 0.779  error: 312.907  set size: 165
+iteration: 4000  accuracy: 0.79  error: 311.978  set size: 159
+iteration: 5000  accuracy: 0.753  error: 344.248  set size: 163
+iteration: 6000  accuracy: 0.78  error: 332.32  set size: 180
+
+Testing
+iteration: 200  accuracy: 0.825  error: 307.169  set size: 180
+N = 200
+P# = 0
+Total Number of Instances = 200
+Number of KNNs = 0
+Number of correct Instances = 165
+
+Accuracy: 0.825
+Global Classifier ID: 2264
+
+real	0m9.477s
+user	0m9.379s
+sys	0m0.052s
+
+//04
+After implementing the filters at leaf level and with tree depth 0. The results should be equivalent as the end result is the same.
+Other Changes:
+- crossover disabled
+- mutation implemented for only one filter per classifier. pM .8 at allele level as before. It should be less at allele. 
+- action set size initialized to 1 rather than match set size argument
+- popSize incremented in getMatchSet for both with and without subsumption cases
+
+
+The experiment was stuck after 44000 iterations. Here are the results. As we can  see it reaches 90% quite fast but then no improvement
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+iteration: 1000  accuracy: 0.733  error: 366.973  set size: 1104
+iteration: 2000  accuracy: 0.835  error: 266.072  set size: 1298
+iteration: 3000  accuracy: 0.852  error: 253.279  set size: 1479
+iteration: 4000  accuracy: 0.879  error: 219.131  set size: 1505
+iteration: 5000  accuracy: 0.904  error: 192.891  set size: 1248
+iteration: 6000  accuracy: 0.874  error: 218.563  set size: 1054
+iteration: 7000  accuracy: 0.893  error: 185.598  set size: 1058
+iteration: 8000  accuracy: 0.89  error: 189.47  set size: 977
+iteration: 9000  accuracy: 0.908  error: 163.826  set size: 782
+iteration: 10000  accuracy: 0.914  error: 161.854  set size: 789
+iteration: 11000  accuracy: 0.903  error: 168.987  set size: 771
+iteration: 12000  accuracy: 0.905  error: 175.955  set size: 766
+iteration: 13000  accuracy: 0.915  error: 158.728  set size: 718
+iteration: 14000  accuracy: 0.906  error: 179.046  set size: 751
+iteration: 15000  accuracy: 0.91  error: 172.119  set size: 855
+iteration: 16000  accuracy: 0.903  error: 165.779  set size: 786
+iteration: 17000  accuracy: 0.893  error: 193.069  set size: 758
+iteration: 18000  accuracy: 0.881  error: 201.31  set size: 815
+iteration: 19000  accuracy: 0.889  error: 202.14  set size: 865
+iteration: 20000  accuracy: 0.876  error: 206.094  set size: 827
+iteration: 21000  accuracy: 0.889  error: 188.959  set size: 831
+iteration: 22000  accuracy: 0.904  error: 170.144  set size: 821
+iteration: 23000  accuracy: 0.906  error: 158.357  set size: 870
+iteration: 24000  accuracy: 0.9  error: 179.142  set size: 827
+iteration: 25000  accuracy: 0.908  error: 160.988  set size: 806
+iteration: 26000  accuracy: 0.911  error: 173.104  set size: 735
+iteration: 27000  accuracy: 0.872  error: 222.48  set size: 759
+iteration: 28000  accuracy: 0.884  error: 201.05  set size: 796
+iteration: 29000  accuracy: 0.888  error: 195.352  set size: 817
+iteration: 30000  accuracy: 0.898  error: 179.621  set size: 809
+iteration: 31000  accuracy: 0.888  error: 192.493  set size: 871
+iteration: 32000  accuracy: 0.901  error: 189.093  set size: 940
+iteration: 33000  accuracy: 0.883  error: 201.593  set size: 912
+iteration: 34000  accuracy: 0.866  error: 227.127  set size: 939
+iteration: 35000  accuracy: 0.889  error: 197.269  set size: 992
+iteration: 36000  accuracy: 0.901  error: 188.602  set size: 944
+iteration: 37000  accuracy: 0.909  error: 192.351  set size: 755
+iteration: 38000  accuracy: 0.911  error: 163.661  set size: 736
+iteration: 39000  accuracy: 0.9  error: 176.521  set size: 690
+iteration: 40000  accuracy: 0.895  error: 198.344  set size: 796
+iteration: 41000  accuracy: 0.891  error: 188.356  set size: 836
+iteration: 42000  accuracy: 0.882  error: 203.076  set size: 857
+iteration: 43000  accuracy: 0.892  error: 187.808  set size: 869
+iteration: 44000  accuracy: 0.885  error: 212.32  set size: 893
+44233/71892  894^C000
+real	16m17.576s
+user	16m15.798s
+sys	0m0.324s
