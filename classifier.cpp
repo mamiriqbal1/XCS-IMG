@@ -133,11 +133,13 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
                     // before inserting the new classifier into the population check for subsumption by a generic one
                     if(!subsumeClassifierToSet(coverClfr,*population)) {
                         addNewClassifierToSet(coverClfr, &mset);
+                        setSize++;
                         addNewClassifierToSet(coverClfr, population);
+                        popSize++;
                     }
                     // increment popSize regardless of subsumptionn
-                    setSize++;
-                    popSize++;
+                    //setSize++;
+                    //popSize++;
                 }
             }
         }
@@ -898,10 +900,12 @@ bool mutation(Classifier *clfr, float state[])
 
     for(int i=0; i<clfrCondLength; i++){
         previous = clfr->condition[i].filter[0]; // todo: for now it assume one CF and one filter for mutation
+        int tries = 0;
         do {
+            tries++;
             clfr->condition[i].filter[0] = previous;
             apply_filter_mutation(clfr->condition[i].filter[0], state);
-        }while(!evaluateCF(clfr->condition[i], state));
+        }while(!evaluateCF(clfr->condition[i], state) || tries < 3);
     }
 
     return true;
@@ -1276,7 +1280,6 @@ void subsumeCFs(Classifier *clfr, float state[])
 
 bool is_filter_general(Filter* filter_general, Filter* filter_to_check)
 {
-    int filter_size = (int)sqrt(numLeaf);  // filter size
     for(int i=0; i<filter_size*filter_size; i++){
 
             if(filter_to_check->lower_bounds[i] < filter_general->lower_bounds[i]
@@ -1308,7 +1311,7 @@ bool is_filter_covered_by_condition(Filter* filter_to_check, CodeFragment code_f
  {
      for(int i=0; i<clfrCondLength; i++)
      {
-         if(!is_filter_covered_by_condition(clfr_general->condition[i].filter, clfr_specific->condition)){
+         if(!is_filter_covered_by_condition(clfr_specific->condition[i].filter, clfr_general->condition)){
              return false;
          }
      }

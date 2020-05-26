@@ -183,14 +183,13 @@ sys	0m0.052s
 //04
 After implementing the filters at leaf level and with tree depth 0. The results should be equivalent as the end result is the same.
 Other Changes:
-- crossover disabled
+- crossover implemented with only one filter per classifier
 - mutation implemented for only one filter per classifier. pM .8 at allele level as before. It should be less at allele. 
 - action set size initialized to 1 rather than match set size argument
 - popSize incremented in getMatchSet for both with and without subsumption cases
 
-
-The experiment was stuck after 44000 iterations. Here are the results. As we can  see it reaches 90% quite fast but then no improvement
-
+The results are comparable (slightly better)
+The efficiency is good ~ 20 mins
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
 test_file_name ../data/mnist/mnist_test_3_8.txt
@@ -205,51 +204,89 @@ test_frequency 1000
 Loading Input! Please wait ....
 
 It is in progress! Please wait ....
-iteration: 1000  accuracy: 0.733  error: 366.973  set size: 1104
-iteration: 2000  accuracy: 0.835  error: 266.072  set size: 1298
-iteration: 3000  accuracy: 0.852  error: 253.279  set size: 1479
-iteration: 4000  accuracy: 0.879  error: 219.131  set size: 1505
-iteration: 5000  accuracy: 0.904  error: 192.891  set size: 1248
-iteration: 6000  accuracy: 0.874  error: 218.563  set size: 1054
-iteration: 7000  accuracy: 0.893  error: 185.598  set size: 1058
-iteration: 8000  accuracy: 0.89  error: 189.47  set size: 977
-iteration: 9000  accuracy: 0.908  error: 163.826  set size: 782
-iteration: 10000  accuracy: 0.914  error: 161.854  set size: 789
-iteration: 11000  accuracy: 0.903  error: 168.987  set size: 771
-iteration: 12000  accuracy: 0.905  error: 175.955  set size: 766
-iteration: 13000  accuracy: 0.915  error: 158.728  set size: 718
-iteration: 14000  accuracy: 0.906  error: 179.046  set size: 751
-iteration: 15000  accuracy: 0.91  error: 172.119  set size: 855
-iteration: 16000  accuracy: 0.903  error: 165.779  set size: 786
-iteration: 17000  accuracy: 0.893  error: 193.069  set size: 758
-iteration: 18000  accuracy: 0.881  error: 201.31  set size: 815
-iteration: 19000  accuracy: 0.889  error: 202.14  set size: 865
-iteration: 20000  accuracy: 0.876  error: 206.094  set size: 827
-iteration: 21000  accuracy: 0.889  error: 188.959  set size: 831
-iteration: 22000  accuracy: 0.904  error: 170.144  set size: 821
-iteration: 23000  accuracy: 0.906  error: 158.357  set size: 870
-iteration: 24000  accuracy: 0.9  error: 179.142  set size: 827
-iteration: 25000  accuracy: 0.908  error: 160.988  set size: 806
-iteration: 26000  accuracy: 0.911  error: 173.104  set size: 735
-iteration: 27000  accuracy: 0.872  error: 222.48  set size: 759
-iteration: 28000  accuracy: 0.884  error: 201.05  set size: 796
-iteration: 29000  accuracy: 0.888  error: 195.352  set size: 817
-iteration: 30000  accuracy: 0.898  error: 179.621  set size: 809
-iteration: 31000  accuracy: 0.888  error: 192.493  set size: 871
-iteration: 32000  accuracy: 0.901  error: 189.093  set size: 940
-iteration: 33000  accuracy: 0.883  error: 201.593  set size: 912
-iteration: 34000  accuracy: 0.866  error: 227.127  set size: 939
-iteration: 35000  accuracy: 0.889  error: 197.269  set size: 992
-iteration: 36000  accuracy: 0.901  error: 188.602  set size: 944
-iteration: 37000  accuracy: 0.909  error: 192.351  set size: 755
-iteration: 38000  accuracy: 0.911  error: 163.661  set size: 736
-iteration: 39000  accuracy: 0.9  error: 176.521  set size: 690
-iteration: 40000  accuracy: 0.895  error: 198.344  set size: 796
-iteration: 41000  accuracy: 0.891  error: 188.356  set size: 836
-iteration: 42000  accuracy: 0.882  error: 203.076  set size: 857
-iteration: 43000  accuracy: 0.892  error: 187.808  set size: 869
-iteration: 44000  accuracy: 0.885  error: 212.32  set size: 893
-44233/71892  894^C000
-real	16m17.576s
-user	16m15.798s
-sys	0m0.324s
+iteration: 1000  accuracy: 0.724  error: 389.364  set size: 1142
+iteration: 2000  accuracy: 0.871  error: 240.787  set size: 1452
+iteration: 3000  accuracy: 0.89  error: 198.591  set size: 1794
+iteration: 4000  accuracy: 0.887  error: 194.496  set size: 1999
+iteration: 5000  accuracy: 0.893  error: 192.183  set size: 1996
+iteration: 6000  accuracy: 0.92  error: 140.844  set size: 1994
+iteration: 7000  accuracy: 0.923  error: 142.473  set size: 1994
+iteration: 8000  accuracy: 0.926  error: 134.733  set size: 1992
+iteration: 9000  accuracy: 0.931  error: 128.203  set size: 1995
+iteration: 10000  accuracy: 0.939  error: 124.576  set size: 1997
+iteration: 11000  accuracy: 0.944  error: 116.635  set size: 1994
+iteration: 12000  accuracy: 0.934  error: 132.954  set size: 1997
+iteration: 13000  accuracy: 0.939  error: 117.675  set size: 1998
+iteration: 14000  accuracy: 0.946  error: 112.431  set size: 1999
+iteration: 15000  accuracy: 0.939  error: 126.425  set size: 1999
+iteration: 16000  accuracy: 0.948  error: 109.303  set size: 1999
+iteration: 17000  accuracy: 0.934  error: 124.021  set size: 1998
+iteration: 18000  accuracy: 0.955  error: 109.757  set size: 1996
+iteration: 19000  accuracy: 0.932  error: 113.256  set size: 1997
+iteration: 20000  accuracy: 0.947  error: 110.461  set size: 2000
+iteration: 21000  accuracy: 0.947  error: 101.476  set size: 1999
+iteration: 22000  accuracy: 0.931  error: 125.545  set size: 1999
+iteration: 23000  accuracy: 0.947  error: 114.919  set size: 1999
+iteration: 24000  accuracy: 0.946  error: 112.791  set size: 1998
+iteration: 25000  accuracy: 0.932  error: 128.681  set size: 1996
+iteration: 26000  accuracy: 0.958  error: 107.922  set size: 2000
+iteration: 27000  accuracy: 0.949  error: 107.372  set size: 1999
+iteration: 28000  accuracy: 0.943  error: 105.575  set size: 1996
+iteration: 29000  accuracy: 0.935  error: 121.877  set size: 1998
+iteration: 30000  accuracy: 0.934  error: 119.919  set size: 1999
+iteration: 31000  accuracy: 0.949  error: 101.741  set size: 1999
+iteration: 32000  accuracy: 0.941  error: 101.692  set size: 1998
+iteration: 33000  accuracy: 0.939  error: 124.916  set size: 1999
+iteration: 34000  accuracy: 0.95  error: 99.3079  set size: 1999
+iteration: 35000  accuracy: 0.946  error: 98.1938  set size: 1999
+iteration: 36000  accuracy: 0.955  error: 95.5947  set size: 1998
+iteration: 37000  accuracy: 0.956  error: 100.829  set size: 1996
+iteration: 38000  accuracy: 0.951  error: 99.8161  set size: 1997
+iteration: 39000  accuracy: 0.952  error: 94.639  set size: 1996
+iteration: 40000  accuracy: 0.94  error: 105.579  set size: 1997
+iteration: 41000  accuracy: 0.943  error: 100.175  set size: 1999
+iteration: 42000  accuracy: 0.964  error: 90.548  set size: 1996
+iteration: 43000  accuracy: 0.952  error: 95.2304  set size: 1997
+iteration: 44000  accuracy: 0.959  error: 94.3214  set size: 1995
+iteration: 45000  accuracy: 0.952  error: 96.263  set size: 1999
+iteration: 46000  accuracy: 0.943  error: 104.589  set size: 2000
+iteration: 47000  accuracy: 0.961  error: 85.6505  set size: 2000
+iteration: 48000  accuracy: 0.96  error: 91.5725  set size: 2000
+iteration: 49000  accuracy: 0.958  error: 91.5502  set size: 1999
+iteration: 50000  accuracy: 0.935  error: 111.246  set size: 1998
+iteration: 51000  accuracy: 0.967  error: 84.7825  set size: 1999
+iteration: 52000  accuracy: 0.945  error: 95.9329  set size: 1999
+iteration: 53000  accuracy: 0.953  error: 92.8867  set size: 1997
+iteration: 54000  accuracy: 0.959  error: 103.076  set size: 1996
+iteration: 55000  accuracy: 0.945  error: 114.816  set size: 1998
+iteration: 56000  accuracy: 0.952  error: 102.168  set size: 1994
+iteration: 57000  accuracy: 0.961  error: 93.1083  set size: 1997
+iteration: 58000  accuracy: 0.96  error: 93.3696  set size: 1994
+iteration: 59000  accuracy: 0.948  error: 109.208  set size: 1997
+iteration: 60000  accuracy: 0.953  error: 92.4695  set size: 1998
+iteration: 61000  accuracy: 0.951  error: 99.9939  set size: 1999
+iteration: 62000  accuracy: 0.956  error: 93.0983  set size: 1998
+iteration: 63000  accuracy: 0.947  error: 112.234  set size: 1998
+iteration: 64000  accuracy: 0.952  error: 106.07  set size: 1999
+iteration: 65000  accuracy: 0.954  error: 96.7036  set size: 1996
+iteration: 66000  accuracy: 0.947  error: 94.1968  set size: 1999
+iteration: 67000  accuracy: 0.956  error: 88.3139  set size: 1998
+iteration: 68000  accuracy: 0.965  error: 85.4069  set size: 1998
+iteration: 69000  accuracy: 0.951  error: 100.405  set size: 1998
+iteration: 70000  accuracy: 0.954  error: 99.8073  set size: 1997
+iteration: 71000  accuracy: 0.96  error: 89.7183  set size: 1996
+71892/71892  1996/2000
+Testing
+iteration: 1984  accuracy: 0.944052  error: 117.182  set size: 1996
+N = 2000
+P# = 0
+Total Number of Instances = 1984
+Number of KNNs = 0
+Number of correct Instances = 1873
+
+Accuracy: 0.944052
+Global Classifier ID: 65548
+
+real	18m28.741s
+user	18m28.376s
+sys	0m0.208s
