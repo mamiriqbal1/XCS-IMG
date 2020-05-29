@@ -1,9 +1,7 @@
 initial fitness .01
 fintess reduction .1
 check action  set subsumption
-
 prediction error reduction is 1 instead of .25 as in the paper
-
 
 still open question:
 why the fitness of classifiers with zero TP can be highest?
@@ -13,5 +11,4 @@ Investigation required:
 Why the accuracy is either 1 or less than .09?
 
 todo:
-potential infinite loop in mutation and crossover to be handled
-mutation probability is being used at allele level, it should be at higher level?
+- implement result reuse for filters

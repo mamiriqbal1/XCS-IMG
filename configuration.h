@@ -31,6 +31,7 @@ extern std::string inputTestFile; //[] = "../data/mnist/3_8_test_mnist.txt";
 
 const int precisionDigits = 2;
 extern int testFrequency;// = trainNumInstances; // 1034;
+extern int validation_frequency;
 
 const char outputFileName[] = "output_training.txt";
 const char featureFileName[] = "feature_codefragments.txt";
@@ -43,7 +44,7 @@ const int cfMaxLength = 2;// pow(2,adfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 const int numLeaf = 1;
-const int filter_size = 4;  // 3 for 3x3, 5 for 5x5 etc.
+const int filter_size = 7;  // 3 for 3x3, 5 for 5x5 etc.
 
 typedef int opType;
 const int opSize = sizeof(opType);

@@ -757,14 +757,22 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
     Filter previous1, previous2;
     if(drand() < pX) {
         for (int i = 0; i < clfrCondLength; i++) {
-            previous1 = cl[0]->condition->filter[0];
-            previous2 = cl[i]->condition->filter[0];
-            // todo: crossover implemented for only one filter for now
-            crossover_filter(cl[0]->condition[i].filter[0], cl[1]->condition[i].filter[0]);
-            // revert if the resultant classifiers do not satisfies the situation
-            if(!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)){
-                cl[0]->condition->filter[0] = previous1;
-                cl[i]->condition->filter[0] = previous2;
+            for(int j=0; j < cl[0]->condition[i].num_filters && j < cl[1]->condition[i].num_filters; j++) {
+                for(int tries=0; tries<100; tries++) {
+                    previous1 = cl[0]->condition[i].filter[j];
+                    previous2 = cl[1]->condition[i].filter[j];
+                    crossover_filter(cl[0]->condition[i].filter[j], cl[1]->condition[i].filter[j]);
+                    //continue; // no need to evaluate crossed-over children
+                    // revert if the resultant classifiers do not satisfies the situation
+                    if (!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)) {
+                        cl[0]->condition[i].filter[j] = previous1;
+                        cl[1]->condition[i].filter[j] = previous2;
+                    }else{
+                        //std::cout<<"\n"<<tries<<"X\n";
+                        break;
+                    }
+
+                }
             }
         }
         return true;
@@ -895,19 +903,24 @@ void apply_filter_mutation(Filter& filter, float state[])
 
 bool mutation(Classifier *clfr, float state[])
 {
-    // todo: disable mutation for now while introducing filters at leaves
     Filter previous;
 
     for(int i=0; i<clfrCondLength; i++){
-        previous = clfr->condition[i].filter[0]; // todo: for now it assume one CF and one filter for mutation
-        int tries = 0;
-        do {
-            tries++;
-            clfr->condition[i].filter[0] = previous;
-            apply_filter_mutation(clfr->condition[i].filter[0], state);
-        }while(!evaluateCF(clfr->condition[i], state) || tries < 3);
+        for(int j=0; j<clfr->condition[i].num_filters; j++) {  // todo: not all filters needs to be mutated simultaneously
+            previous = clfr->condition[i].filter[j];
+            for(int tries = 0; tries < 100; tries++){
+                apply_filter_mutation(clfr->condition[i].filter[j], state);
+                //break; // no need to evaluate mutated filter
+                if(evaluateCF(clfr->condition[i], state)) {
+                    //std::cout<<"\n"<<tries<<"M\n";
+                    break;
+                }
+                else{
+                    clfr->condition[i].filter[j] = previous;
+                }
+            }
+        }
     }
-
     return true;
 }
 
@@ -1278,23 +1291,25 @@ void subsumeCFs(Classifier *clfr, float state[])
     }
 }
 
-bool is_filter_general(Filter* filter_general, Filter* filter_to_check)
+bool is_filter_general(Filter& filter_general, Filter& filter_to_check)
 {
     for(int i=0; i<filter_size*filter_size; i++){
 
-            if(filter_to_check->lower_bounds[i] < filter_general->lower_bounds[i]
-            || filter_to_check->upper_bounds[i] > filter_general->upper_bounds[i]){
+            if(filter_to_check.lower_bounds[i] < filter_general.lower_bounds[i]
+            || filter_to_check.upper_bounds[i] > filter_general.upper_bounds[i]){
                 return false;
             }
     }
     return true;
 }
 
-bool is_filter_covered_by_condition(Filter* filter_to_check, CodeFragment code_fragments[])
+bool is_filter_covered_by_condition(Filter& filter_to_check, CodeFragment code_fragments[])
 {
     for(int i=0; i<clfrCondLength; i++){
-        if(is_filter_general(code_fragments[i].filter, filter_to_check)){
-           return true;
+        for(int j=0; j < code_fragments[i].num_filters; j++) {
+            if (is_filter_general(code_fragments[i].filter[j], filter_to_check)) {
+                return true;
+            }
         }
     }
     return false;
@@ -1311,8 +1326,10 @@ bool is_filter_covered_by_condition(Filter* filter_to_check, CodeFragment code_f
  {
      for(int i=0; i<clfrCondLength; i++)
      {
-         if(!is_filter_covered_by_condition(clfr_specific->condition[i].filter, clfr_general->condition)){
-             return false;
+         for(int j=0; j < clfr_specific->condition[i].num_filters; j++) {
+             if (!is_filter_covered_by_condition(clfr_specific->condition[i].filter[j], clfr_general->condition)) {
+                 return false;
+             }
          }
      }
     return true;

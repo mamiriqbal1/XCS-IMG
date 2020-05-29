@@ -34,6 +34,7 @@ int testNumInstances=0;// = 1984;
 int totalNumInstances=0;// = trainNumInstances + testNumInstances;//4; //for review analysis
 int maxProblems=0;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 int testFrequency=0;// = trainNumInstances; // 1034;
+int validation_frequency = 0; // to be initialized
 int maxPopSize=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 bool analyze = false;
 std::string analyze_path;
@@ -114,7 +115,7 @@ void writePerformance(ClassifierSet *population, int performance[], double sysEr
     fwrite(buf,strlen(buf),1,filePerformance);
     fwrite("\n",strlen("\n"),1,filePerformance);
 
-    std::cout<<"iteration: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
+    std::cout<<"Training: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
       //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
     //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
@@ -146,7 +147,7 @@ void writeTestPerformance(ClassifierSet *population, int performance[], double s
     fwrite(buf,strlen(buf),1,testPerformance);
     fwrite("\n",strlen("\n"),1,testPerformance);
 
-    std::cout<<"iteration: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
+    std::cout<<"Validation: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
     //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
     //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
@@ -306,6 +307,10 @@ void doOneSingleStepProblem(ClassifierSet **population, DataSource *object, int 
         {
             writePerformance(*population,correct,sysError,exploreProbC);
         }
+        if(exploreProbC%validation_frequency==0 && exploreProbC>0)
+        {
+            doOneSingleStepTest(*population);
+        }
     }
 //    delete state;
 }
@@ -438,13 +443,13 @@ void doOneSingleStepTest(ClassifierSet *population){
     //std::string wLine = "";
     //std::string wLine2 = "";
 
-    std::cout<<"N = "<<maxPopSize<<std::endl;
-    std::cout<<"P# = "<<P_dontcare<<std::endl;
-    std::cout<<"Total Number of Instances = "<<testNumInstances<<std::endl;
-    std::cout<<"Number of KNNs = "<<cc<<std::endl;
-    std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
-    //std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN<<std::endl;
-    std::cout<<"\nAccuracy: "<< (correctCounter)*1.0/(testNumInstances) << "\n";
+//    std::cout<<"N = "<<maxPopSize<<std::endl;
+//    std::cout<<"P# = "<<P_dontcare<<std::endl;
+//    std::cout<<"Total Number of Instances = "<<testNumInstances<<std::endl;
+//    std::cout<<"Number of KNNs = "<<cc<<std::endl;
+//    std::cout<<"Number of correct Instances = "<<correctCounter<<std::endl;
+//    //std::cout<<"TP: "<<TP<<"--TN: "<<TN<<"--FP: "<<FP<<"--FN: "<<FN<<std::endl;
+//    std::cout<<"\nAccuracy: "<< (correctCounter)*1.0/(testNumInstances) << "\n";
 }
 
 
@@ -577,11 +582,18 @@ void LoadConfig(char* file)
     }
     // calculate the number of train and test instances
     trainNumInstances = CountLines(inputTrainingFile.c_str());
+    std::cout<<"Training instances: "<<trainNumInstances<<std::endl;
     testNumInstances = CountLines(inputTestFile.c_str());
+    std::cout<<"Test instances: "<<testNumInstances<<std::endl;
     totalNumInstances = trainNumInstances + testNumInstances;
     if(testFrequency == 0) {
         testFrequency = trainNumInstances;
     }
+    std::cout<<"Test frequency: "<<testFrequency<<std::endl;
+    if(validation_frequency == 0){
+        validation_frequency = trainNumInstances;
+    }
+    std::cout<<"Validation frequency: "<<validation_frequency<<std::endl;
     // calculate number of training examples to be presented based on epochs
     if(maxProblems == 0) {
         maxProblems = trainNumInstances * epochs;

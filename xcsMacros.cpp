@@ -1,4 +1,8 @@
 #include "xcsMacros.h"
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_01.hpp>
+
+
 
 long seed = 143907; // a number between 1 and _M-1 */
 const long _Q = _M/_A; // constant for the random number generator (=_M/_A).
@@ -13,6 +17,18 @@ long getSeed()
 {
     return seed;
 }
+
+//boost::rand48 intgen(114665);
+//boost::uniform_01<boost::rand48> gen(intgen);
+
+//boost::mt19937 intgen(114665);
+//boost::uniform_01<boost::mt19937> gen(intgen);
+
+
+//double drand()
+//{
+//    return gen();
+//}
 
 double drand()  // returns a floating-point random number generated according to uniform distribution from [0,1)
 {
