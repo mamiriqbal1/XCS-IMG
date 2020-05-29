@@ -244,7 +244,7 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-                if(!equal_two_filters(cf1.filter[cf1.codeFragment[i]], cf2.filter[cf2.codeFragment[i]]))
+                if(!equal_two_filters(get_filter(cf1.filter_id[cf1.codeFragment[i]]), get_filter(cf2.filter_id[cf2.codeFragment[i]])))
                     return false;
             }
         }else
@@ -276,7 +276,7 @@ bool isGeneralCF(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-                if(!is_more_general_filter(cf1.filter[cf1.codeFragment[i]], cf2.filter[cf2.codeFragment[i]]))
+                if(!is_more_general_filter(get_filter(cf1.filter_id[cf1.codeFragment[i]]), get_filter(cf2.filter_id[cf2.codeFragment[i]])))
                     return false;
             }
         }
@@ -544,11 +544,9 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
         if(0<=opcode && opcode<condLength)  //condition bit
         {
             cf.codeFragment[i] = leafNum;
-            create_new_filter_from_input(cf.filter[leafNum], state);
-            // todo: remove cf.filter array as it is replaced by cf.filter_id array
-//            Filter new_filter;
-//            create_new_filter_from_input(new_filter, state);
-//            cf.filter_id[i] = add_filter(new_filter);
+            Filter new_filter;
+            create_new_filter_from_input(new_filter, state);
+            cf.filter_id[leafNum] = add_filter(new_filter);
             leafNum++;
         }
     }
@@ -601,7 +599,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(cf.filter[opcode], state))
+            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state))
             {
                 stack[SP++] = 1;   //changed
             }

@@ -86,7 +86,7 @@ struct CodeFragment
     opType codeFragment[cfMaxLength];
     //Leaf leaf[numLeaf];
     int num_filters; // equal to number of leaves to be determined at run time
-    Filter filter[numLeaf];
+    //Filter filter[numLeaf];
     int filter_id[numLeaf];
     int cfID;
 };

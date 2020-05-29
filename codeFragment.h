@@ -49,3 +49,4 @@ void outprog(CodeFragment prog,int size, FILE *fp);
 /////////////
 
 
+bool evaluate_filter(const Filter& filter, float state[]);

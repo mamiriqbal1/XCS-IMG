@@ -9,6 +9,7 @@
 #include "codeFragment.h"
 #include "classifier.h"
 #include "env.h"
+#include "filter_list.h"
 
 int countNewCFs = 0;
 double predictionArray[max_actions]; //prediction array
@@ -754,24 +755,28 @@ void crossover_filter(Filter& parent1, Filter& parent2)
 bool crossover(Classifier **cl, float situation[])  // Determines if crossover is applied and calls then the selected crossover type.
 {
 
-    Filter previous1, previous2;
+    Filter filter1, filter2;
+    bool filter1_result = false;
+    bool filter2_result = false;
+
     if(drand() < pX) {
         for (int i = 0; i < clfrCondLength; i++) {
             for(int j=0; j < cl[0]->condition[i].num_filters && j < cl[1]->condition[i].num_filters; j++) {
+                filter1 = get_filter(cl[0]->condition[i].filter_id[j]);
+                filter2 = get_filter(cl[1]->condition[i].filter_id[j]);
+                filter1_result = evaluate_filter(filter1, situation);
+                filter2_result = evaluate_filter(filter2, situation);
                 for(int tries=0; tries<100; tries++) {
-                    previous1 = cl[0]->condition[i].filter[j];
-                    previous2 = cl[1]->condition[i].filter[j];
-                    crossover_filter(cl[0]->condition[i].filter[j], cl[1]->condition[i].filter[j]);
-                    //continue; // no need to evaluate crossed-over children
-                    // revert if the resultant classifiers do not satisfies the situation
-                    if (!evaluateCF(cl[0]->condition[i], situation) || !evaluateCF(cl[1]->condition[i], situation)) {
-                        cl[0]->condition[i].filter[j] = previous1;
-                        cl[1]->condition[i].filter[j] = previous2;
-                    }else{
-                        //std::cout<<"\n"<<tries<<"X\n";
+                    crossover_filter(filter1, filter2);
+                    if(filter1_result == evaluate_filter(filter1, situation)
+                    && filter2_result == evaluate_filter(filter2, situation)){
+                        cl[0]->condition[i].filter_id[j] = add_filter(filter1);
+                        cl[1]->condition[i].filter_id[j] = add_filter(filter2);
                         break;
+                    }else{
+                        filter1 = get_filter(cl[0]->condition[i].filter_id[j]);
+                        filter2 = get_filter(cl[1]->condition[i].filter_id[j]);
                     }
-
                 }
             }
         }
@@ -903,27 +908,26 @@ void apply_filter_mutation(Filter& filter, float state[])
 
 bool mutation(Classifier *clfr, float state[])
 {
-    Filter previous;
+    Filter filter_to_mutate;
+    bool previous_evaluation_result = false;
 
     for(int i=0; i<clfrCondLength; i++){
         for(int j=0; j<clfr->condition[i].num_filters; j++) {  // todo: not all filters needs to be mutated simultaneously
-            previous = clfr->condition[i].filter[j];
+            filter_to_mutate = get_filter(clfr->condition[i].filter_id[j]);
+            previous_evaluation_result = evaluate_filter(filter_to_mutate, state);
             for(int tries = 0; tries < 100; tries++){
-                apply_filter_mutation(clfr->condition[i].filter[j], state);
-                //break; // no need to evaluate mutated filter
-                if(evaluateCF(clfr->condition[i], state)) {
-                    //std::cout<<"\n"<<tries<<"M\n";
+                apply_filter_mutation(filter_to_mutate, state);
+                if(previous_evaluation_result == evaluate_filter(filter_to_mutate, state)){
+                    clfr->condition[i].filter_id[j] = add_filter(filter_to_mutate);
                     break;
-                }
-                else{
-                    clfr->condition[i].filter[j] = previous;
+                }else{
+                    filter_to_mutate = get_filter(clfr->condition[i].filter_id[j]);
                 }
             }
         }
     }
     return true;
 }
-
 
 
 /**
@@ -1291,7 +1295,7 @@ void subsumeCFs(Classifier *clfr, float state[])
     }
 }
 
-bool is_filter_general(Filter& filter_general, Filter& filter_to_check)
+bool is_filter_general(const Filter& filter_general, const Filter& filter_to_check)
 {
     for(int i=0; i<filter_size*filter_size; i++){
 
@@ -1303,11 +1307,11 @@ bool is_filter_general(Filter& filter_general, Filter& filter_to_check)
     return true;
 }
 
-bool is_filter_covered_by_condition(Filter& filter_to_check, CodeFragment code_fragments[])
+bool is_filter_covered_by_condition(const Filter& filter_to_check, CodeFragment code_fragments[])
 {
     for(int i=0; i<clfrCondLength; i++){
         for(int j=0; j < code_fragments[i].num_filters; j++) {
-            if (is_filter_general(code_fragments[i].filter[j], filter_to_check)) {
+            if (is_filter_general(get_filter(code_fragments[i].filter_id[j]), filter_to_check)) {
                 return true;
             }
         }
@@ -1327,7 +1331,7 @@ bool is_filter_covered_by_condition(Filter& filter_to_check, CodeFragment code_f
      for(int i=0; i<clfrCondLength; i++)
      {
          for(int j=0; j < clfr_specific->condition[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(clfr_specific->condition[i].filter[j], clfr_general->condition)) {
+             if (!is_filter_covered_by_condition(get_filter(clfr_specific->condition[i].filter_id[j]), clfr_general->condition)) {
                  return false;
              }
          }
