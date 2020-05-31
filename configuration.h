@@ -32,6 +32,7 @@ extern std::string inputTestFile; //[] = "../data/mnist/3_8_test_mnist.txt";
 const int precisionDigits = 2;
 extern int testFrequency;// = trainNumInstances; // 1034;
 extern int validation_frequency;
+const int filter_list_management_frequency = 500;
 
 const char outputFileName[] = "output_training.txt";
 const char featureFileName[] = "feature_codefragments.txt";
@@ -63,6 +64,9 @@ const opType functionCodes[] = {OPAND};
 
 struct Filter{
     int id=-1; // uninitialized value
+    int numerosity = 1; // initial numerosity when a filter is created
+    int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
+    // a promising classifier is one whose error < 10 and experience > 10
     float lower_bounds[filter_size*filter_size];
     float upper_bounds[filter_size*filter_size];
 };
@@ -71,7 +75,6 @@ struct FilterList{
     std::forward_list<Filter> filters;
     int gid = 0;
     int max_size_limit = N_filter_ol;
-    float fitness = 1.0; // initial fitness of the filter
 };
 
 struct Leaf

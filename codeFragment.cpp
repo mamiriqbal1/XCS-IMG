@@ -244,7 +244,7 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-                if(!equal_two_filters(get_filter(cf1.filter_id[cf1.codeFragment[i]]), get_filter(cf2.filter_id[cf2.codeFragment[i]])))
+                if(cf1.filter_id[cf1.codeFragment[i]] != cf2.filter_id[cf2.codeFragment[i]])
                     return false;
             }
         }else
@@ -276,7 +276,7 @@ bool isGeneralCF(CodeFragment cf1, CodeFragment cf2)
         {
             if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
             {
-                if(!is_more_general_filter(get_filter(cf1.filter_id[cf1.codeFragment[i]]), get_filter(cf2.filter_id[cf2.codeFragment[i]])))
+                if(cf1.filter_id[cf1.codeFragment[i]] != cf2.filter_id[cf2.codeFragment[i]])
                     return false;
             }
         }

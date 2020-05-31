@@ -991,5 +991,113 @@ sys	0m1.736s
 
 
 //13
+Above experiment with cap of maximum 100 tries for mutation and crossover
 
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.835  error: 266.022  set size: 1208
+Training: 2000  accuracy: 0.911  error: 161.704  set size: 1663
+Training: 3000  accuracy: 0.939  error: 125.951  set size: 1970
+Training: 4000  accuracy: 0.936  error: 123.562  set size: 1980
+Training: 5000  accuracy: 0.925  error: 118.191  set size: 1977
+Training: 6000  accuracy: 0.951  error: 90.7359  set size: 1975
+Training: 7000  accuracy: 0.938  error: 97.1183  set size: 1975
+Training: 8000  accuracy: 0.948  error: 101.147  set size: 1982
+Training: 9000  accuracy: 0.951  error: 99.7266  set size: 1974
+Training: 10000  accuracy: 0.956  error: 78.8422  set size: 1977
+Training: 11000  accuracy: 0.95  error: 81.4087  set size: 1966
+Validation: 1984  accuracy: 0.946069  error: 79.9079  set size: 1972
+Training: 12000  accuracy: 0.961  error: 85.0622  set size: 1972
+Training: 13000  accuracy: 0.96  error: 74.801  set size: 1973
+Training: 14000  accuracy: 0.943  error: 95.2884  set size: 1978
+Training: 15000  accuracy: 0.957  error: 88.0838  set size: 1978
+Training: 16000  accuracy: 0.949  error: 90.8614  set size: 1979
+Training: 17000  accuracy: 0.951  error: 73.3701  set size: 1977
+Training: 18000  accuracy: 0.953  error: 80.9415  set size: 1984
+Training: 19000  accuracy: 0.948  error: 77.1798  set size: 1977
+Training: 20000  accuracy: 0.945  error: 87.9306  set size: 1974
+Training: 21000  accuracy: 0.951  error: 84.8589  set size: 1975
+Training: 22000  accuracy: 0.965  error: 65.1438  set size: 1973
+Training: 23000  accuracy: 0.946  error: 81.0114  set size: 1969
+Validation: 1984  accuracy: 0.948085  error: 82.2609  set size: 1972
+Training: 24000  accuracy: 0.941  error: 104.954  set size: 1971
+Training: 25000  accuracy: 0.949  error: 97.0997  set size: 1970
+Training: 26000  accuracy: 0.956  error: 78.4489  set size: 1971
+Training: 27000  accuracy: 0.958  error: 73.1616  set size: 1972
+Training: 28000  accuracy: 0.952  error: 80.8468  set size: 1969
+Training: 29000  accuracy: 0.954  error: 74.8554  set size: 1972
+Training: 30000  accuracy: 0.957  error: 78.8113  set size: 1975
+Training: 31000  accuracy: 0.946  error: 86.8244  set size: 1970
+3135^C71892  1976/2000
+real	18m22.022s
+user	18m21.034s
+sys	0m0.184s
+
+//14
+After implementing manged filter list
+Now the filter is subsumed only by another filter who's fitness is at least 1. Which means it is present in at least one "promising" classifiers.
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.803  error: 307.411  set size: 1190
+Training: 2000  accuracy: 0.88  error: 192.506  set size: 1628
+Training: 3000  accuracy: 0.919  error: 146.616  set size: 1949
+Training: 4000  accuracy: 0.922  error: 144.006  set size: 1955
+Training: 5000  accuracy: 0.936  error: 120.808  set size: 1963
+Training: 6000  accuracy: 0.929  error: 123  set size: 1954
+Training: 7000  accuracy: 0.942  error: 109.212  set size: 1953
+Training: 8000  accuracy: 0.945  error: 101.033  set size: 1949
+Training: 9000  accuracy: 0.943  error: 94.3287  set size: 1964
+Training: 10000  accuracy: 0.932  error: 111.816  set size: 1953
+Training: 11000  accuracy: 0.936  error: 104.908  set size: 1954
+Validation: 1984  accuracy: 0.949597  error: 102.378  set size: 1961
+Training: 12000  accuracy: 0.952  error: 91.62  set size: 1961
+Training: 13000  accuracy: 0.942  error: 99.8536  set size: 1967
+Training: 14000  accuracy: 0.939  error: 91.016  set size: 1941
+Training: 15000  accuracy: 0.956  error: 84.8255  set size: 1952
+Training: 16000  accuracy: 0.944  error: 93.4151  set size: 1958
+Training: 17000  accuracy: 0.948  error: 87.4177  set size: 1953
+Training: 18000  accuracy: 0.941  error: 91.5782  set size: 1957
+Training: 19000  accuracy: 0.949  error: 87.7348  set size: 1958
+Training: 20000  accuracy: 0.945  error: 93.9652  set size: 1969
+Training: 21000  accuracy: 0.936  error: 106.534  set size: 1965
+Training: 22000  accuracy: 0.948  error: 92.5273  set size: 1953
+Training: 23000  accuracy: 0.952  error: 90.6822  set size: 1958
+Validation: 1984  accuracy: 0.946069  error: 82.5714  set size: 1955
+Global Classifier ID: 19816
+
+real	31m5.440s
+user	31m4.303s
+sys	0m0.540s
 

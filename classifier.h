@@ -79,3 +79,6 @@ void simplifyPopulation(ClassifierSet **population);
 
 double absoluteValue(double value);
 float computeDistance(CodeFragment clfrCond[], float cond[]);
+
+
+void manage_filter_list(ClassifierSet *population);

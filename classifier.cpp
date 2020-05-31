@@ -1307,11 +1307,11 @@ bool is_filter_general(const Filter& filter_general, const Filter& filter_to_che
     return true;
 }
 
-bool is_filter_covered_by_condition(const Filter& filter_to_check, CodeFragment code_fragments[])
+bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fragments[])
 {
     for(int i=0; i<clfrCondLength; i++){
         for(int j=0; j < code_fragments[i].num_filters; j++) {
-            if (is_filter_general(get_filter(code_fragments[i].filter_id[j]), filter_to_check)) {
+            if(filter_to_check_id == code_fragments[i].filter_id[j]){
                 return true;
             }
         }
@@ -1319,19 +1319,15 @@ bool is_filter_covered_by_condition(const Filter& filter_to_check, CodeFragment 
     return false;
 }
 
-/**
- * Returns if the classifier clfr1 is more general than the classifier clfr2. It is made sure that the classifier is indeed more general and
- * not equally general as well as that the more specific classifier is completely included in the more general one (do not specify overlapping regions)
+/*
+ * This function checks that all the filters of one classifier are present in the second.
+ * todo: At this time it does not check the result of the evaluation of the code fragment. It only compares filters.
  */
-
-// Writing by amir
-
  bool isMoreGeneral(Classifier *clfr_general, Classifier *clfr_specific)
  {
-     for(int i=0; i<clfrCondLength; i++)
-     {
+     for(int i=0; i<clfrCondLength; i++){
          for(int j=0; j < clfr_specific->condition[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(get_filter(clfr_specific->condition[i].filter_id[j]), clfr_general->condition)) {
+             if (!is_filter_covered_by_condition(clfr_specific->condition[i].filter_id[j], clfr_general->condition)) {
                  return false;
              }
          }
@@ -1653,7 +1649,10 @@ void freeClassifierSet(ClassifierSet **cls)
  */
 void freeClassifier(Classifier *cl)
 {
-    //delete [] cl->condition->filter;
+//    // remove filters from the master list
+//    for(int i=0; i<cl->condition->num_filters; i++){
+//        remove_filter(cl->condition->filter_id[i]);
+//    }
     free(cl);
 }
 
@@ -1675,6 +1674,7 @@ void printClassifierSet(ClassifierSet *head)
  */
 void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierSet *head)
 {
+    print_filter_stats();
     ClassifierSet* set;
     for(set=head; set!=NULL; set=set->next)
     {
@@ -1961,4 +1961,37 @@ double absoluteValue(double value)
     {
         return value;
     }
+}
+
+/*
+ * This function is used to update stats of all filters in the filter list
+ * Which includes nuemrosity and fitness of the filter
+ * If classifier is "promising" then increase the fitness of the filter
+ * A promising classifier is one whose error < 10 and experience > 10
+ */
+
+void manage_filter_list(ClassifierSet *population){
+    ClassifierSet * setp;
+    Classifier* cl;
+
+    // reset statistics of all filters before updating
+    reset_filter_stats();
+
+    for(setp=population; setp!=NULL; setp=setp->next){
+        cl = setp->classifier;
+        for(int i=0; i<clfrCondLength; i++){
+            for(int j=0; j<cl->condition[i].num_filters; j++){
+                Filter& f = get_filter(cl->condition[i].filter_id[j]);
+                f.numerosity++;
+                // if classifier is "promising" then increase the fitness of the filter
+                // a promising classifier is one whose error < 10 and experience > 10
+                if(cl->predictionError < epsilon_0 && cl->experience > theta_filter){
+                    f.fitness++;
+                }
+
+            }
+        }
+    }
+    // remove filters with numerosity=0 from the filter list
+    remove_unused_filters();
 }

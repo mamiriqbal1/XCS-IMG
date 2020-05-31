@@ -303,13 +303,14 @@ void doOneSingleStepProblem(ClassifierSet **population, DataSource *object, int 
 
         doOneSingleStepProblem(population,state,exploreProbC, img_id, correct, sysError);
 
-       if(exploreProbC%testFrequency==0 && exploreProbC>0)
-        {
+       if(exploreProbC%testFrequency==0 && exploreProbC>0){
             writePerformance(*population,correct,sysError,exploreProbC);
         }
-        if(exploreProbC%validation_frequency==0 && exploreProbC>0)
-        {
+        if(exploreProbC%validation_frequency==0 && exploreProbC>0){
             doOneSingleStepTest(*population);
+        }
+        if(exploreProbC%filter_list_management_frequency==0 && exploreProbC>0){
+            manage_filter_list(*population);
         }
     }
 //    delete state;

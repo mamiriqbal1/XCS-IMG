@@ -9,8 +9,13 @@
 
 
 int add_filter(Filter filter_to_add);
-const Filter& get_filter(int filter_id);
+Filter& get_filter(int filter_id);
 int push_front(Filter filter_to_push);
 void pop_front();
+void remove_filter(int filter_id);
+void reset_filter_stats();
+void remove_unused_filters();
+void print_filter_stats();
+
 
 #endif //RCFC_KB_FILTER_LIST_H

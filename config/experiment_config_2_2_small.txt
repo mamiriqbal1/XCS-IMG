@@ -10,3 +10,4 @@ epochs=2
 # if max_problems are provided then epochs are ignored.
 # max_problems=4000
 test_frequency=500
+testing=no
