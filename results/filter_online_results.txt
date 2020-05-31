@@ -1049,8 +1049,11 @@ user	18m21.034s
 sys	0m0.184s
 
 //14
-After implementing manged filter list
-Now the filter is subsumed only by another filter who's fitness is at least 1. Which means it is present in at least one "promising" classifiers.
+Following changes implemented
+- manged filter list implemented
+- Now the filter is subsumed only by another filter who's fitness is at least 1. Which means it is present in at least one "promising" classifiers.
+- Filter evaluation cache implement with little improvement (may be because filters are constantly being replaced?)
+
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
 test_file_name ../data/mnist/mnist_test_3_8.txt
@@ -1070,34 +1073,41 @@ Validation frequency: 11982
 Loading Input! Please wait ....
 
 It is in progress! Please wait ....
-Training: 1000  accuracy: 0.803  error: 307.411  set size: 1190
-Training: 2000  accuracy: 0.88  error: 192.506  set size: 1628
-Training: 3000  accuracy: 0.919  error: 146.616  set size: 1949
-Training: 4000  accuracy: 0.922  error: 144.006  set size: 1955
-Training: 5000  accuracy: 0.936  error: 120.808  set size: 1963
-Training: 6000  accuracy: 0.929  error: 123  set size: 1954
-Training: 7000  accuracy: 0.942  error: 109.212  set size: 1953
-Training: 8000  accuracy: 0.945  error: 101.033  set size: 1949
-Training: 9000  accuracy: 0.943  error: 94.3287  set size: 1964
-Training: 10000  accuracy: 0.932  error: 111.816  set size: 1953
-Training: 11000  accuracy: 0.936  error: 104.908  set size: 1954
-Validation: 1984  accuracy: 0.949597  error: 102.378  set size: 1961
-Training: 12000  accuracy: 0.952  error: 91.62  set size: 1961
-Training: 13000  accuracy: 0.942  error: 99.8536  set size: 1967
-Training: 14000  accuracy: 0.939  error: 91.016  set size: 1941
-Training: 15000  accuracy: 0.956  error: 84.8255  set size: 1952
-Training: 16000  accuracy: 0.944  error: 93.4151  set size: 1958
-Training: 17000  accuracy: 0.948  error: 87.4177  set size: 1953
-Training: 18000  accuracy: 0.941  error: 91.5782  set size: 1957
-Training: 19000  accuracy: 0.949  error: 87.7348  set size: 1958
-Training: 20000  accuracy: 0.945  error: 93.9652  set size: 1969
-Training: 21000  accuracy: 0.936  error: 106.534  set size: 1965
-Training: 22000  accuracy: 0.948  error: 92.5273  set size: 1953
-Training: 23000  accuracy: 0.952  error: 90.6822  set size: 1958
-Validation: 1984  accuracy: 0.946069  error: 82.5714  set size: 1955
-Global Classifier ID: 19816
+Training: 1000  accuracy: 0.835  error: 253.978  set size: 1222
+Training: 2000  accuracy: 0.905  error: 167.264  set size: 1712
+Training: 3000  accuracy: 0.927  error: 138.871  set size: 1982
+Training: 4000  accuracy: 0.943  error: 104.173  set size: 1979
+Training: 5000  accuracy: 0.943  error: 98.7529  set size: 1974
+Training: 6000  accuracy: 0.939  error: 108.341  set size: 1980
+Training: 7000  accuracy: 0.948  error: 88.4564  set size: 1984
+Training: 8000  accuracy: 0.943  error: 92.5982  set size: 1981
+Training: 9000  accuracy: 0.957  error: 93.7279  set size: 1988
+Training: 10000  accuracy: 0.961  error: 84.239  set size: 1983
+Training: 11000  accuracy: 0.946  error: 92.8977  set size: 1974
+Validation: 1984  accuracy: 0.957157  error: 85.0043  set size: 1979
+Training: 12000  accuracy: 0.963  error: 74.8389  set size: 1979
+Training: 13000  accuracy: 0.945  error: 98.0155  set size: 1982
+Training: 14000  accuracy: 0.955  error: 84.1511  set size: 1980
+Training: 15000  accuracy: 0.961  error: 71.4041  set size: 1979
+Training: 16000  accuracy: 0.954  error: 77.6131  set size: 1982
+Training: 17000  accuracy: 0.956  error: 75.9013  set size: 1974
+Training: 18000  accuracy: 0.958  error: 72.5845  set size: 1972
+Training: 19000  accuracy: 0.96  error: 90.8583  set size: 1974
+Training: 20000  accuracy: 0.937  error: 105.259  set size: 1978
+Training: 21000  accuracy: 0.942  error: 98.834  set size: 1980
+Training: 22000  accuracy: 0.953  error: 91.4926  set size: 1984
+Training: 23000  accuracy: 0.947  error: 82.5939  set size: 1984
+Validation: 1984  accuracy: 0.954133  error: 96.2434  set size: 1990
 
-real	31m5.440s
-user	31m4.303s
-sys	0m0.540s
+--- Filter Stats ---
+gid: 25289
+filter list size: 2538
+avg numerosity: 1.03389 max numerosity: 5 min numerosity: 1
+avg fitness: 0.210402 max fitness: 1 min fitness: 0
+--- Filter Stats ---
 
+Global Classifier ID: 20323
+
+real	33m11.287s
+user	33m8.836s
+sys	0m0.652s

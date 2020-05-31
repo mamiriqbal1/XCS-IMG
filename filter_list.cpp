@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <vector>
 
 FilterList master_filter_list; // The main filter list that is maintained
 
@@ -42,7 +43,7 @@ int add_filter(Filter filter_to_add){
     general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [&filter_to_add](Filter& filter_from_list) -> bool
             {
-                if(filter_from_list.fitness = 0) return false; // only a fitter filter can subsume;
+                if(filter_from_list.fitness == 0) return false; // only a fitter filter can subsume;
                 for(int i=0; i<filter_size*filter_size; i++){
                     if(filter_from_list.lower_bounds[i] > filter_to_add.lower_bounds[i]
                        || filter_from_list.upper_bounds[i] < filter_to_add.upper_bounds[i]){
@@ -70,16 +71,16 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    std::forward_list<Filter>::iterator iterator;
-    iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
+    std::forward_list<Filter>::iterator it;
+    it = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [filter_id](Filter& filter_from_list) -> bool
             {
                 return filter_from_list.id == filter_id;
             });
-    if(iterator == master_filter_list.filters.end()){  // did not find any general filter
-        throw std::runtime_error("Filter ID not found in the list");
+    if(it == master_filter_list.filters.end()){
+        throw std::runtime_error("Filter ID not found in the list: " + std::to_string(filter_id));
     }else{
-        return *iterator;
+        return *it;
     }
 }
 
@@ -118,18 +119,26 @@ void reset_filter_stats(){
 /*
  * This function removes any unused filters
  */
-void remove_unused_filters(){
+void remove_unused_filters(std::forward_list<int>& removed_filters){
     master_filter_list.filters.remove_if(
-            [](Filter& filter_from_list) -> bool
+            [&removed_filters](Filter& filter_from_list) -> bool
             {
-                return filter_from_list.numerosity == 0;
+                if(filter_from_list.numerosity == 0){
+                    removed_filters.push_front(filter_from_list.id);
+                    return true;
+                }else{
+                    return false;
+                }
+
             });
+
 }
 
 /*
  * Print stats about the filter list
  */
 void print_filter_stats(){
+    std::cout<<"\n--- Filter Stats ---\n";
     std::cout<<"gid: "<<master_filter_list.gid<<std::endl;
     int size = std::distance(master_filter_list.filters.begin(), master_filter_list.filters.end());
     std::cout<<"filter list size: "<<size<<std::endl;
@@ -148,4 +157,5 @@ void print_filter_stats(){
             });
     std::cout<<"avg numerosity: "<<n_total/(float)size<<" max numerosity: "<<n_max<<" min numerosity: "<<n_min<<std::endl;
     std::cout<<"avg fitness: "<<f_total/(float)size<<" max fitness: "<<f_max<<" min fitness: "<<f_min<<std::endl;
+    std::cout<<"--- Filter Stats ---\n\n";
 }

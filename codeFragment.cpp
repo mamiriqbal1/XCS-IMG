@@ -14,6 +14,7 @@
 #include <boost/functional/hash.hpp>
 #include <unordered_map>
 #include <utility>
+#include <algorithm>
 //using namespace std;
 
 char globalBuf[1000];
@@ -22,8 +23,9 @@ int startingPreviousCFID = 0;   //what is this value
 
 CodeFragment *previousCFPopulation;
 
-typedef std::pair<int, int> pair;
-std::unordered_map<pair,int,boost::hash<pair>> evaluation_map;
+typedef std::unordered_map<int, bool> ImageMap;
+typedef std::unordered_map<int, ImageMap> FilterMap;
+FilterMap evaluation_map;
 
 
 void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *cfWritingFilePointer)
@@ -553,8 +555,10 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
     return cf;
 }
 
-bool evaluate_filter(const Filter& filter, float state[])
+
+bool evaluate_filter_actual(const Filter& filter, float state[])
 {
+
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
     int k = 0;
     int l = 0;
@@ -576,6 +580,35 @@ bool evaluate_filter(const Filter& filter, float state[])
     }
     return false;
 }
+
+void update_evaluation_cache(std::forward_list<int>& removed_filters){
+    std::forward_list<int>::iterator it;
+    for(it = removed_filters.begin(); it != removed_filters.end(); it++){
+        evaluation_map.erase(*it);
+    }
+}
+
+bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
+{
+    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
+    if(img_id >=0){
+        // return prior result if it is found
+        ImageMap inner_map = evaluation_map[filter.id];
+        if(inner_map.count(img_id) >= 1){  // the image evaluation exist - unordered map always return  1
+            return inner_map[img_id];
+        }
+    }
+
+    bool evaluation = evaluate_filter_actual(filter, state);
+
+    // set hasmap entry for re-using evaluation
+    if(img_id >=0) {
+        ImageMap inner_map = evaluation_map[filter.id];
+        inner_map[img_id] = evaluation;
+    }
+    return evaluation;
+}
+
 
 int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
     int stack[cfMaxStack];
@@ -599,7 +632,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state))
+            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state, cl_id, img_id))
             {
                 stack[SP++] = 1;   //changed
             }

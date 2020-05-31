@@ -14,7 +14,7 @@ int push_front(Filter filter_to_push);
 void pop_front();
 void remove_filter(int filter_id);
 void reset_filter_stats();
-void remove_unused_filters();
+void remove_unused_filters(std::forward_list<int>& removed_filters);
 void print_filter_stats();
 
 

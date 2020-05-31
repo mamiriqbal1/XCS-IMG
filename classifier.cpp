@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "classifier.h"
@@ -1993,5 +1994,7 @@ void manage_filter_list(ClassifierSet *population){
         }
     }
     // remove filters with numerosity=0 from the filter list
-    remove_unused_filters();
+    std::forward_list<int> removed_filters;
+    remove_unused_filters(removed_filters);
+    update_evaluation_cache(removed_filters);
 }
