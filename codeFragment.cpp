@@ -28,6 +28,29 @@ typedef std::unordered_map<int, ImageMap> FilterMap;
 FilterMap evaluation_map;
 
 
+void print_filter_evaluation_stats(){
+    std::cout<<"--- Filter Evaluation Stats ---\n";
+    int size = std::distance(evaluation_map.begin(), evaluation_map.end());
+    int total = 0, positive = 0, min = INT16_MAX, max = -1;
+    std::for_each(evaluation_map.begin(), evaluation_map.end(),
+                  [&total, &positive, &min, &max](const std::pair<int, ImageMap> & item)
+                  {
+                      int size = item.second.size();
+                      int yes = std::count_if(item.second.begin(), item.second.end(),
+                              [](const std::pair<int, bool> & item2)
+                              {
+                                return item2.second;
+                              });
+                      total += size;
+                      positive += yes;
+                      if(min > yes) min = yes;
+                      if(max < yes) max = yes;
+                 });
+    std::cout<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
+    std::cout<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
+    std::cout<<"--- Filter Evaluation Stats ---\n\n";
+}
+
 void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *cfWritingFilePointer)
 {
     if(use_kb)
@@ -593,7 +616,7 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
     // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
     if(img_id >=0){
         // return prior result if it is found
-        ImageMap inner_map = evaluation_map[filter.id];
+        ImageMap& inner_map = evaluation_map[filter.id];
         if(inner_map.count(img_id) >= 1){  // the image evaluation exist - unordered map always return  1
             return inner_map[img_id];
         }
@@ -603,7 +626,7 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
 
     // set hasmap entry for re-using evaluation
     if(img_id >=0) {
-        ImageMap inner_map = evaluation_map[filter.id];
+        ImageMap& inner_map = evaluation_map[filter.id];
         inner_map[img_id] = evaluation;
     }
     return evaluation;

@@ -1670,12 +1670,15 @@ void printClassifierSet(ClassifierSet *head)
     }
 }
 
+
+
 /**
  * print the classifier in a ClassifierSet to the file fp
  */
 void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierSet *head)
 {
     print_filter_stats();
+    print_filter_evaluation_stats();
     ClassifierSet* set;
     for(set=head; set!=NULL; set=set->next)
     {

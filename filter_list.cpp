@@ -155,7 +155,7 @@ void print_filter_stats(){
                 if(f_max < filter_from_list.fitness) f_max = filter_from_list.fitness;
 
             });
-    std::cout<<"avg numerosity: "<<n_total/(float)size<<" max numerosity: "<<n_max<<" min numerosity: "<<n_min<<std::endl;
-    std::cout<<"avg fitness: "<<f_total/(float)size<<" max fitness: "<<f_max<<" min fitness: "<<f_min<<std::endl;
+    std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
+    std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     std::cout<<"--- Filter Stats ---\n\n";
 }
