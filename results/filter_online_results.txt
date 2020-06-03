@@ -1048,6 +1048,8 @@ real	18m22.022s
 user	18m21.034s
 sys	0m0.184s
 
+
+
 //14
 Following changes implemented
 - manged filter list implemented
@@ -1190,3 +1192,864 @@ Global Classifier ID: 15584
 real	26m45.253s
 user	26m43.170s
 sys	0m0.772s
+
+
+//16
+FilterStore implemented as unordered_map instead of forward_list
+Time efficiency improved
+pX from .5 to .8
+pM from .3 to .04
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.796  error: 305.497  set size: 1189
+Training: 2000  accuracy: 0.872  error: 221.667  set size: 1574
+Training: 3000  accuracy: 0.891  error: 194.161  set size: 1879
+Training: 4000  accuracy: 0.892  error: 191.774  set size: 1851
+Training: 5000  accuracy: 0.91  error: 174.484  set size: 1840
+Training: 6000  accuracy: 0.904  error: 164.951  set size: 1814
+Training: 7000  accuracy: 0.914  error: 155.059  set size: 1755
+Training: 8000  accuracy: 0.909  error: 146.593  set size: 1788
+Training: 9000  accuracy: 0.918  error: 147.422  set size: 1797
+Training: 10000  accuracy: 0.896  error: 176.58  set size: 1748
+Training: 11000  accuracy: 0.908  error: 161.282  set size: 1746
+Validation: 1984  accuracy: 0.92994  error: 136.857  set size: 1732
+Training: 12000  accuracy: 0.92  error: 130.109  set size: 1728
+Training: 13000  accuracy: 0.906  error: 153.139  set size: 1731
+Training: 14000  accuracy: 0.919  error: 137.891  set size: 1699
+Training: 15000  accuracy: 0.917  error: 138.117  set size: 1695
+Training: 16000  accuracy: 0.926  error: 132.021  set size: 1683
+Training: 17000  accuracy: 0.922  error: 137.65  set size: 1709
+Training: 18000  accuracy: 0.927  error: 150.551  set size: 1697
+Training: 19000  accuracy: 0.914  error: 138.12  set size: 1716
+Training: 20000  accuracy: 0.922  error: 137.81  set size: 1716
+Training: 21000  accuracy: 0.916  error: 148.395  set size: 1706
+Training: 22000  accuracy: 0.934  error: 122.483  set size: 1722
+Training: 23000  accuracy: 0.926  error: 130.748  set size: 1691
+Validation: 1984  accuracy: 0.925403  error: 123.717  set size: 1676
+
+--- Filter Stats ---
+gid: 20591
+filter list size: 2018
+avg numerosity: 1.0887 , max numerosity: 17 , min numerosity: 1
+avg fitness: 0.231417 , max fitness: 1 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+total evaluations recorded: 7646069 , total evaluated filters: 1901
+avg positive: 92.8211 , max positive: 1332 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 15404
+
+real	14m3.237s
+user	13m54.995s
+sys	0m4.677s
+
+
+
+//17
+6 epochs
+FilterStore implemented as unordered_map instead of forward_list
+Time efficiency improved
+pX from .5 to .8
+pM from .3 to .04
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.796  error: 305.497  set size: 1189
+Training: 2000  accuracy: 0.872  error: 221.667  set size: 1574
+Training: 3000  accuracy: 0.891  error: 194.161  set size: 1879
+Training: 4000  accuracy: 0.892  error: 191.774  set size: 1851
+Training: 5000  accuracy: 0.91  error: 174.484  set size: 1840
+Training: 6000  accuracy: 0.904  error: 164.951  set size: 1814
+Training: 7000  accuracy: 0.914  error: 155.059  set size: 1755
+Training: 8000  accuracy: 0.909  error: 146.593  set size: 1788
+Training: 9000  accuracy: 0.918  error: 147.422  set size: 1797
+Training: 10000  accuracy: 0.896  error: 176.58  set size: 1748
+Training: 11000  accuracy: 0.908  error: 161.282  set size: 1746
+Validation: 1984  accuracy: 0.92994  error: 136.857  set size: 1732
+Training: 12000  accuracy: 0.92  error: 130.109  set size: 1728
+Training: 13000  accuracy: 0.906  error: 153.139  set size: 1731
+Training: 14000  accuracy: 0.919  error: 137.891  set size: 1699
+Training: 15000  accuracy: 0.917  error: 138.117  set size: 1695
+Training: 16000  accuracy: 0.926  error: 132.021  set size: 1683
+Training: 17000  accuracy: 0.922  error: 137.65  set size: 1709
+Training: 18000  accuracy: 0.927  error: 150.551  set size: 1697
+Training: 19000  accuracy: 0.914  error: 138.12  set size: 1716
+Training: 20000  accuracy: 0.922  error: 137.81  set size: 1716
+Training: 21000  accuracy: 0.916  error: 148.395  set size: 1706
+Training: 22000  accuracy: 0.934  error: 122.483  set size: 1722
+Training: 23000  accuracy: 0.926  error: 130.748  set size: 1691
+Validation: 1984  accuracy: 0.925403  error: 123.717  set size: 1676
+Training: 24000  accuracy: 0.93  error: 127.263  set size: 1677
+Training: 25000  accuracy: 0.924  error: 140.81  set size: 1700
+Training: 26000  accuracy: 0.927  error: 120.717  set size: 1671
+Training: 27000  accuracy: 0.932  error: 120.276  set size: 1666
+Training: 28000  accuracy: 0.936  error: 119.66  set size: 1672
+Training: 29000  accuracy: 0.927  error: 126.133  set size: 1663
+Training: 30000  accuracy: 0.946  error: 105.442  set size: 1691
+Training: 31000  accuracy: 0.949  error: 101.292  set size: 1666
+Training: 32000  accuracy: 0.94  error: 99.97  set size: 1657
+Training: 33000  accuracy: 0.918  error: 125.598  set size: 1680
+Training: 34000  accuracy: 0.933  error: 112.5  set size: 1667
+Training: 35000  accuracy: 0.939  error: 120.95  set size: 1671
+Validation: 1984  accuracy: 0.944556  error: 101.867  set size: 1704
+Training: 36000  accuracy: 0.923  error: 128.86  set size: 1710
+Training: 37000  accuracy: 0.936  error: 115.381  set size: 1698
+Training: 38000  accuracy: 0.938  error: 105.609  set size: 1668
+Training: 39000  accuracy: 0.933  error: 115.276  set size: 1672
+Training: 40000  accuracy: 0.948  error: 98.5982  set size: 1666
+Training: 41000  accuracy: 0.947  error: 98.0011  set size: 1665
+Training: 42000  accuracy: 0.933  error: 107.393  set size: 1647
+Training: 43000  accuracy: 0.938  error: 113.893  set size: 1657
+Training: 44000  accuracy: 0.95  error: 87.2297  set size: 1636
+Training: 45000  accuracy: 0.94  error: 96.4813  set size: 1663
+Training: 46000  accuracy: 0.932  error: 125.766  set size: 1656
+Training: 47000  accuracy: 0.946  error: 93.7056  set size: 1656
+Validation: 1984  accuracy: 0.947581  error: 115.508  set size: 1666
+Training: 48000  accuracy: 0.939  error: 96.2593  set size: 1670
+Training: 49000  accuracy: 0.938  error: 113.473  set size: 1650
+Training: 50000  accuracy: 0.935  error: 94.6097  set size: 1638
+Training: 51000  accuracy: 0.932  error: 117.078  set size: 1679
+Training: 52000  accuracy: 0.952  error: 90.1987  set size: 1678
+Training: 53000  accuracy: 0.938  error: 114.149  set size: 1675
+Training: 54000  accuracy: 0.948  error: 108.466  set size: 1681
+Training: 55000  accuracy: 0.93  error: 106.995  set size: 1680
+Training: 56000  accuracy: 0.948  error: 84.23  set size: 1674
+Training: 57000  accuracy: 0.943  error: 105.095  set size: 1717
+Training: 58000  accuracy: 0.961  error: 98.0018  set size: 1705
+Training: 59000  accuracy: 0.948  error: 94.6493  set size: 1681
+Validation: 1984  accuracy: 0.938508  error: 111.333  set size: 1681
+Training: 60000  accuracy: 0.953  error: 92.5678  set size: 1680
+Training: 61000  accuracy: 0.941  error: 102.709  set size: 1691
+Training: 62000  accuracy: 0.955  error: 90.9826  set size: 1683
+Training: 63000  accuracy: 0.931  error: 120.405  set size: 1687
+Training: 64000  accuracy: 0.953  error: 80.6207  set size: 1681
+Training: 65000  accuracy: 0.959  error: 95.0737  set size: 1676
+Training: 66000  accuracy: 0.938  error: 126.103  set size: 1684
+Training: 67000  accuracy: 0.935  error: 112.366  set size: 1677
+Training: 68000  accuracy: 0.94  error: 108.395  set size: 1670
+Training: 69000  accuracy: 0.945  error: 105.544  set size: 1679
+Training: 70000  accuracy: 0.948  error: 101.598  set size: 1666
+Training: 71000  accuracy: 0.947  error: 115.875  set size: 1687
+Validation: 1984  accuracy: 0.956149  error: 72.4572  set size: 1657
+
+--- Filter Stats ---
+gid: 58198
+filter list size: 1911
+avg numerosity: 1.07326 , max numerosity: 9 , min numerosity: 1
+avg fitness: 0.199372 , max fitness: 1 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 42861990
+total evaluations recorded: 9173384 , total evaluated filters: 1818
+avg positive: 68.0908 , max positive: 1156 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 47150
+
+real	33m59.413s
+user	33m56.154s
+sys	0m0.904s
+
+
+
+
+
+//18
+Using promising filters from OL with prob 0.1 in mutation. In covering it has no impact because initially there are no promising filters.
+
+
+
+16:18:26 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_2_2.txt 
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 6
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.838  error: 264.703  set size: 1189
+Training: 2000  accuracy: 0.911  error: 183.664  set size: 1569
+Training: 3000  accuracy: 0.922  error: 149.488  set size: 1824
+Training: 4000  accuracy: 0.925  error: 146.453  set size: 1781
+Training: 5000  accuracy: 0.939  error: 128.923  set size: 1727
+Training: 6000  accuracy: 0.921  error: 151.674  set size: 1738
+Training: 7000  accuracy: 0.928  error: 133.135  set size: 1743
+Training: 8000  accuracy: 0.941  error: 125.963  set size: 1721
+Training: 9000  accuracy: 0.939  error: 127.657  set size: 1732
+Training: 10000  accuracy: 0.934  error: 121.222  set size: 1712
+Training: 11000  accuracy: 0.922  error: 150.937  set size: 1692
+Validation: 1984  accuracy: 0.913306  error: 143.638  set size: 1658
+Training: 12000  accuracy: 0.938  error: 119.298  set size: 1659
+Training: 13000  accuracy: 0.918  error: 152.006  set size: 1679
+Training: 14000  accuracy: 0.938  error: 125.469  set size: 1650
+Training: 15000  accuracy: 0.91  error: 153.04  set size: 1663
+Training: 16000  accuracy: 0.924  error: 139.964  set size: 1673
+Training: 17000  accuracy: 0.93  error: 131.338  set size: 1673
+Training: 18000  accuracy: 0.932  error: 134.943  set size: 1647
+Training: 19000  accuracy: 0.939  error: 121.825  set size: 1646
+Training: 20000  accuracy: 0.939  error: 116.676  set size: 1645
+Training: 21000  accuracy: 0.929  error: 130.869  set size: 1619
+Training: 22000  accuracy: 0.934  error: 139.407  set size: 1635
+Training: 23000  accuracy: 0.926  error: 134.62  set size: 1616
+Validation: 1984  accuracy: 0.952621  error: 91.8531  set size: 1650
+Training: 24000  accuracy: 0.905  error: 147.405  set size: 1653
+Training: 25000  accuracy: 0.939  error: 137.914  set size: 1631
+Training: 26000  accuracy: 0.931  error: 142.59  set size: 1624
+Training: 27000  accuracy: 0.931  error: 120.755  set size: 1624
+Training: 28000  accuracy: 0.929  error: 145.168  set size: 1646
+Training: 29000  accuracy: 0.941  error: 122.234  set size: 1625
+Training: 30000  accuracy: 0.944  error: 115.334  set size: 1611
+Training: 31000  accuracy: 0.931  error: 126.191  set size: 1599
+Training: 32000  accuracy: 0.95  error: 109.376  set size: 1574
+Training: 33000  accuracy: 0.952  error: 95.9653  set size: 1554
+Training: 34000  accuracy: 0.938  error: 110.717  set size: 1556
+Training: 35000  accuracy: 0.945  error: 105.659  set size: 1567
+Validation: 1984  accuracy: 0.953125  error: 89.1073  set size: 1562
+Training: 36000  accuracy: 0.943  error: 108.07  set size: 1566
+Training: 37000  accuracy: 0.946  error: 105.425  set size: 1542
+Training: 38000  accuracy: 0.932  error: 131.701  set size: 1558
+Training: 39000  accuracy: 0.957  error: 107.247  set size: 1555
+Training: 40000  accuracy: 0.953  error: 101.119  set size: 1557
+Training: 41000  accuracy: 0.934  error: 118.274  set size: 1557
+Training: 42000  accuracy: 0.95  error: 106.768  set size: 1532
+Training: 43000  accuracy: 0.944  error: 110.981  set size: 1532
+Training: 44000  accuracy: 0.949  error: 99.8618  set size: 1520
+Training: 45000  accuracy: 0.949  error: 97.1378  set size: 1537
+Training: 46000  accuracy: 0.949  error: 93.7702  set size: 1533
+Training: 47000  accuracy: 0.951  error: 94.5668  set size: 1495
+Validation: 1984  accuracy: 0.956149  error: 60.1487  set size: 1525
+Training: 48000  accuracy: 0.952  error: 92.0766  set size: 1518
+Training: 49000  accuracy: 0.956  error: 86.4211  set size: 1537
+Training: 50000  accuracy: 0.958  error: 88.6359  set size: 1518
+Training: 51000  accuracy: 0.948  error: 91.3452  set size: 1542
+Training: 52000  accuracy: 0.96  error: 88.7777  set size: 1535
+Training: 53000  accuracy: 0.956  error: 84.2922  set size: 1556
+Training: 54000  accuracy: 0.953  error: 96.1913  set size: 1543
+Training: 55000  accuracy: 0.948  error: 94.8173  set size: 1524
+Training: 56000  accuracy: 0.933  error: 117.615  set size: 1504
+Training: 57000  accuracy: 0.954  error: 97.6216  set size: 1509
+Training: 58000  accuracy: 0.953  error: 81.547  set size: 1482
+Training: 59000  accuracy: 0.946  error: 93.3933  set size: 1512
+Validation: 1984  accuracy: 0.949093  error: 81.4513  set size: 1536
+Training: 60000  accuracy: 0.95  error: 94.4899  set size: 1532
+Training: 61000  accuracy: 0.949  error: 100.609  set size: 1568
+Training: 62000  accuracy: 0.953  error: 95.9255  set size: 1549
+Training: 63000  accuracy: 0.947  error: 102.379  set size: 1553
+Training: 64000  accuracy: 0.949  error: 95.4722  set size: 1539
+Training: 65000  accuracy: 0.947  error: 96.2054  set size: 1544
+Training: 66000  accuracy: 0.951  error: 93.4444  set size: 1525
+Training: 67000  accuracy: 0.956  error: 77.6618  set size: 1509
+Training: 68000  accuracy: 0.95  error: 97.5979  set size: 1496
+Training: 69000  accuracy: 0.945  error: 99.2103  set size: 1502
+Training: 70000  accuracy: 0.95  error: 97.276  set size: 1532
+Training: 71000  accuracy: 0.956  error: 88.7488  set size: 1525
+Validation: 1984  accuracy: 0.9375  error: 80.233  set size: 1509
+
+--- Filter Stats ---
+gid: 47639
+filter list size: 2245
+avg numerosity: 0.862806 , max numerosity: 13 , min numerosity: 0
+avg fitness: 0.281069 , max fitness: 1 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 43451485
+total evaluations recorded: 8525281 , total evaluated filters: 1658
+avg positive: 120.764 , max positive: 2135 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 41003
+
+real	27m37.213s
+user	27m36.596s
+sys	0m0.412s
+
+
+
+
+
+//19
+With p_ol = 0.5 and 12 epochs
+
+
+
+16:53:13 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_2_2.txt train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 12
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.827  error: 262.352  set size: 1185
+Training: 2000  accuracy: 0.915  error: 171.52  set size: 1539
+Training: 3000  accuracy: 0.922  error: 146.605  set size: 1820
+Training: 4000  accuracy: 0.926  error: 146.016  set size: 1774
+Training: 5000  accuracy: 0.921  error: 154.112  set size: 1751
+Training: 6000  accuracy: 0.92  error: 143.007  set size: 1739
+Training: 7000  accuracy: 0.919  error: 144.25  set size: 1732
+Training: 8000  accuracy: 0.911  error: 153.509  set size: 1743
+Training: 9000  accuracy: 0.898  error: 168.118  set size: 1741
+Training: 10000  accuracy: 0.929  error: 132.407  set size: 1746
+Training: 11000  accuracy: 0.923  error: 141.34  set size: 1748
+Validation: 1984  accuracy: 0.911794  error: 138.626  set size: 1716
+Training: 12000  accuracy: 0.933  error: 126.458  set size: 1716
+Training: 13000  accuracy: 0.924  error: 141.772  set size: 1702
+Training: 14000  accuracy: 0.936  error: 123.382  set size: 1686
+Training: 15000  accuracy: 0.929  error: 125.61  set size: 1667
+Training: 16000  accuracy: 0.919  error: 145.027  set size: 1684
+Training: 17000  accuracy: 0.938  error: 131.03  set size: 1683
+Training: 18000  accuracy: 0.95  error: 113.148  set size: 1677
+Training: 19000  accuracy: 0.941  error: 119.058  set size: 1643
+Training: 20000  accuracy: 0.934  error: 117.867  set size: 1649
+Training: 21000  accuracy: 0.939  error: 111.175  set size: 1634
+Training: 22000  accuracy: 0.924  error: 136.464  set size: 1649
+Training: 23000  accuracy: 0.941  error: 113.511  set size: 1630
+Validation: 1984  accuracy: 0.946573  error: 97.1691  set size: 1625
+Training: 24000  accuracy: 0.927  error: 131.846  set size: 1631
+Training: 25000  accuracy: 0.933  error: 120.673  set size: 1604
+Training: 26000  accuracy: 0.944  error: 112.963  set size: 1575
+Training: 27000  accuracy: 0.948  error: 95.6703  set size: 1593
+Training: 28000  accuracy: 0.946  error: 115.992  set size: 1591
+Training: 29000  accuracy: 0.928  error: 130.529  set size: 1603
+Training: 30000  accuracy: 0.94  error: 118.301  set size: 1601
+Training: 31000  accuracy: 0.934  error: 115.908  set size: 1603
+Training: 32000  accuracy: 0.942  error: 107.858  set size: 1636
+Training: 33000  accuracy: 0.935  error: 115.922  set size: 1630
+Training: 34000  accuracy: 0.947  error: 101.571  set size: 1555
+Training: 35000  accuracy: 0.953  error: 105.233  set size: 1568
+Validation: 1984  accuracy: 0.857359  error: 250.622  set size: 1584
+Training: 36000  accuracy: 0.942  error: 115.836  set size: 1580
+Training: 37000  accuracy: 0.934  error: 126.894  set size: 1578
+Training: 38000  accuracy: 0.947  error: 101.216  set size: 1551
+Training: 39000  accuracy: 0.922  error: 146.851  set size: 1583
+Training: 40000  accuracy: 0.934  error: 121.771  set size: 1595
+Training: 41000  accuracy: 0.931  error: 131.319  set size: 1584
+Training: 42000  accuracy: 0.936  error: 127.743  set size: 1576
+Training: 43000  accuracy: 0.926  error: 123.879  set size: 1595
+Training: 44000  accuracy: 0.947  error: 105.082  set size: 1563
+Training: 45000  accuracy: 0.95  error: 102.349  set size: 1586
+Training: 46000  accuracy: 0.954  error: 99.4115  set size: 1587
+Training: 47000  accuracy: 0.945  error: 95.5231  set size: 1542
+Validation: 1984  accuracy: 0.947077  error: 96.5705  set size: 1539
+Training: 48000  accuracy: 0.946  error: 98.067  set size: 1539
+Training: 49000  accuracy: 0.95  error: 104.625  set size: 1557
+Training: 50000  accuracy: 0.962  error: 86.3978  set size: 1543
+Training: 51000  accuracy: 0.948  error: 101.826  set size: 1548
+Training: 52000  accuracy: 0.944  error: 103.928  set size: 1565
+Training: 53000  accuracy: 0.948  error: 96.5532  set size: 1554
+Training: 54000  accuracy: 0.95  error: 89.901  set size: 1528
+Training: 55000  accuracy: 0.949  error: 95.8789  set size: 1555
+Training: 56000  accuracy: 0.954  error: 96.2656  set size: 1549
+Training: 57000  accuracy: 0.952  error: 99.2939  set size: 1525
+Training: 58000  accuracy: 0.94  error: 108.796  set size: 1525
+Training: 59000  accuracy: 0.934  error: 118.153  set size: 1528
+Validation: 1984  accuracy: 0.951613  error: 116.264  set size: 1511
+Training: 60000  accuracy: 0.945  error: 105.054  set size: 1511
+Training: 61000  accuracy: 0.94  error: 118.528  set size: 1521
+Training: 62000  accuracy: 0.945  error: 99.9789  set size: 1521
+Training: 63000  accuracy: 0.944  error: 97.1611  set size: 1518
+Training: 64000  accuracy: 0.948  error: 96.3702  set size: 1519
+Training: 65000  accuracy: 0.952  error: 101.812  set size: 1517
+Training: 66000  accuracy: 0.95  error: 96.7582  set size: 1497
+Training: 67000  accuracy: 0.948  error: 94.0416  set size: 1510
+Training: 68000  accuracy: 0.952  error: 88.3868  set size: 1501
+Training: 69000  accuracy: 0.952  error: 93.5395  set size: 1528
+Training: 70000  accuracy: 0.945  error: 95.7935  set size: 1519
+Training: 71000  accuracy: 0.95  error: 98.4285  set size: 1506
+Validation: 1984  accuracy: 0.94254  error: 118.37  set size: 1490
+Training: 72000  accuracy: 0.956  error: 95.5002  set size: 1492
+Training: 73000  accuracy: 0.962  error: 78.63  set size: 1483
+Training: 74000  accuracy: 0.947  error: 92.4055  set size: 1483
+Training: 75000  accuracy: 0.949  error: 94.4025  set size: 1507
+Training: 76000  accuracy: 0.954  error: 92.9584  set size: 1499
+Training: 77000  accuracy: 0.955  error: 83.2385  set size: 1481
+Training: 78000  accuracy: 0.949  error: 93.6922  set size: 1474
+Training: 79000  accuracy: 0.956  error: 94.0183  set size: 1468
+Training: 80000  accuracy: 0.948  error: 97.2592  set size: 1475
+Training: 81000  accuracy: 0.945  error: 104.627  set size: 1497
+Training: 82000  accuracy: 0.942  error: 103.249  set size: 1526
+Training: 83000  accuracy: 0.951  error: 93.4674  set size: 1473
+Validation: 1984  accuracy: 0.948085  error: 79.012  set size: 1476
+Training: 84000  accuracy: 0.954  error: 93.0078  set size: 1490
+Training: 85000  accuracy: 0.948  error: 92.823  set size: 1461
+Training: 86000  accuracy: 0.957  error: 92.4274  set size: 1440
+Training: 87000  accuracy: 0.951  error: 101.146  set size: 1438
+Training: 88000  accuracy: 0.947  error: 96.9798  set size: 1438
+Training: 89000  accuracy: 0.966  error: 71.7916  set size: 1423
+Training: 90000  accuracy: 0.957  error: 81.3468  set size: 1413
+Training: 91000  accuracy: 0.948  error: 94.4536  set size: 1447
+Training: 92000  accuracy: 0.946  error: 109.616  set size: 1428
+Training: 93000  accuracy: 0.961  error: 81.3549  set size: 1430
+Training: 94000  accuracy: 0.957  error: 79.6281  set size: 1428
+Training: 95000  accuracy: 0.949  error: 90.6319  set size: 1428
+Validation: 1984  accuracy: 0.921371  error: 87.3809  set size: 1425
+Training: 96000  accuracy: 0.958  error: 88.6488  set size: 1431
+Training: 97000  accuracy: 0.953  error: 87.7199  set size: 1413
+Training: 98000  accuracy: 0.944  error: 103.453  set size: 1391
+Training: 99000  accuracy: 0.959  error: 80.4924  set size: 1416
+Training: 100000  accuracy: 0.953  error: 93.5372  set size: 1401
+Training: 101000  accuracy: 0.959  error: 79.297  set size: 1395
+Training: 102000  accuracy: 0.961  error: 75.4815  set size: 1410
+Training: 103000  accuracy: 0.949  error: 95.51  set size: 1401
+Training: 104000  accuracy: 0.955  error: 85.4821  set size: 1412
+Training: 105000  accuracy: 0.962  error: 78.0477  set size: 1405
+Training: 106000  accuracy: 0.947  error: 100.858  set size: 1410
+Training: 107000  accuracy: 0.959  error: 82.6939  set size: 1381
+Validation: 1984  accuracy: 0.919355  error: 98.1627  set size: 1388
+Training: 108000  accuracy: 0.957  error: 90.2689  set size: 1397
+Training: 109000  accuracy: 0.963  error: 83.7959  set size: 1403
+Training: 110000  accuracy: 0.955  error: 91.1321  set size: 1411
+Training: 111000  accuracy: 0.952  error: 89.8114  set size: 1412
+Training: 112000  accuracy: 0.934  error: 108.584  set size: 1406
+Training: 113000  accuracy: 0.956  error: 78.6123  set size: 1379
+Training: 114000  accuracy: 0.96  error: 84.0647  set size: 1383
+Training: 115000  accuracy: 0.951  error: 96.2071  set size: 1389
+Training: 116000  accuracy: 0.953  error: 84.8812  set size: 1375
+Training: 117000  accuracy: 0.948  error: 101.535  set size: 1419
+Training: 118000  accuracy: 0.956  error: 90.194  set size: 1393
+Training: 119000  accuracy: 0.956  error: 86.8934  set size: 1367
+Validation: 1984  accuracy: 0.925907  error: 119.596  set size: 1354
+Training: 120000  accuracy: 0.962  error: 78.4289  set size: 1359
+Training: 121000  accuracy: 0.954  error: 91.1885  set size: 1362
+Training: 122000  accuracy: 0.961  error: 81.8581  set size: 1345
+Training: 123000  accuracy: 0.947  error: 86.204  set size: 1318
+Training: 124000  accuracy: 0.947  error: 98.2037  set size: 1350
+Training: 125000  accuracy: 0.956  error: 85.7176  set size: 1358
+Training: 126000  accuracy: 0.938  error: 110.311  set size: 1339
+Training: 127000  accuracy: 0.951  error: 98.7274  set size: 1370
+Training: 128000  accuracy: 0.958  error: 87.7751  set size: 1393
+Training: 129000  accuracy: 0.947  error: 102.124  set size: 1405
+Training: 130000  accuracy: 0.967  error: 82.7307  set size: 1385
+Training: 131000  accuracy: 0.943  error: 102.122  set size: 1345
+Validation: 1984  accuracy: 0.955645  error: 108.7  set size: 1325
+Training: 132000  accuracy: 0.952  error: 91.9998  set size: 1322
+Training: 133000  accuracy: 0.937  error: 104.866  set size: 1360
+Training: 134000  accuracy: 0.957  error: 87.134  set size: 1364
+Training: 135000  accuracy: 0.948  error: 96.0519  set size: 1362
+Training: 136000  accuracy: 0.938  error: 105.077  set size: 1388
+Training: 137000  accuracy: 0.95  error: 104.786  set size: 1400
+Training: 138000  accuracy: 0.948  error: 95.1372  set size: 1367
+Training: 139000  accuracy: 0.947  error: 92.7813  set size: 1385
+Training: 140000  accuracy: 0.955  error: 84.6469  set size: 1367
+Training: 141000  accuracy: 0.954  error: 88.9866  set size: 1350
+Training: 142000  accuracy: 0.947  error: 103.002  set size: 1345
+Training: 143000  accuracy: 0.947  error: 101.17  set size: 1375
+Validation: 1984  accuracy: 0.956653  error: 104.771  set size: 1398
+
+--- Filter Stats ---
+gid: 76137
+filter list size: 2125
+avg numerosity: 0.760471 , max numerosity: 13 , min numerosity: 0
+avg fitness: 0.253176 , max fitness: 1 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 100661673
+total evaluations recorded: 8313451 , total evaluated filters: 1475
+avg positive: 194.307 , max positive: 2403 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 71123
+
+real	44m43.851s
+user	44m42.925s
+sys	0m0.496s
+
+
+
+
+
+//20
+pX=0.5
+pM=0.3
+96% after 6 epochs
+core dump after during 8th epoch
+
+
+19:08:15 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_2_2.txt train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 12
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.793  error: 290.729  set size: 1220
+Training: 2000  accuracy: 0.921  error: 157.005  set size: 1676
+Training: 3000  accuracy: 0.936  error: 114.996  set size: 1981
+Training: 4000  accuracy: 0.943  error: 111.064  set size: 1971
+Training: 5000  accuracy: 0.928  error: 122.735  set size: 1984
+Training: 6000  accuracy: 0.934  error: 113.57  set size: 1985
+Training: 7000  accuracy: 0.937  error: 119.205  set size: 1986
+Training: 8000  accuracy: 0.931  error: 130.408  set size: 1979
+Training: 9000  accuracy: 0.927  error: 124.46  set size: 1983
+Training: 10000  accuracy: 0.927  error: 122.04  set size: 1978
+Training: 11000  accuracy: 0.926  error: 123.027  set size: 1982
+Validation: 1984  accuracy: 0.93498  error: 95.201  set size: 1982
+Training: 12000  accuracy: 0.932  error: 119.81  set size: 1982
+Training: 13000  accuracy: 0.931  error: 118.126  set size: 1980
+Training: 14000  accuracy: 0.938  error: 119.171  set size: 1975
+Training: 15000  accuracy: 0.926  error: 131.01  set size: 1966
+Training: 16000  accuracy: 0.939  error: 116.267  set size: 1981
+Training: 17000  accuracy: 0.935  error: 120.475  set size: 1978
+Training: 18000  accuracy: 0.943  error: 109.408  set size: 1982
+Training: 19000  accuracy: 0.935  error: 120.855  set size: 1980
+Training: 20000  accuracy: 0.939  error: 111.548  set size: 1980
+Training: 21000  accuracy: 0.946  error: 101.107  set size: 1982
+Training: 22000  accuracy: 0.938  error: 99.583  set size: 1979
+Training: 23000  accuracy: 0.955  error: 96.7853  set size: 1973
+Validation: 1984  accuracy: 0.938004  error: 84.9835  set size: 1971
+Training: 24000  accuracy: 0.942  error: 105.863  set size: 1972
+Training: 25000  accuracy: 0.923  error: 129.289  set size: 1967
+Training: 26000  accuracy: 0.944  error: 107.98  set size: 1965
+Training: 27000  accuracy: 0.937  error: 105.048  set size: 1964
+Training: 28000  accuracy: 0.931  error: 111.108  set size: 1968
+Training: 29000  accuracy: 0.944  error: 105.749  set size: 1959
+Training: 30000  accuracy: 0.946  error: 103.436  set size: 1964
+Training: 31000  accuracy: 0.94  error: 116.716  set size: 1971
+Training: 32000  accuracy: 0.941  error: 101.176  set size: 1974
+Training: 33000  accuracy: 0.94  error: 109.174  set size: 1974
+Training: 34000  accuracy: 0.943  error: 112.89  set size: 1972
+Training: 35000  accuracy: 0.954  error: 96.157  set size: 1973
+Validation: 1984  accuracy: 0.952621  error: 68.6633  set size: 1975
+Training: 36000  accuracy: 0.939  error: 110.895  set size: 1975
+Training: 37000  accuracy: 0.953  error: 102.173  set size: 1977
+Training: 38000  accuracy: 0.942  error: 113.547  set size: 1978
+Training: 39000  accuracy: 0.949  error: 103.751  set size: 1973
+Training: 40000  accuracy: 0.94  error: 103.121  set size: 1974
+Training: 41000  accuracy: 0.944  error: 97.7212  set size: 1970
+Training: 42000  accuracy: 0.936  error: 108.791  set size: 1976
+Training: 43000  accuracy: 0.944  error: 99.277  set size: 1980
+Training: 44000  accuracy: 0.951  error: 93.5284  set size: 1976
+Training: 45000  accuracy: 0.956  error: 85.9684  set size: 1971
+Training: 46000  accuracy: 0.941  error: 101.259  set size: 1977
+Training: 47000  accuracy: 0.937  error: 104.456  set size: 1985
+Validation: 1984  accuracy: 0.948589  error: 198.891  set size: 1976
+Training: 48000  accuracy: 0.953  error: 83.3307  set size: 1974
+Training: 49000  accuracy: 0.938  error: 111.835  set size: 1976
+Training: 50000  accuracy: 0.952  error: 92.4262  set size: 1979
+Training: 51000  accuracy: 0.957  error: 86.0931  set size: 1979
+Training: 52000  accuracy: 0.956  error: 88.4619  set size: 1975
+Training: 53000  accuracy: 0.957  error: 77.576  set size: 1970
+Training: 54000  accuracy: 0.953  error: 91.5526  set size: 1971
+Training: 55000  accuracy: 0.953  error: 95.8318  set size: 1970
+Training: 56000  accuracy: 0.944  error: 104.968  set size: 1959
+Training: 57000  accuracy: 0.953  error: 85.1433  set size: 1963
+Training: 58000  accuracy: 0.952  error: 86.4767  set size: 1973
+Training: 59000  accuracy: 0.948  error: 92.2578  set size: 1968
+Validation: 1984  accuracy: 0.940524  error: 88.1939  set size: 1967
+Training: 60000  accuracy: 0.958  error: 86.2056  set size: 1968
+Training: 61000  accuracy: 0.943  error: 97.3154  set size: 1967
+Training: 62000  accuracy: 0.961  error: 72.444  set size: 1969
+Training: 63000  accuracy: 0.959  error: 81.5559  set size: 1959
+Training: 64000  accuracy: 0.953  error: 91.9451  set size: 1952
+Training: 65000  accuracy: 0.948  error: 93.2429  set size: 1957
+Training: 66000  accuracy: 0.947  error: 99.8593  set size: 1973
+Training: 67000  accuracy: 0.959  error: 86.7359  set size: 1974
+Training: 68000  accuracy: 0.958  error: 83.6008  set size: 1964
+Training: 69000  accuracy: 0.945  error: 86.7243  set size: 1976
+Training: 70000  accuracy: 0.947  error: 82.6458  set size: 1983
+Training: 71000  accuracy: 0.958  error: 86.1251  set size: 1977
+Validation: 1984  accuracy: 0.962198  error: 64.7219  set size: 1973
+Training: 72000  accuracy: 0.959  error: 83.1734  set size: 1968
+Training: 73000  accuracy: 0.957  error: 76.5421  set size: 1964
+Training: 74000  accuracy: 0.954  error: 88.9928  set size: 1965
+Training: 75000  accuracy: 0.952  error: 93.1492  set size: 1960
+Training: 76000  accuracy: 0.959  error: 87.5423  set size: 1969
+Training: 77000  accuracy: 0.951  error: 86.7135  set size: 1969
+Training: 78000  accuracy: 0.961  error: 83.9232  set size: 1965
+Training: 79000  accuracy: 0.946  error: 98.6802  set size: 1965
+Training: 80000  accuracy: 0.955  error: 86.7875  set size: 1974
+Training: 81000  accuracy: 0.946  error: 94.358  set size: 1965
+Training: 82000  accuracy: 0.955  error: 83.1897  set size: 1968
+Training: 83000  accuracy: 0.942  error: 96.492  set size: 1968
+Validation: 1984  accuracy: 0.952621  error: 80.2104  set size: 1968
+Training: 84000  accuracy: 0.959  error: 77.9343  set size: 1966
+Training: 85000  accuracy: 0.941  error: 106.289  set size: 1970
+Training: 86000  accuracy: 0.948  error: 100.609  set size: 1966
+Training: 87000  accuracy: 0.944  error: 102.991  set size: 1961
+Training: 88000  accuracy: 0.947  error: 94.2024  set size: 1961
+Training: 89000  accuracy: 0.953  error: 90.8444  set size: 1966
+Training: 90000  accuracy: 0.941  error: 99.0501  set size: 1976
+Training: 91000  accuracy: 0.957  error: 87.1813  set size: 1971
+Training: 92000  accuracy: 0.952  error: 93.9438  set size: 1968
+92342/14terminate called after throwing an instance of 'std::out_of_range'
+  what():  _Map_base::at
+Aborted (core dumped)
+
+real	52m44.293s
+user	52m41.930s
+sys	0m1.032s
+
+
+
+
+
+//21
+pX=0.04
+pM=0.8
+too fast?
+
+
+20:14:38 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_2_2.txt train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 12
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.728  error: 400.046  set size: 994
+Training: 2000  accuracy: 0.886  error: 289.087  set size: 1166
+Training: 3000  accuracy: 0.88  error: 244.267  set size: 1301
+Training: 4000  accuracy: 0.893  error: 225.072  set size: 1275
+Training: 5000  accuracy: 0.894  error: 218.056  set size: 1262
+Training: 6000  accuracy: 0.891  error: 223.634  set size: 1243
+Training: 7000  accuracy: 0.879  error: 233.698  set size: 1209
+Training: 8000  accuracy: 0.874  error: 226.657  set size: 1169
+Training: 9000  accuracy: 0.89  error: 221.215  set size: 1161
+Training: 10000  accuracy: 0.872  error: 254.978  set size: 1123
+Training: 11000  accuracy: 0.868  error: 247.722  set size: 1119
+Validation: 1984  accuracy: 0.86996  error: 183.677  set size: 1101
+Training: 12000  accuracy: 0.905  error: 197.861  set size: 1103
+Training: 13000  accuracy: 0.883  error: 232.847  set size: 1071
+Training: 14000  accuracy: 0.887  error: 212.058  set size: 1048
+Training: 15000  accuracy: 0.9  error: 222.503  set size: 1049
+Training: 16000  accuracy: 0.889  error: 225.522  set size: 1028
+Training: 17000  accuracy: 0.872  error: 231.392  set size: 1036
+Training: 18000  accuracy: 0.883  error: 221.871  set size: 1032
+Training: 19000  accuracy: 0.874  error: 232.51  set size: 1009
+Training: 20000  accuracy: 0.885  error: 219.171  set size: 991
+Training: 21000  accuracy: 0.892  error: 197.42  set size: 958
+Training: 22000  accuracy: 0.883  error: 223.691  set size: 922
+Training: 23000  accuracy: 0.896  error: 202.117  set size: 919
+Validation: 1984  accuracy: 0.893145  error: 191.815  set size: 922
+Training: 24000  accuracy: 0.887  error: 228.892  set size: 923
+Training: 25000  accuracy: 0.874  error: 221.76  set size: 921
+Training: 26000  accuracy: 0.889  error: 217.806  set size: 894
+Training: 27000  accuracy: 0.883  error: 235.035  set size: 849
+Training: 28000  accuracy: 0.903  error: 203.89  set size: 821
+Training: 29000  accuracy: 0.895  error: 212.117  set size: 835
+Training: 30000  accuracy: 0.89  error: 210.543  set size: 807
+Training: 31000  accuracy: 0.901  error: 192.358  set size: 789
+Training: 32000  accuracy: 0.884  error: 230.298  set size: 770
+Training: 33000  accuracy: 0.903  error: 206.785  set size: 767
+Training: 34000  accuracy: 0.851  error: 252.921  set size: 762
+Training: 35000  accuracy: 0.881  error: 221.699  set size: 756
+Validation: 1984  accuracy: 0.904738  error: 192.017  set size: 761
+Training: 36000  accuracy: 0.897  error: 217.521  set size: 761
+Training: 37000  accuracy: 0.9  error: 197.263  set size: 748
+Training: 38000  accuracy: 0.899  error: 197.937  set size: 761
+Training: 39000  accuracy: 0.881  error: 224.885  set size: 737
+Training: 40000  accuracy: 0.883  error: 208.025  set size: 714
+Training: 41000  accuracy: 0.883  error: 229.722  set size: 697
+Training: 42000  accuracy: 0.877  error: 236.658  set size: 690
+Training: 43000  accuracy: 0.876  error: 210.845  set size: 686
+Training: 44000  accuracy: 0.897  error: 209.986  set size: 669
+Training: 45000  accuracy: 0.908  error: 194.416  set size: 671
+Training: 46000  accuracy: 0.887  error: 220.167  set size: 665
+Training: 47000  accuracy: 0.869  error: 231.007  set size: 669
+Validation: 1984  accuracy: 0.857359  error: 315.618  set size: 659
+Training: 48000  accuracy: 0.896  error: 209.245  set size: 658
+Training: 49000  accuracy: 0.892  error: 210.312  set size: 668
+Training: 50000  accuracy: 0.884  error: 227.491  set size: 669
+Training: 51000  accuracy: 0.889  error: 200.944  set size: 655
+Training: 52000  accuracy: 0.891  error: 216.835  set size: 650
+Training: 53000  accuracy: 0.878  error: 218.114  set size: 638
+Training: 54000  accuracy: 0.883  error: 206.985  set size: 614
+Training: 55000  accuracy: 0.887  error: 209.746  set size: 618
+Training: 56000  accuracy: 0.898  error: 209.33  set size: 620
+Training: 57000  accuracy: 0.903  error: 208.308  set size: 622
+Training: 58000  accuracy: 0.885  error: 214.669  set size: 624
+Training: 59000  accuracy: 0.889  error: 208.19  set size: 627
+Validation: 1984  accuracy: 0.91129  error: 148.861  set size: 634
+Training: 60000  accuracy: 0.896  error: 200.739  set size: 631
+Training: 61000  accuracy: 0.891  error: 220.307  set size: 637
+Training: 62000  accuracy: 0.871  error: 219.383  set size: 642
+Training: 63000  accuracy: 0.881  error: 221.853  set size: 637
+Training: 64000  accuracy: 0.904  error: 193.093  set size: 635
+Training: 65000  accuracy: 0.893  error: 210.835  set size: 626
+Training: 66000  accuracy: 0.891  error: 203.58  set size: 635
+Training: 67000  accuracy: 0.889  error: 216.108  set size: 616
+Training: 68000  accuracy: 0.888  error: 208.918  set size: 601
+Training: 69000  accuracy: 0.89  error: 198.356  set size: 597
+Training: 70000  accuracy: 0.897  error: 191.767  set size: 594
+Training: 71000  accuracy: 0.881  error: 216.917  set size: 591
+Validation: 1984  accuracy: 0.921875  error: 181.518  set size: 583
+Training: 72000  accuracy: 0.912  error: 185.648  set size: 580
+Training: 73000  accuracy: 0.905  error: 184.453  set size: 581
+Training: 74000  accuracy: 0.878  error: 210.949  set size: 594
+Training: 75000  accuracy: 0.902  error: 193.575  set size: 575
+Training: 76000  accuracy: 0.899  error: 188.311  set size: 549
+Training: 77000  accuracy: 0.903  error: 205.394  set size: 555
+Training: 78000  accuracy: 0.897  error: 216.01  set size: 558
+Training: 79000  accuracy: 0.913  error: 176.734  set size: 546
+Training: 80000  accuracy: 0.877  error: 232.628  set size: 544
+Training: 81000  accuracy: 0.898  error: 196.21  set size: 546
+Training: 82000  accuracy: 0.877  error: 219.638  set size: 539
+Training: 83000  accuracy: 0.917  error: 186.463  set size: 541
+Validation: 1984  accuracy: 0.883569  error: 209.193  set size: 547
+Training: 84000  accuracy: 0.903  error: 200.628  set size: 547
+Training: 85000  accuracy: 0.893  error: 200.055  set size: 544
+Training: 86000  accuracy: 0.913  error: 185.224  set size: 550
+Training: 87000  accuracy: 0.892  error: 198.035  set size: 555
+Training: 88000  accuracy: 0.894  error: 211.22  set size: 568
+Training: 89000  accuracy: 0.903  error: 189.892  set size: 552
+Training: 90000  accuracy: 0.91  error: 174.381  set size: 542
+Training: 91000  accuracy: 0.888  error: 202.195  set size: 557
+Training: 92000  accuracy: 0.906  error: 195.002  set size: 554
+Training: 93000  accuracy: 0.902  error: 186.477  set size: 531
+Training: 94000  accuracy: 0.894  error: 199.619  set size: 534
+Training: 95000  accuracy: 0.9  error: 193.101  set size: 530
+Validation: 1984  accuracy: 0.912802  error: 137.709  set size: 512
+Training: 96000  accuracy: 0.917  error: 172.565  set size: 514
+Training: 97000  accuracy: 0.892  error: 201.272  set size: 515
+Training: 98000  accuracy: 0.909  error: 170.338  set size: 507
+Training: 99000  accuracy: 0.92  error: 166.696  set size: 497
+Training: 100000  accuracy: 0.898  error: 204.202  set size: 513
+Training: 101000  accuracy: 0.901  error: 189.623  set size: 504
+Training: 102000  accuracy: 0.913  error: 183.151  set size: 507
+Training: 103000  accuracy: 0.915  error: 175.749  set size: 510
+Training: 104000  accuracy: 0.888  error: 207.624  set size: 515
+Training: 105000  accuracy: 0.924  error: 164.842  set size: 488
+Training: 106000  accuracy: 0.919  error: 183.573  set size: 511
+Training: 107000  accuracy: 0.919  error: 177.943  set size: 487
+Validation: 1984  accuracy: 0.932964  error: 175.076  set size: 503
+Training: 108000  accuracy: 0.911  error: 197.139  set size: 504
+Training: 109000  accuracy: 0.914  error: 180.744  set size: 491
+Training: 110000  accuracy: 0.915  error: 172.797  set size: 491
+Training: 111000  accuracy: 0.911  error: 171.896  set size: 489
+Training: 112000  accuracy: 0.905  error: 192.862  set size: 493
+Training: 113000  accuracy: 0.926  error: 171.914  set size: 476
+Training: 114000  accuracy: 0.904  error: 185.418  set size: 500
+Training: 115000  accuracy: 0.905  error: 184.658  set size: 497
+Training: 116000  accuracy: 0.915  error: 177.318  set size: 476
+Training: 117000  accuracy: 0.933  error: 170.386  set size: 499
+Training: 118000  accuracy: 0.917  error: 171.928  set size: 510
+Training: 119000  accuracy: 0.893  error: 204.995  set size: 513
+Validation: 1984  accuracy: 0.924899  error: 231.014  set size: 533
+Training: 120000  accuracy: 0.917  error: 185.162  set size: 528
+Training: 121000  accuracy: 0.923  error: 174.277  set size: 523
+Training: 122000  accuracy: 0.921  error: 159.573  set size: 501
+Training: 123000  accuracy: 0.906  error: 182.974  set size: 518
+Training: 124000  accuracy: 0.927  error: 172.268  set size: 495
+Training: 125000  accuracy: 0.914  error: 173.818  set size: 508
+Training: 126000  accuracy: 0.924  error: 158.808  set size: 491
+Training: 127000  accuracy: 0.912  error: 178.476  set size: 489
+Training: 128000  accuracy: 0.925  error: 166.955  set size: 493
+Training: 129000  accuracy: 0.908  error: 182.3  set size: 496
+Training: 130000  accuracy: 0.925  error: 170.948  set size: 497
+Training: 131000  accuracy: 0.909  error: 185.809  set size: 503
+Validation: 1984  accuracy: 0.94254  error: 196.348  set size: 488
+Training: 132000  accuracy: 0.929  error: 163.483  set size: 486
+Training: 133000  accuracy: 0.927  error: 165.591  set size: 477
+Training: 134000  accuracy: 0.921  error: 169.85  set size: 477
+Training: 135000  accuracy: 0.919  error: 177.525  set size: 479
+Training: 136000  accuracy: 0.916  error: 195.15  set size: 486
+Training: 137000  accuracy: 0.927  error: 170.117  set size: 474
+Training: 138000  accuracy: 0.91  error: 172.391  set size: 462
+Training: 139000  accuracy: 0.914  error: 175.55  set size: 458
+Training: 140000  accuracy: 0.915  error: 173.734  set size: 461
+Training: 141000  accuracy: 0.93  error: 165.098  set size: 463
+Training: 142000  accuracy: 0.917  error: 167.249  set size: 459
+Training: 143000  accuracy: 0.919  error: 164.723  set size: 453
+Validation: 1984  accuracy: 0.91381  error: 125.579  set size: 457
+
+--- Filter Stats ---
+gid: 7249
+filter list size: 525
+avg numerosity: 0.887619 , max numerosity: 3 , min numerosity: 0
+avg fitness: 0.249524 , max fitness: 2 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 59917439
+total evaluations recorded: 3347389 , total evaluated filters: 383
+avg positive: 389.574 , max positive: 4231 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 62412
+
+real	13m18.846s
+user	13m18.179s
+sys	0m0.412s

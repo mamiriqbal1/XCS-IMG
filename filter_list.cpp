@@ -108,9 +108,29 @@ void print_filter_stats(){
 }
 
 /*
- * Returns a promising filter randomly to be used in mutation or covering
+ * Returns a promising filter using tournament selection to be used in mutation or covering
+ * Tournament size = 2
+ * Returns -1 if no promising filter found
  */
-
-int get_promising_filter(){
-
+int get_promising_filter_id(){
+    // create a vector of promising filters
+    std::vector<int> promising_filters;
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
+        if(it->second.fitness > 0){
+            promising_filters.push_back(it->second.id);
+        }
+    }
+    // select two filters for tournament
+    int size = promising_filters.size();
+    if(size == 0) return -1;
+    int selected[2];
+    selected[0] = irand(size);
+    selected[1] = irand(size);
+    if(master_filter_list.filters[selected[0]].fitness > master_filter_list.filters[selected[1]].fitness){
+        return selected[0];
+    }else if (master_filter_list.filters[selected[0]].fitness < master_filter_list.filters[selected[1]].fitness){
+        return selected[1];
+    }else{
+        return selected[irand(2)];  // return randomly if both have equal fitness
+    }
 }

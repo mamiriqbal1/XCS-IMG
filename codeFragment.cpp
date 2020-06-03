@@ -26,6 +26,7 @@ CodeFragment *previousCFPopulation;
 typedef std::unordered_map<int, bool> ImageMap;
 typedef std::unordered_map<int, ImageMap> FilterMap;
 FilterMap evaluation_map;
+int map_hits = 0;
 
 
 void print_filter_evaluation_stats(){
@@ -33,11 +34,11 @@ void print_filter_evaluation_stats(){
     int size = std::distance(evaluation_map.begin(), evaluation_map.end());
     int total = 0, positive = 0, min = INT16_MAX, max = -1;
     std::for_each(evaluation_map.begin(), evaluation_map.end(),
-                  [&total, &positive, &min, &max](const std::pair<int, ImageMap> & item)
+                  [&total, &positive, &min, &max](const FilterMap::value_type & item)
                   {
                       int size = item.second.size();
                       int yes = std::count_if(item.second.begin(), item.second.end(),
-                              [](const std::pair<int, bool> & item2)
+                              [](const ImageMap::value_type & item2)
                               {
                                 return item2.second;
                               });
@@ -46,6 +47,7 @@ void print_filter_evaluation_stats(){
                       if(min > yes) min = yes;
                       if(max < yes) max = yes;
                  });
+    std::cout<<"map hits: "<<map_hits<<std::endl;
     std::cout<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
     std::cout<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
     std::cout<<"--- Filter Evaluation Stats ---\n\n";
@@ -569,9 +571,18 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
         if(0<=opcode && opcode<condLength)  //condition bit
         {
             cf.codeFragment[i] = leafNum;
-            Filter new_filter;
-            create_new_filter_from_input(new_filter, state);
-            cf.filter_id[leafNum] = add_filter(new_filter);
+            // With probability p_ol if there is promising filter available in filter store then use it
+            int id = -1;
+            if(drand() < p_ol){
+                id = get_promising_filter_id();
+            }
+            if(id != -1){
+               cf.filter_id[numLeaf] = id;
+            }else {
+                Filter new_filter;
+                create_new_filter_from_input(new_filter, state);
+                cf.filter_id[leafNum] = add_filter(new_filter);
+            }
             leafNum++;
         }
     }
@@ -617,7 +628,8 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
     if(img_id >=0){
         // return prior result if it is found
         ImageMap& inner_map = evaluation_map[filter.id];
-        if(inner_map.count(img_id) >= 1){  // the image evaluation exist - unordered map always return  1
+        if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
+            map_hits++;
             return inner_map[img_id];
         }
     }
