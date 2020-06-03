@@ -755,7 +755,6 @@ void crossover_filter(Filter& parent1, Filter& parent2)
 
 bool crossover(Classifier **cl, float situation[])  // Determines if crossover is applied and calls then the selected crossover type.
 {
-
     Filter filter1, filter2;
     bool filter1_result = false;
     bool filter2_result = false;
@@ -914,9 +913,14 @@ bool mutation(Classifier *clfr, float state[])
 
     for(int i=0; i<clfrCondLength; i++){
         for(int j=0; j<clfr->condition[i].num_filters; j++) {  // todo: not all filters needs to be mutated simultaneously
-//            if(drand() < 0.1){
-//                // get promising filter and use if the current filter is not promising
-//            }
+            // if current filter is not promising and there is promising filter available in filter store
+            // then use it with probability p_ol
+            if(get_filter(clfr->condition[i].filter_id[j]).fitness < 1 && drand() < p_ol){
+                int id = get_promising_filter_id();
+                if(id != -1){   // if promising filter found
+                   clfr->condition[i].filter_id[j] = id;
+                }
+            }
             filter_to_mutate = get_filter(clfr->condition[i].filter_id[j]);
             previous_evaluation_result = evaluate_filter(filter_to_mutate, state);
             for(int tries = 0; tries < 100; tries++){
