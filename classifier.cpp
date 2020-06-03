@@ -914,6 +914,9 @@ bool mutation(Classifier *clfr, float state[])
 
     for(int i=0; i<clfrCondLength; i++){
         for(int j=0; j<clfr->condition[i].num_filters; j++) {  // todo: not all filters needs to be mutated simultaneously
+//            if(drand() < 0.1){
+//                // get promising filter and use if the current filter is not promising
+//            }
             filter_to_mutate = get_filter(clfr->condition[i].filter_id[j]);
             previous_evaluation_result = evaluate_filter(filter_to_mutate, state);
             for(int tries = 0; tries < 100; tries++){

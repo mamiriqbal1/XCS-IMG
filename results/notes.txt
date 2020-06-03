@@ -11,8 +11,6 @@ Investigation required:
 Why the accuracy is either 1 or less than .09?
 
 todo:
-- implement result reuse for filters
-- remove all subsumption after implementing the filter list. check all subsumption how it is working
-- what if the new filter subsumes another filter in the filter list? Probably we don't need it as it is a new filter. Also should we consider other attributes of subsumers as per the xcs algorithm before subsumption?
+- implement reusing filters from observed list (for the moment there are negligible "promising classifiers". 
 - implement don't care/ masking for filters (should get generic filters)
 - implement different types of filters

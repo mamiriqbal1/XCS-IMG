@@ -3,6 +3,7 @@
 
 #include <string>
 #include <forward_list>
+#include <unordered_map>
 #include "xcsMacros.h"
 
 extern bool use_kb;
@@ -71,8 +72,10 @@ struct Filter{
     float upper_bounds[filter_size*filter_size];
 };
 
+typedef std::unordered_map<int, Filter> FilterStore;
+
 struct FilterList{
-    std::forward_list<Filter> filters;
+    FilterStore filters;
     int gid = 0;
     int max_size_limit = N_filter_ol;
 };

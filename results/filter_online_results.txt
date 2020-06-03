@@ -1052,8 +1052,9 @@ sys	0m0.184s
 Following changes implemented
 - manged filter list implemented
 - Now the filter is subsumed only by another filter who's fitness is at least 1. Which means it is present in at least one "promising" classifiers.
+- Filter stats printed
 - Filter evaluation cache implement with little improvement (may be because filters are constantly being replaced?)
-
+- Filter evaluation stats printed
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
 test_file_name ../data/mnist/mnist_test_3_8.txt
@@ -1102,12 +1103,90 @@ Validation: 1984  accuracy: 0.954133  error: 96.2434  set size: 1990
 --- Filter Stats ---
 gid: 25289
 filter list size: 2538
-avg numerosity: 1.03389 max numerosity: 5 min numerosity: 1
-avg fitness: 0.210402 max fitness: 1 min fitness: 0
+avg numerosity: 1.03389 , max numerosity: 5 , min numerosity: 1
+avg fitness: 0.210402 , max fitness: 1 , min fitness: 0
 --- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+total evaluations recorded: 6698914 , total evaluated filters: 2405
+avg positive: 42.6578 , max positive: 732 , min positive: 0
+--- Filter Evaluation Stats ---
 
 Global Classifier ID: 20323
 
-real	33m11.287s
-user	33m8.836s
-sys	0m0.652s
+real	33m56.722s
+user	33m55.283s
+sys	0m0.756s
+
+
+//15
+pX from .5 to .8
+pM from .3 to .04
+Decreasing mutation -> slow convergence but a bit more general filter (with a bit more higher numerosity). The generality is still less than before implementing filter at leaf level.
+2 epochs give 92% validation accuracy, 6 epochs might reach higher
+
+investigate:
+the effect of using observed list filters in covering and mutation
+
+
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2_2/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.796  error: 305.497  set size: 1189
+Training: 2000  accuracy: 0.886  error: 213.383  set size: 1576
+Training: 3000  accuracy: 0.874  error: 207.961  set size: 1890
+Training: 4000  accuracy: 0.901  error: 178.157  set size: 1859
+Training: 5000  accuracy: 0.912  error: 171.701  set size: 1827
+Training: 6000  accuracy: 0.906  error: 168.949  set size: 1846
+Training: 7000  accuracy: 0.912  error: 164.721  set size: 1806
+Training: 8000  accuracy: 0.914  error: 169.673  set size: 1755
+Training: 9000  accuracy: 0.905  error: 153.354  set size: 1751
+Training: 10000  accuracy: 0.921  error: 147.8  set size: 1728
+Training: 11000  accuracy: 0.921  error: 147.59  set size: 1722
+Validation: 1984  accuracy: 0.919859  error: 170.855  set size: 1726
+Training: 12000  accuracy: 0.906  error: 168.274  set size: 1725
+Training: 13000  accuracy: 0.919  error: 142.96  set size: 1745
+Training: 14000  accuracy: 0.925  error: 145.01  set size: 1749
+Training: 15000  accuracy: 0.923  error: 142.48  set size: 1723
+Training: 16000  accuracy: 0.919  error: 145.344  set size: 1710
+Training: 17000  accuracy: 0.92  error: 148.12  set size: 1708
+Training: 18000  accuracy: 0.915  error: 152.205  set size: 1705
+Training: 19000  accuracy: 0.921  error: 132.129  set size: 1708
+Training: 20000  accuracy: 0.929  error: 136.906  set size: 1722
+Training: 21000  accuracy: 0.914  error: 149.938  set size: 1690
+Training: 22000  accuracy: 0.918  error: 156.638  set size: 1679
+Training: 23000  accuracy: 0.905  error: 154.238  set size: 1705
+Validation: 1984  accuracy: 0.926411  error: 166.536  set size: 1682
+
+--- Filter Stats ---
+gid: 21001
+filter list size: 2087
+avg numerosity: 1.07762 , max numerosity: 9 , min numerosity: 1
+avg fitness: 0.224245 , max fitness: 1 , min fitness: 0
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+total evaluations recorded: 7444919 , total evaluated filters: 1932
+avg positive: 68.869 , max positive: 1170 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 15584
+
+real	26m45.253s
+user	26m43.170s
+sys	0m0.772s

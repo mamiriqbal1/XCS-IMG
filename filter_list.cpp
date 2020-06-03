@@ -10,25 +10,6 @@
 
 FilterList master_filter_list; // The main filter list that is maintained
 
-/*
- * This functions is used to push a filter at the front of the list.
- * This function does not check if filter is subsumed by existing filters
- * It can be used for crossover and mutation to push filters temporarily and then pop if validation fails
- * It also returns ID of the filter so that all other functions with filter ID can work just like for normal filters
- */
-int push_front(Filter filter_to_push){
-    filter_to_push.id = master_filter_list.gid++;
-    master_filter_list.filters.push_front(filter_to_push);
-    return filter_to_push.id;
-}
-
-/*
- * This functions is used to pop the last pushed filter
- * It can be used for crossover and mutation to pop filters if validation fails
- */
-void pop_front(){
-    master_filter_list.filters.pop_front();
-}
 
 /*
  * Inserts a filter into the list.
@@ -39,14 +20,13 @@ void pop_front(){
  */
 int add_filter(Filter filter_to_add){
     // use find_if from <algorithm> to find a more general filter.
-    std::forward_list<Filter>::iterator general_filter_iterator;
-    general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&filter_to_add](Filter& filter_from_list) -> bool
+    auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
+            [&filter_to_add](const FilterStore::value_type & filter_item) -> bool
             {
-                if(filter_from_list.fitness == 0) return false; // only a fitter filter can subsume;
+                if(filter_item.second.fitness < 1) return false; // only a promising filter can subsume;
                 for(int i=0; i<filter_size*filter_size; i++){
-                    if(filter_from_list.lower_bounds[i] > filter_to_add.lower_bounds[i]
-                       || filter_from_list.upper_bounds[i] < filter_to_add.upper_bounds[i]){
+                    if(filter_item.second.lower_bounds[i] > filter_to_add.lower_bounds[i]
+                       || filter_item.second.upper_bounds[i] < filter_to_add.upper_bounds[i]){
                         return false;
                     }
                 }
@@ -55,11 +35,11 @@ int add_filter(Filter filter_to_add){
     if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
         filter_to_add.id = master_filter_list.gid++;
         filter_to_add.numerosity = 1;
-        master_filter_list.filters.push_front(filter_to_add);
+        master_filter_list.filters[filter_to_add.id] = filter_to_add;
         return filter_to_add.id;
     }else{
-        general_filter_iterator->numerosity++;
-        return general_filter_iterator->id;
+        general_filter_iterator->second.numerosity++;
+        return general_filter_iterator->second.id;
     }
 }
 
@@ -71,48 +51,19 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    std::forward_list<Filter>::iterator it;
-    it = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [filter_id](Filter& filter_from_list) -> bool
-            {
-                return filter_from_list.id == filter_id;
-            });
-    if(it == master_filter_list.filters.end()){
-        throw std::runtime_error("Filter ID not found in the list: " + std::to_string(filter_id));
-    }else{
-        return *it;
-    }
+    return master_filter_list.filters.at(filter_id);
 }
 
-/*
- * This function first checks the numerosity of the filter and decreases it if it is more than 1 otherwise removes
- * the filter.
- */
-void remove_filter(int filter_id){
-    std::forward_list<Filter>::iterator iterator, previous_iterator;
-    for(iterator = master_filter_list.filters.before_begin();
-    iterator != master_filter_list.filters.end(); ){
-       previous_iterator = iterator++;
-       if(iterator->id == filter_id){
-           if(iterator->numerosity > 1){
-               iterator->numerosity--;
-           }else {
-               master_filter_list.filters.erase_after(previous_iterator);
-           }
-           break;
-       }
-    }
-}
 
 /*
  * This function resets the numerosity and fitness of all filters
  */
 void reset_filter_stats(){
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-                            [](Filter& filter_from_list)
+                            [](FilterStore::value_type & filter_item)
                             {
-                                filter_from_list.numerosity=0;
-                                filter_from_list.fitness=0;
+                                filter_item.second.numerosity=0;
+                                filter_item.second.fitness=0;
                             });
 }
 
@@ -120,18 +71,14 @@ void reset_filter_stats(){
  * This function removes any unused filters
  */
 void remove_unused_filters(std::forward_list<int>& removed_filters){
-    master_filter_list.filters.remove_if(
-            [&removed_filters](Filter& filter_from_list) -> bool
-            {
-                if(filter_from_list.numerosity == 0){
-                    removed_filters.push_front(filter_from_list.id);
-                    return true;
-                }else{
-                    return false;
-                }
-
-            });
-
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
+        if(it->second.numerosity == 0){
+            removed_filters.push_front(it->second.id);
+        }
+    }
+    for(auto it=removed_filters.begin(); it!=removed_filters.end();it++){
+        master_filter_list.filters.erase(*it);
+    }
 }
 
 /*
@@ -145,17 +92,25 @@ void print_filter_stats(){
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     int f_total = 0, f_min = INT16_MAX, f_max = -1;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max](Filter& filter_from_list)
+            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max](const FilterStore::value_type & filter_item)
             {
-                n_total+= filter_from_list.numerosity;
-                if(n_min > filter_from_list.numerosity) n_min = filter_from_list.numerosity;
-                if(n_max < filter_from_list.numerosity) n_max = filter_from_list.numerosity;
-                f_total+= filter_from_list.fitness;
-                if(f_min > filter_from_list.fitness) f_min = filter_from_list.fitness;
-                if(f_max < filter_from_list.fitness) f_max = filter_from_list.fitness;
+                n_total+= filter_item.second.numerosity;
+                if(n_min > filter_item.second.numerosity) n_min = filter_item.second.numerosity;
+                if(n_max < filter_item.second.numerosity) n_max = filter_item.second.numerosity;
+                f_total+= filter_item.second.fitness;
+                if(f_min > filter_item.second.fitness) f_min = filter_item.second.fitness;
+                if(f_max < filter_item.second.fitness) f_max = filter_item.second.fitness;
 
             });
     std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     std::cout<<"--- Filter Stats ---\n\n";
+}
+
+/*
+ * Returns a promising filter randomly to be used in mutation or covering
+ */
+
+int get_promising_filter(){
+
 }
