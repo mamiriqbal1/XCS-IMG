@@ -51,7 +51,15 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    return master_filter_list.filters.at(filter_id);
+    if(master_filter_list.filters.count(filter_id)){
+        return master_filter_list.filters.at(filter_id);
+    }else{
+        std::cout<<std::endl<<filter_id<<std::endl;
+        print_filter_stats();
+        // print stack trace by causing a segmentation fault that will be handled by our handler
+        int *foo = (int *) -1; // make a bad pointer
+        printf("%d\n", *foo);       // causes segfault
+    }
 }
 
 
@@ -79,6 +87,7 @@ void remove_unused_filters(std::forward_list<int>& removed_filters){
     for(auto it=removed_filters.begin(); it!=removed_filters.end();it++){
         master_filter_list.filters.erase(*it);
     }
+    //print_filter_stats();
 }
 
 /*
@@ -90,9 +99,9 @@ void print_filter_stats(){
     int size = std::distance(master_filter_list.filters.begin(), master_filter_list.filters.end());
     std::cout<<"filter list size: "<<size<<std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
-    int f_total = 0, f_min = INT16_MAX, f_max = -1;
+    int f_total = 0, f_min = INT16_MAX, f_max = -1, promising_filters = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max](const FilterStore::value_type & filter_item)
+            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters](const FilterStore::value_type & filter_item)
             {
                 n_total+= filter_item.second.numerosity;
                 if(n_min > filter_item.second.numerosity) n_min = filter_item.second.numerosity;
@@ -100,10 +109,11 @@ void print_filter_stats(){
                 f_total+= filter_item.second.fitness;
                 if(f_min > filter_item.second.fitness) f_min = filter_item.second.fitness;
                 if(f_max < filter_item.second.fitness) f_max = filter_item.second.fitness;
-
+                if(filter_item.second.fitness>1) promising_filters++;
             });
     std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    std::cout<<"promising filters: "<<promising_filters<<std::endl;
     std::cout<<"--- Filter Stats ---\n\n";
 }
 
@@ -124,8 +134,8 @@ int get_promising_filter_id(){
     int size = promising_filters.size();
     if(size == 0) return -1;
     int selected[2];
-    selected[0] = irand(size);
-    selected[1] = irand(size);
+    selected[0] = promising_filters[irand(size)];
+    selected[1] = promising_filters[irand(size)];
     if(master_filter_list.filters[selected[0]].fitness > master_filter_list.filters[selected[1]].fitness){
         return selected[0];
     }else if (master_filter_list.filters[selected[0]].fitness < master_filter_list.filters[selected[1]].fitness){

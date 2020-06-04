@@ -104,7 +104,7 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
     for(poppointer= *population; poppointer!=NULL; poppointer=poppointer->next)
     {
         popSize += poppointer->classifier->numerosity; // calculate the population size
-        if(isConditionMatched(poppointer->classifier->condition,state, poppointer->classifier->id, img_id))
+        if(isConditionMatched(poppointer->classifier->condition,state, poppointer->classifier->id, img_id, true))
         {
             //std::cout<<"Previous\n";
             addNewClassifierToSet(poppointer->classifier, &mset); // add matching classifier to the matchset
@@ -197,13 +197,13 @@ float computeDistance(CodeFragment clfrCond[], float cond[]){
 }
 
 
-bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id, int img_id)
+bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id, int img_id, bool train)
 {
     for(int i=0; i<clfrCondLength; i++)
     {
         //std::cout<<"iscond\n";
         //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].codeFragment,state)==0 )
-        if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i],state, cl_id, img_id)==0 )
+        if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i],state, cl_id, img_id, train)==0 )
         {
             return false;
         }

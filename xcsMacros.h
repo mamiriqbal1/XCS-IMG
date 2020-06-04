@@ -17,7 +17,7 @@ const double nu=5.0; //Specifies the exponent in the power function for the fitn
 const double theta_GA=25.0; //The threshold for the GA application in an action set.
 const double epsilon_0= 10.0; //The error threshold under which the accuracy of a classifier is set to one.
 const int theta_del = 20; //Specified the threshold over which the fitness of a classifier may be considered in its deletion probability.
-const double pX = 0.5; //0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+const double pX = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 const double pM = 0.3; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 const int mutationType = 0; // 0 niche, and 1 general mutation.
@@ -41,7 +41,7 @@ const float m_0 = 0.5; //to be used in mutation
 const float m = 0.1; // how much to mutuate one single ellel
 const float epsilon = 0.5; // the probability of exploration for epsilon greedy strategy
 const int N_filter_ol = 2500;  // maximum limit of filters in the managed observed list
-const float p_ol = 0.5;  // probability of using a filter from observed list
+const float p_ol = 0.1;  // probability of using a filter from observed list
 
 
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).

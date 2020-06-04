@@ -8,7 +8,7 @@ int getNumFitterCFs(ClassifierSet *set, double avgFitness);
 ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, float state[], int itTime, int action, int img_id);
 int nrActionsInSet(ClassifierSet *set, bool coveredActions[]);
 //bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id=-1, int img_id=-1);
-bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id, int img_id);
+bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id, int img_id, bool train);
 Classifier* matchingCondAndSpecifiedAct(float state[], int act, int setSize, int time);
 void createMatchingCondition(CodeFragment cond[], float state[]);
 

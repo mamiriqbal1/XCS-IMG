@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 project(RCFC_kb)
 
 set(CMAKE_CXX_STANDARD 14)
-
+SET(GCC_COVERAGE_COMPILE_FLAGS "-g -rdynamic")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 include_directories(.)
 
 add_executable(RCFC_kb

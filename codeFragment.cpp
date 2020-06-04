@@ -26,6 +26,7 @@ CodeFragment *previousCFPopulation;
 typedef std::unordered_map<int, bool> ImageMap;
 typedef std::unordered_map<int, ImageMap> FilterMap;
 FilterMap evaluation_map;
+FilterMap evaluation_validation_map;
 int map_hits = 0;
 
 
@@ -577,7 +578,7 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
                 id = get_promising_filter_id();
             }
             if(id != -1){
-               cf.filter_id[numLeaf] = id;
+               cf.filter_id[leafNum] = id;
             }else {
                 Filter new_filter;
                 create_new_filter_from_input(new_filter, state);
@@ -622,15 +623,23 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
     }
 }
 
-bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
+bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id, bool train)
 {
     // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
     if(img_id >=0){
         // return prior result if it is found
-        ImageMap& inner_map = evaluation_map[filter.id];
-        if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
-            map_hits++;
-            return inner_map[img_id];
+        if(train){
+            ImageMap& inner_map = evaluation_map[filter.id];
+            if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
+                map_hits++;
+                return inner_map[img_id];
+            }
+        }else {
+            ImageMap &inner_map = evaluation_validation_map[filter.id];
+            if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
+                map_hits++;
+                return inner_map[img_id];
+            }
         }
     }
 
@@ -638,14 +647,19 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id)
 
     // set hasmap entry for re-using evaluation
     if(img_id >=0) {
-        ImageMap& inner_map = evaluation_map[filter.id];
-        inner_map[img_id] = evaluation;
+        if(train){
+            ImageMap& inner_map = evaluation_map[filter.id];
+            inner_map[img_id] = evaluation;
+        }else{
+            ImageMap& inner_map = evaluation_validation_map[filter.id];
+            inner_map[img_id] = evaluation;
+        }
     }
     return evaluation;
 }
 
 
-int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
+int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id, bool train){
     int stack[cfMaxStack];
     stack[0] = 0;
     int SP = 0;
@@ -660,14 +674,14 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
         if(isPreviousLevelsCode(opcode))  //CF from any previous level
         {
 
-            int valueOfCF = evaluateCF(previousCFPopulation[opcode - condLength], state);
+            int valueOfCF = evaluateCF(previousCFPopulation[opcode - condLength], state, train);
             stack[SP++] = valueOfCF;
         }
         else if(0<=opcode && opcode<numLeaf)  //condition bit
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state, cl_id, img_id))
+            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state, cl_id, img_id, train))
             {
                 stack[SP++] = 1;   //changed
             }

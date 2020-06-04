@@ -18,7 +18,8 @@
 #include "env.h"
 #include "xcs.h"
 #include <algorithm>
-
+#include <execinfo.h>
+#include <signal.h>
 
 //using namespace std;
 
@@ -391,7 +392,7 @@ void doOneSingleStepTest(ClassifierSet *population){
 
         for(poppointer= population; poppointer!=NULL; poppointer=poppointer->next)
         {
-            if(isConditionMatched(poppointer->classifier->condition,testState->state, -1, -1))
+            if(isConditionMatched(poppointer->classifier->condition,testState->state, -1, t, false))
             {
                 isMatched = true;tmpcorrectcounter++;
                 addNewClassifierToSet(poppointer->classifier, &mset); // add matching classifier to the matchset
@@ -673,7 +674,22 @@ void analyze_rules()
 }
 
 
+void handler(int sig) {
+    void *array[100];
+    size_t size;
+
+    // get void*'s for all entries on the stack
+    size = backtrace(array, 100);
+
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
+}
+
+
 int main(int argc, char **argv){
+    signal(SIGSEGV, handler);   // install our handler for stack trace in case of a signal
 
     if(argc == 1){
         std::cout << "Please provide experiment config file" << std::endl;
