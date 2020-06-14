@@ -658,6 +658,31 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     return evaluation;
 }
 
+bool mutate_cf(CodeFragment cf){
+    int functions_index[cfMaxLength];  // collect indices of functions for possible mutation
+    int functions_i = 0;
+    for(int i=0; /*i<cfMaxLength*/; i++){
+        const opType opcode = cf.codeFragment[i];
+        if(opcode == OPNOP){
+            break;
+        }else if(getNumberOfArguments(opcode) > 1){  // only select binary functions for now
+           functions_index[functions_i++] = i;
+        }
+    }
+    if(functions_i == 0) return false;
+    // number of functions in the CF are functions_i
+    int k = irand(functions_i); // select a function index at random for mutation
+    opType new_function=0;
+    do{
+        new_function = randomFunction(); // there is a possiblity of selecting the same function
+        if(getNumberOfArguments(new_function) == getNumberOfArguments(cf.codeFragment[functions_index[k]])){
+            cf.codeFragment[functions_index[k]] = new_function;
+            break;
+        }
+    }while(true);
+    return true;
+}
+
 
 int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id, bool train){
     int stack[cfMaxStack];

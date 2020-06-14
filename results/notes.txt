@@ -11,8 +11,9 @@ Investigation required:
 Why the accuracy is either 1 or less than .09?
 
 todo:
-- implement reusing filters from observed list (for the moment there are negligible "promising classifiers". 
 - implement don't care/ masking for filters (should get generic filters)
-- implement different types of filters
-- why tournament selection is using fitness/numerosity?
-- implement evaluation cache for testing/validation iteration
+- implement different types of filters (different sizes, with don't care values, dilated filters)
+- why tournament selection is using fitness/numerosity? Try to understand the function
+- implement GP crossover
+- think about filter composition / layering
+- implement crossover at three levels (classifier, code fragment, filter) and mutation at 2 levels (code fragment and filter)

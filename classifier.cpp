@@ -116,8 +116,9 @@ ClassifierSet* getMatchSet(ClassifierSet **population, ClassifierSet **killset, 
     // TEMP: insert filters every time
     if(popSize < maxPopSize/2) {
         representedActions = 0;
-        coveredActions[0] = false;
-        coveredActions[1] = false;
+        for(int i=0; i<numActions; i++){
+            coveredActions[i] = false;
+        }
     }
 
 
@@ -759,31 +760,35 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
     bool filter1_result = false;
     bool filter2_result = false;
 
-    if(drand() < pX) {
-        for (int i = 0; i < clfrCondLength; i++) {
-            for(int j=0; j < cl[0]->condition[i].num_filters && j < cl[1]->condition[i].num_filters; j++) {
+    for (int i = 0; i < clfrCondLength; i++) {
+        if(drand() < pX){  // swap CF with pX probability
+            CodeFragment temp = cl[0]->condition[i];
+            cl[0]->condition[i] = cl[1]->condition[i];
+            cl[1]->condition[i] = temp;
+            continue; // if cf crossover done then skip filter crossover
+        }
+        for(int j=0; j < cl[0]->condition[i].num_filters && j < cl[1]->condition[i].num_filters; j++) {
+            if(drand() < pX) {  // filter crossover with pX probability
                 filter1 = get_filter(cl[0]->condition[i].filter_id[j]);
                 filter2 = get_filter(cl[1]->condition[i].filter_id[j]);
                 filter1_result = evaluate_filter(filter1, situation);
                 filter2_result = evaluate_filter(filter2, situation);
-                for(int tries=0; tries<100; tries++) {
+                for (int tries = 0; tries < 100; tries++) {
                     crossover_filter(filter1, filter2);
-                    if(filter1_result == evaluate_filter(filter1, situation)
-                    && filter2_result == evaluate_filter(filter2, situation)){
+                    if (filter1_result == evaluate_filter(filter1, situation)
+                        && filter2_result == evaluate_filter(filter2, situation)) {
                         cl[0]->condition[i].filter_id[j] = add_filter(filter1);
                         cl[1]->condition[i].filter_id[j] = add_filter(filter2);
                         break;
-                    }else{
+                    } else {
                         filter1 = get_filter(cl[0]->condition[i].filter_id[j]);
                         filter2 = get_filter(cl[1]->condition[i].filter_id[j]);
                     }
                 }
             }
         }
-        return true;
-    }else{
-        return false;
     }
+    return true;
 }
 
 
@@ -912,7 +917,15 @@ bool mutation(Classifier *clfr, float state[])
     bool previous_evaluation_result = false;
 
     for(int i=0; i<clfrCondLength; i++){
-        for(int j=0; j<clfr->condition[i].num_filters; j++) {  // todo: not all filters needs to be mutated simultaneously
+        // 2 level mutation (CF and filter)
+        if(drand() < pM){
+           if(mutate_cf(clfr->condition[i])) {
+               continue; // if cf is mutated then skip filter mutation
+           }
+        }
+        for(int j=0; j<clfr->condition[i].num_filters; j++) {
+            if(drand() >= pM) continue; // mutate only with probability of pM
+
             // if current filter is not promising and there is promising filter available in filter store
             // then use it with probability p_ol
             if(get_filter(clfr->condition[i].filter_id[j]).fitness < 1 && drand() < p_ol){
@@ -934,6 +947,8 @@ bool mutation(Classifier *clfr, float state[])
             }
         }
     }
+    // mutate action
+    mutateAction(clfr);
     return true;
 }
 

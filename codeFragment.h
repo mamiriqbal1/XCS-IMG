@@ -52,3 +52,4 @@ void outprog(CodeFragment prog,int size, FILE *fp);
 bool evaluate_filter(const Filter& filter, float state[], int cl_id=-1, int img_id=-1, bool train=true);
 void update_evaluation_cache(std::forward_list<int>& removed_filters);
 void print_filter_evaluation_stats();
+bool mutate_cf(CodeFragment cf);

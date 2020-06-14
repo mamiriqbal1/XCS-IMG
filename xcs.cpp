@@ -225,6 +225,7 @@ void doOneSingleStepProblem(ClassifierSet **population, DataSource *object, int 
     double reward;
     bool explore = false;
 
+    //if(drand() < epsilon - ((float)counter/(float)maxProblems)/2.0){  // steadily decrease the exploration probability
     if(drand() < epsilon){
         explore = true;
     }else{
@@ -600,6 +601,7 @@ void LoadConfig(char* file)
     if(maxProblems == 0) {
         maxProblems = trainNumInstances * epochs;
     }
+
 }
 
 /*
