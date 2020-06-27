@@ -89,3 +89,47 @@ I have shared the working sheet with you if you  want to see all the attributes 
 
 
 
+#20 May
+
+Next steps...
+
+The XOF paper (with observed list of CFs) pointed out by Dr. Irfan has interesting insights.
+
+I am planing to implement following now:
+
+1. Implement filters at leaf nodes. At the moment the filters represent the complete code fragment. By implementing filters at the leaf node we can combine various filters in the code fragment to create high level features.
+2. Implement different sizes (e.g. 3x3 or 5x5) and types of filters (e.g. normal filters, filters with don't care values, dilated filters)
+3. Implement observed list of filters and/or CFs to reduce search space as suggested in the XOF paper.
+
+I might have to rewrite much of the existing code base for this purpose. Will be looking at the best way to structure the code.
+
+
+#14 Jun
+
+Asslam o Alaikum,
+
+I have completed implementation for following:
+- Filters at leaf level
+- Managed list of filters similar to the "observed list"
+
+I have not yet implemented different types of filters.
+
+Following are the observations from experiments:
+
+- The results of the experiments for 2 digits are similar with validation accuracy reaching 95.4% and training accuracy 96.5%. This accuracy is reached without using code fragments (tree depth=0) which means one filter per classifier
+- It seems the  using code fragments (tree depth = 2) there is not much improvement in case of 2 digits
+- The results for 4 digit classification are 78.6% validation and 80% training
+- The results improved slightly when using code fragments (tree depth = 2), 81.1% validation and 82% training
+
+Next steps could be:
+- implement different types of filters
+- reuse "promising" filters from 2 digit training in 4 digit classification.
+
+So far we can see that filter + code fragments are still not able to take us to 99% accuracy for 2 digits that I feel we should theoretically reach. I am not sure what we might be missing. 
+
+Should we go ahead to at least publish the new filter approach with current results while we explore transfer learning direction?
+
+
+@Dr. Irfan the special issue that you shared is related to deep learning. How do you think we can participate in that with our current direction?
+
+  

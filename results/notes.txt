@@ -17,3 +17,5 @@ todo:
 - implement GP crossover
 - think about filter composition / layering
 - implement crossover at three levels (classifier, code fragment, filter) and mutation at 2 levels (code fragment and filter)
+- in mutation what if action is mutated, in that case the evaluation of the mutated filter is not required to be true (or same as previous filter).
+- consider implementing a pre-processing step for extracting features from all the classes.

@@ -3480,7 +3480,7 @@ pM=0.5
 p_ol=0.5
 CF max depth = 2, functions = 5
 2 depth code fragment has slightly better results in case of 4 digits than zero depth tree
-
+- action mutation implemented
 
 
 12:07:21 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_4.txt 
