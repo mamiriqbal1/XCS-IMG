@@ -19,3 +19,18 @@ todo:
 - implement crossover at three levels (classifier, code fragment, filter) and mutation at 2 levels (code fragment and filter)
 - in mutation what if action is mutated, in that case the evaluation of the mutated filter is not required to be true (or same as previous filter).
 - consider implementing a pre-processing step for extracting features from all the classes.
+
+
+
+filter types:
+1. different sizes
+No filter crossover
+mutation ok
+subsumption: only subsume if same size. 
+
+2. dilated filters
+same as different sizes
+
+
+
+now is more general CF and filter functions are not being used because filter subsumption has been moved to filter observed list. Does it have any impact on the algorithm

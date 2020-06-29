@@ -255,7 +255,10 @@ bool isExists(CodeFragment newCF, CodeFragment cfPopulation[], int numCFs)
 
 bool equal_two_filters(const Filter& f1, const Filter& f2)
 {
-    for(int i=0; i<filter_size*filter_size; i++){
+    // only filter of same size and type can be equal
+    if(f1.filter_size != f2.filter_size ||
+       f1.is_dilated != f2.is_dilated) return false;
+    for(int i=0; i<f1.filter_size*f1.filter_size; i++){
         if(f1.lower_bounds[i] != f2.lower_bounds[i] || f1.upper_bounds[i] != f2.upper_bounds[i]){
             return false;
         }
@@ -286,7 +289,10 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
 
 bool is_more_general_filter(const Filter& general, const Filter& specific)
 {
-    for(int i=0; i<filter_size*filter_size; i++){
+    // only filter of same size and type can be equal
+    if(general.filter_size != specific.filter_size ||
+       general.is_dilated != specific.is_dilated) return false;
+    for(int i=0; i<general.filter_size*general.filter_size; i++){
         if(general.lower_bounds[i] > specific.lower_bounds[i] || general.upper_bounds[i] < specific.upper_bounds[i]){
             return false;
         }
@@ -518,15 +524,25 @@ void create_new_filter_from_input(Filter& filter, float *state)
 {
     // randomly selects a position in the image to create filter bounds
     //int filter_size = (int)sqrt(numLeaf);  // filter size
-    float pixel_values[filter_size*filter_size];
+    int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
+    bool is_dilated = false;
+    if(allow_dilated_filters){
+        is_dilated = irand(2) != 0;
+    }
+    int effective_filter_size = new_filter_size;
+    if(is_dilated){
+        effective_filter_size = new_filter_size + new_filter_size -1;
+    }
+    int step = is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
+    float pixel_values[new_filter_size*new_filter_size];
     float sum = 0;
     do{
         sum = 0;
         int index = 0;
-        int x_position = irand(image_width-filter_size);
-        int y_position = irand(image_height-filter_size);
-        for(int y=y_position; y<y_position+filter_size; y++){
-            for(int x=x_position; x<x_position+filter_size; x++){
+        int x_position = irand(image_width-effective_filter_size);
+        int y_position = irand(image_height-effective_filter_size);
+        for(int y=y_position; y<y_position+effective_filter_size; y+=step){
+            for(int x=x_position; x<x_position+effective_filter_size; x+=step){
                 pixel_values[index] = state[y*image_width+x];
                 sum += pixel_values[index];
                 index++;
@@ -534,12 +550,13 @@ void create_new_filter_from_input(Filter& filter, float *state)
         }
     }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
 
-    for(int i=0; i<filter_size*filter_size; i++){
+    for(int i=0; i<new_filter_size*new_filter_size; i++){
         float delta = drand();
         filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
         filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
     }
-
+    filter.filter_size = new_filter_size;
+    filter.is_dilated = is_dilated;
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position
@@ -593,17 +610,21 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
 
 bool evaluate_filter_actual(const Filter& filter, float state[])
 {
-
+    int step = filter.is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
+    int effective_filter_size = filter.filter_size;
+    if(filter.is_dilated){
+        effective_filter_size = filter.filter_size + filter.filter_size -1;
+    }
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
     int k = 0;
     int l = 0;
-    for(int i=0; i<image_height - filter_size; i++){
-        for(int j=0; j<image_width - filter_size; j++){
+    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
+        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
             match_failed = false;
-            for(k=0; k<filter_size && !match_failed; k++){
-                for(l=0; l<filter_size && !match_failed; l++){
-                    if(state[i*image_width+j + k*image_width+l] < filter.lower_bounds[k*filter_size+l]
-                    || state[i*image_width+j + k*image_width+l] > filter.upper_bounds[k*filter_size+l]){
+            for(k=0; k<filter.filter_size && !match_failed; k+=step){  // k is filter y coordinate
+                for(l=0; l<filter.filter_size && !match_failed; l+=step){  // l is filter x coordinate
+                    if(state[i*image_width+j + k*image_width+l] < filter.lower_bounds[k*filter.filter_size+l]
+                    || state[i*image_width+j + k*image_width+l] > filter.upper_bounds[k*filter.filter_size+l]){
                         match_failed = true;
                     }
                 }

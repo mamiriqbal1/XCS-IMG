@@ -24,7 +24,10 @@ int add_filter(Filter filter_to_add){
             [&filter_to_add](const FilterStore::value_type & filter_item) -> bool
             {
                 if(filter_item.second.fitness < 1) return false; // only a promising filter can subsume;
-                for(int i=0; i<filter_size*filter_size; i++){
+                // only filter of same size and type can subsume
+                if(filter_item.second.filter_size != filter_to_add.filter_size ||
+                   filter_item.second.is_dilated != filter_to_add.is_dilated) return false;
+                for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
                     if(filter_item.second.lower_bounds[i] > filter_to_add.lower_bounds[i]
                        || filter_item.second.upper_bounds[i] < filter_to_add.upper_bounds[i]){
                         return false;
@@ -100,8 +103,11 @@ void print_filter_stats(){
     std::cout<<"filter list size: "<<size<<std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     int f_total = 0, f_min = INT16_MAX, f_max = -1, promising_filters = 0;
+    int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
+    int num_dilated = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters](const FilterStore::value_type & filter_item)
+            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters, &filter_sizes_count, &num_dilated]
+            (const FilterStore::value_type & filter_item)
             {
                 n_total+= filter_item.second.numerosity;
                 if(n_min > filter_item.second.numerosity) n_min = filter_item.second.numerosity;
@@ -110,10 +116,18 @@ void print_filter_stats(){
                 if(f_min > filter_item.second.fitness) f_min = filter_item.second.fitness;
                 if(f_max < filter_item.second.fitness) f_max = filter_item.second.fitness;
                 if(filter_item.second.fitness>0) promising_filters++;
+                filter_sizes_count[filter_item.second.filter_size]++;
+                if(filter_item.second.is_dilated) num_dilated++;
             });
     std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     std::cout<<"promising filters: "<<promising_filters<<std::endl;
+    for(int i=0; i<100; i++){
+        if(filter_sizes_count[i] > 0){
+            std::cout<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
+        }
+    }
+    std::cout<<"dilated filters: "<<num_dilated<<std::endl;
     std::cout<<"--- Filter Stats ---\n\n";
 }
 

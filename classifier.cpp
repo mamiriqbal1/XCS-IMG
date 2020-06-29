@@ -771,6 +771,9 @@ bool crossover(Classifier **cl, float situation[])  // Determines if crossover i
             if(drand() < pX) {  // filter crossover with pX probability
                 filter1 = get_filter(cl[0]->condition[i].filter_id[j]);
                 filter2 = get_filter(cl[1]->condition[i].filter_id[j]);
+                // Skip crossover if filters are not of the same size or type
+                if(filter1.filter_size != filter2.filter_size ||
+                filter1.is_dilated != filter2.is_dilated) continue;
                 filter1_result = evaluate_filter(filter1, situation);
                 filter2_result = evaluate_filter(filter2, situation);
                 for (int tries = 0; tries < 100; tries++) {
@@ -895,7 +898,7 @@ void apply_filter_mutation(Filter& filter, float state[])
 {
     float delta = 0;
 
-    for(int i=0; i<filter_size*filter_size; i++){
+    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
         // todo: pM should be used only to initiate mutation. Prob of mutating each elle should be less?
         if(drand() < pM) {  // mutation based on mutation probability
             delta = drand()*m;  // how much to mutate
@@ -1320,7 +1323,10 @@ void subsumeCFs(Classifier *clfr, float state[])
 
 bool is_filter_general(const Filter& filter_general, const Filter& filter_to_check)
 {
-    for(int i=0; i<filter_size*filter_size; i++){
+    // only filter of same size and type can be general
+    if(filter_general.filter_size != filter_to_check.filter_size ||
+    filter_general.is_dilated != filter_to_check.is_dilated) return false;
+    for(int i=0; i<filter_general.filter_size*filter_general.filter_size; i++){
 
             if(filter_to_check.lower_bounds[i] < filter_general.lower_bounds[i]
             || filter_to_check.upper_bounds[i] > filter_general.upper_bounds[i]){

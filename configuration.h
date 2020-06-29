@@ -46,7 +46,6 @@ const int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 const int numLeaf = 1; // 2^cfMaxDepth
-const int filter_size = 7;  // 3 for 3x3, 5 for 5x5 etc.
 
 typedef int opType;
 const int opSize = sizeof(opType);
@@ -62,14 +61,21 @@ const opType OPNOT = -105;
 const int totalFunctions = 5;
 const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR, OPNOT};
 
+const int num_filter_sizes = 3;
+const int filter_sizes[] = {3, 5, 7}; // filter sizes to be used
+const int max_filter_size = filter_sizes[num_filter_sizes-1];  // the last one should be maximum
+const bool allow_dilated_filters = true;
 
 struct Filter{
     int id=-1; // uninitialized value
     int numerosity = 1; // initial numerosity when a filter is created
-    int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
+    // Fitness of a filter is the appearance of the filter in "promising classifiers"
     // a promising classifier is one whose error < 10 and experience > 10
-    float lower_bounds[filter_size*filter_size];
-    float upper_bounds[filter_size*filter_size];
+    int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
+    int filter_size = -1;
+    bool is_dilated = false; // what is the type of filter normal or dilated
+    float lower_bounds[max_filter_size*max_filter_size];
+    float upper_bounds[max_filter_size*max_filter_size];
 };
 
 typedef std::unordered_map<int, Filter> FilterStore;
