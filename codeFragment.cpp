@@ -705,7 +705,7 @@ bool mutate_cf(CodeFragment cf){
 }
 
 
-int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id, bool train){
+int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){
     int stack[cfMaxStack];
     stack[0] = 0;
     int SP = 0;
@@ -1034,6 +1034,7 @@ void outprog(CodeFragment prog, int size, FILE *fp){
 
             //sprintf(globalBuf,"D%d ",validLeaf(code));
             //temp = leafInterval(prog.leaf);
+            delete temp;
         }
         else if (code>=condLength&&isPreviousLevelsCode(code))
         {

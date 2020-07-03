@@ -6,7 +6,7 @@ kb_file=output/kb_file.txt
 output_path=output_2_2_small/
 max_population_size=200
 # ecpochs are multiplied by number of training examples to calculate total problems to be presented
-epochs=2
+epochs=10
 # if max_problems are provided then epochs are ignored.
 # max_problems=4000
 test_frequency=500

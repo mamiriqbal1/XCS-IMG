@@ -61,6 +61,7 @@ const opType OPNOT = -105;
 const int totalFunctions = 5;
 const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR, OPNOT};
 
+
 const int num_filter_sizes = 3;
 const int filter_sizes[] = {3, 5, 7}; // filter sizes to be used
 const int max_filter_size = filter_sizes[num_filter_sizes-1];  // the last one should be maximum
@@ -118,6 +119,8 @@ struct Classifier
     int timeStamp;
     int specificness; //number of specific CFs
 };
+
+typedef std::forward_list<Classifier> ClassifierList;
 
 struct ClassifierSet
 {

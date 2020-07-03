@@ -12,13 +12,13 @@ double executeAction(int action, int stateAction, bool &wasCorrect);
 void header();
 void Exit(FILE *fp);
 
-void writePerformance(ClassifierSet *population, int performance[], double sysError[], int exploreProbC);
+void writePerformance(ClassifierList &pop, int *performance, double *sysError, int exploreProbC);
 
 void startXCS();
-void doOneSingleStepExperiment(ClassifierSet **population);
+void doOneSingleStepExperiment(ClassifierList &pop, ClassifierSet **population);
 void doOneSingleStepProblemExplore(ClassifierSet **population, DataSource *object, int counter, int img_id);
 void doOneSingleStepProblemExploit(ClassifierSet **population, DataSource *object, int counter, int correct[], double sysError[], int img_id);
 void doOneSingleStepExperiment(ClassifierSet **population,DataSource inputArray[]);
 
 DataSource resetState(DataSource inputArray[],int index);
-void doOneSingleStepTest(ClassifierSet *population);
+void doOneSingleStepTest(ClassifierList &pop);

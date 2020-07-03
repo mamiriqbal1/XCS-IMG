@@ -34,3 +34,9 @@ same as different sizes
 
 
 now is more general CF and filter functions are not being used because filter subsumption has been moved to filter observed list. Does it have any impact on the algorithm
+
+
+The match set, action set have separate allocations. Kill set is wired. Clean up the code and verify the results to be sure
+
+code cleanup in progress. changes done, compilation successful
+action set updates are not being reflected in the population
