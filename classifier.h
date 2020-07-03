@@ -1,7 +1,5 @@
 void setInitialVariables(Classifier *clfr, double setSize, int time);
 void initializePopulation(ClassifierSet **population, FILE *cfReadingFilePointer);//, FILE *cfWritingFilePointer);
-int getNumerositySum(ClassifierSet *set);
-int getSetSize(ClassifierSet *set);
 double getAvgFitness(ClassifierSet *set);
 int getNumFitterCFs(ClassifierSet *set, double avgFitness);
 
@@ -17,7 +15,6 @@ void getPredictionArray(ClassifierList &match_set);
 double getBestValue();
 int randomActionWinner();
 int bestActionWinner();
-int rouletteActionWinner();
 
 void *getActionSet(int action, ClassifierList &match_set, ClassifierList &action_set);
 void updateActionSet(ClassifierList &action_set, double maxPrediction, double reward, ClassifierList &pop);
@@ -28,17 +25,11 @@ void getDiscoversSums(ClassifierList action_set, double *fitsum, int *setsum, in
 void setTimeStamps(ClassifierList action_set, int itTime);
 
 void selectTwoClassifiers(Classifier cl[], Classifier parents[], ClassifierList &action_set, double fitsum, int setsum);
-Classifier* selectClassifierUsingTournamentSelection(ClassifierList action_set, int setsum, Classifier *notMe);
-Classifier* selectClassifierUsingRWS(ClassifierSet *set, double fitsum);
-
-void subsumeCFs(Classifier *clfr, float state[]);
 
 bool crossover(Classifier &cl1, Classifier &cl2, float situation[]);
-void uniformCrossover(Classifier **cl);
-void onePointCrossover(Classifier **cl);
-void twoPointCrossover(Classifier **cl);
+
 bool mutation(Classifier &clfr, float *state);
-bool applyNicheMutation(Classifier *clfr, float state[]);
+
 bool applyNicheMutation1(Classifier *clfr, float state[]);
 bool applyNicheMutation2(Classifier *clfr, float state[]);
 bool applyGeneralMutation(Classifier *clfr, float state[]);
@@ -53,19 +44,9 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierList &cl_set, ClassifierSe
 bool subsumes(Classifier &cl1, Classifier & cl2);
 bool isSubsumer(Classifier &cl);
 bool isMoreGeneral(Classifier &clfr1, Classifier &clfr2);
-bool compareDontcares(Classifier *clfr1, Classifier *clfr2);
-bool checkNonDontcares(CodeFragment cond1[], CodeFragment cond2[]);
-
-bool addClassifierToPointerSet(Classifier *cl, ClassifierSet **pointerset);
-bool addClassifierToSet(Classifier *cl, ClassifierSet **clSet);
-void addNewClassifierToSet(Classifier *cl, ClassifierSet **clSet);
-bool equals(Classifier *clfr1, Classifier *clfr2);
 
 int deleteStochClassifier(ClassifierList &pop);
 double getDelProp(Classifier *clfr, double meanFitness);
-Classifier* deleteTypeOfClassifier(ClassifierSet *setp, ClassifierSet *setpl, ClassifierSet **pop);
-bool updateSet(ClassifierSet **uset, ClassifierSet *killset);
-bool deleteClassifierPointerFromSet(ClassifierSet **set, Classifier *clp);
 
 void freeSet(ClassifierSet **cls);
 void freeClassifierSet(ClassifierSet **cls);
@@ -77,7 +58,6 @@ void printClassifier(Classifier *clfr);
 void fprintClassifier(FILE *fp, Classifier *classifier);
 
 ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type);
-void simplifyPopulation(ClassifierSet **population);
 
 double absoluteValue(double value);
 float computeDistance(CodeFragment clfrCond[], float cond[]);

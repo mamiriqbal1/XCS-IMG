@@ -186,30 +186,6 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
 
 
 }
-Leaf leafNode(std::string str)
-{
-    Leaf leaf;
-    //char *cstr = new char[strlen(str) + 1];
-    //strcpy(cstr, str);
-    int length = str.length();
-    std::size_t found = str.find(" ");
-
-    std::string strFN = str.substr(1,found);
-    std::stringstream convertInt(strFN);
-    convertInt>> leaf.featureNumber;
-
-    std::size_t foundLB = str.find(" ",found+1,1);
-    std::string strLB = str.substr(found+1,foundLB);
-    std::stringstream convertFloat(strLB);
-    convertFloat>> leaf.lowerBound;
-
-    std::string strUB = str.substr(foundLB+1,length-foundLB);
-    std::stringstream convertFloatU(strUB);
-    convertFloatU>> leaf.upperBound;
-
-    //std::cout<<"leaf No: "<<leaf.featureNumber<<" LB: "<<leaf.lowerBound<<" UB: "<<leaf.upperBound;
-    return leaf;
-}
 
 opType getOpType(char str[])
 {
@@ -253,19 +229,6 @@ bool isExists(CodeFragment newCF, CodeFragment cfPopulation[], int numCFs)
     return false;
 }
 
-bool equal_two_filters(const Filter& f1, const Filter& f2)
-{
-    // only filter of same size and type can be equal
-    if(f1.filter_size != f2.filter_size ||
-       f1.is_dilated != f2.is_dilated) return false;
-    for(int i=0; i<f1.filter_size*f1.filter_size; i++){
-        if(f1.lower_bounds[i] != f2.lower_bounds[i] || f1.upper_bounds[i] != f2.upper_bounds[i]){
-            return false;
-        }
-    }
-    return true;
-}
-
 bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
 {
 
@@ -279,42 +242,6 @@ bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
                     return false;
             }
         }else
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool is_more_general_filter(const Filter& general, const Filter& specific)
-{
-    // only filter of same size and type can be equal
-    if(general.filter_size != specific.filter_size ||
-       general.is_dilated != specific.is_dilated) return false;
-    for(int i=0; i<general.filter_size*general.filter_size; i++){
-        if(general.lower_bounds[i] > specific.lower_bounds[i] || general.upper_bounds[i] < specific.upper_bounds[i]){
-            return false;
-        }
-    }
-    return true;
-}
-
-// function added by me in new code
-bool isGeneralCF(CodeFragment cf1, CodeFragment cf2)
-{
-
-    for(int i=0; i<cfMaxLength; i++)
-    {
-        if(cf1.codeFragment[i] == cf2.codeFragment[i])
-        {
-            if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
-            {
-                if(cf1.filter_id[cf1.codeFragment[i]] != cf2.filter_id[cf2.codeFragment[i]])
-                    return false;
-            }
-        }
-        else
         {
             return false;
         }

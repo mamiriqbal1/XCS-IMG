@@ -20,7 +20,6 @@ void validateDepth(opType* cf, opType* end);
 CodeFragment createNewCF(int id);
 void storeCFs(ClassifierSet* population, FILE *cfWritingFilePointer);
 
-bool isGeneralCF(CodeFragment cf1, CodeFragment cf2);
 bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2);
 
 //int evaluateCF(opType cf[], int state[]);
@@ -36,11 +35,7 @@ opType* randomProgram(opType* prog,const int isfull,const int maxDepth, const in
 char* leafname(const opType code);
 
 void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth);
-///////////////////
-//char* opchar(const opType code);
-//void outprog_bin(const opType* prog, int size);
-//void outprog(const opType* const prog, int size, FILE *fp);
-Leaf leafNode(std::string str);
+
 char* leafname(const Leaf leaf);
 char* leafInterval(const Leaf leaf);
 char* opchar(opType code);
