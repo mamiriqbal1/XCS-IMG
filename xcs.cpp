@@ -91,7 +91,7 @@ void Exit(FILE *fp){
  * @param sysError The system error in the last fifty exploration trials.
  * @param exploreProbC The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierList &pop, int *performance, double *sysError, int exploreProbC){
+void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC){
     char buf[1000];
     double perf=0.0, serr=0.0;
     int setSize;
@@ -122,7 +122,7 @@ void writePerformance(ClassifierList &pop, int *performance, double *sysError, i
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierList &pop, int *performance, double *sysError, int exploreProbC){
+void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC){
     char buf[100];
     double perf=0.0, serr=0.0;
 
@@ -156,11 +156,12 @@ void writeTestPerformance(ClassifierList &pop, int *performance, double *sysErro
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierList &pop, ClassifierSet **population, DataSource *object, int counter, int img_id,
+void doOneSingleStepProblem(ClassifierMap &pop, delete_ClassifierSet **population, DataSource *object, int counter, int img_id,
                             int correct[], double sysError[]) {
 
     bool wasCorrect = false;
-    ClassifierList match_set, action_set;
+    ClassifierSet match_set(maxPopSize, pop);
+    ClassifierSet action_set(maxPopSize, pop);
 
     getMatchSet(pop, match_set, object->state, counter, object->action, img_id);
     getPredictionArray(match_set);
@@ -184,7 +185,7 @@ void doOneSingleStepProblem(ClassifierList &pop, ClassifierSet **population, Dat
     getActionSet(actionWinner, match_set, action_set);
     reward = executeAction(actionWinner,object->action,wasCorrect);
 
-    updateActionSet(action_set, 0.0, reward, pop);
+    updateActionSet(action_set, 0.0, reward);
 
     // apply GA only with exploration step
     if(explore) {
@@ -214,7 +215,7 @@ void doOneSingleStepProblem(ClassifierList &pop, ClassifierSet **population, Dat
  * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
  * modified to calculate training and validation accuracies after every epoch.
  */
-void doOneSingleStepExperiment(ClassifierList &pop, ClassifierSet **to_be_removed) {  //Executes one single-step experiment monitoring the performance.
+void doOneSingleStepExperiment(ClassifierMap &pop, delete_ClassifierSet **to_be_removed) {  //Executes one single-step experiment monitoring the performance.
 
     int correct[testFrequency];
     double sysError[testFrequency];
@@ -224,23 +225,14 @@ void doOneSingleStepExperiment(ClassifierList &pop, ClassifierSet **to_be_remove
     //int index = 0;
     for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC++)
     {
-        int pop_size = get_set_size(pop);
-        int pop_numerosity = get_set_numerosity(pop);
+        int pop_size = pop.size();
+        int pop_numerosity = get_pop_numerosity(pop);
         std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
-
-        //std::cout<<index<<" ";
-        /*for (int i=0;i<condLength;i++)
-        {
-            if(state->state[i] != 0.0)
-                std::cout<<state->state[i]<<" ";
-        }
-        std::cout<<std::endl;
-        getchar();*/
 
         doOneSingleStepProblem(pop, nullptr, state, exploreProbC, img_id, correct, sysError);
 
@@ -299,7 +291,7 @@ std::string NumberToString(int num){
     return ss.str();
 }
 
-void doOneSingleStepTest(ClassifierList &pop){
+void doOneSingleStepTest(ClassifierMap &pop){
 	bool wasCorrect = false;
 	int correctCounter = 0;
 	int correct[testNumInstances];
@@ -313,14 +305,14 @@ void doOneSingleStepTest(ClassifierList &pop){
 	int class1FP=0, class2FP=0, class3FP=0, class4FP=0, class5FP=0, class6FP=0, class7FP=0, class8FP=0, class9FP=0, class10FP=0;
 	int class11FP=0, class12FP=0, class13FP=0, class14FP=0, class15FP=0, class16FP=0, class17FP=0, class18FP=0, class19FP=0, class20FP=0, class21FP=0, class22FP=0, class23FP=0;
 
-	ClassifierList match_set;
+	ClassifierSet match_set(maxPopSize, pop);
 
     //loadDataFile(false);
     int cc = 0;
 
 	for(int t=0; t<testNumInstances; t++){
         std::cout<<t<<"/"<<testNumInstances<<"\r";
-		ClassifierSet *mset=NULL, *poppointer;
+		delete_ClassifierSet *mset=NULL, *poppointer;
 		bool isMatched = false;
 		//resetStateTesting(testState,t);
 		testState = &testingData[t];
@@ -333,7 +325,7 @@ void doOneSingleStepTest(ClassifierList &pop){
             getchar();*/
 
         get_matching_classifiers(pop, testState->state, match_set, t, false);
-        isMatched = get_set_size(match_set) > 0;
+        isMatched = match_set.ids.size() > 0;
         if(isMatched == false){
             cc++;
             tmpnotmatched++;
@@ -343,9 +335,9 @@ void doOneSingleStepTest(ClassifierList &pop){
 			int k = popSize*tournamentSize;
 			assert(k > 0); // make sure that k > 0
 
-			for(auto it : pop){
+			for(auto& item : pop){
 			  distanceArray[i].posClassifier = i;
-			  distanceArray[i].distance = computeDistance(it.condition,testState->state);
+			  distanceArray[i].distance = computeDistance(item.second.condition, testState->state);
 			  i++;
 			}
 			sortAll(distanceArray,popSize);
@@ -353,7 +345,7 @@ void doOneSingleStepTest(ClassifierList &pop){
 			int mK = 0, mT = 0;
 			for(auto it = pop.begin(); it != pop.end() && mK < k; it++,mT++){
 			  if(distanceArray[mK].posClassifier == mT){
-			      match_set.push_front(*it);
+			      match_set.ids.push_back(it->first);
 			    mK++;
 			  }
 		   	}
@@ -394,8 +386,8 @@ void doOneSingleStepTest(ClassifierList &pop){
 
 void startXCS(){
     startTimer();
-    ClassifierSet *population;
-    ClassifierList pop;
+    delete_ClassifierSet *population;
+    ClassifierMap pop;
     initializePopulation(&population,cfReadingFilePointer);//,cfWritingFilePointer);
     printf("\nLoading Input! Please wait ....\n");
     //inp = new ds[totalNumInstances];

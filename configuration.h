@@ -5,6 +5,7 @@
 #include <forward_list>
 #include <unordered_map>
 #include "xcsMacros.h"
+#include <vector>
 
 extern bool use_kb;
 extern std::string kb_file;
@@ -120,12 +121,20 @@ struct Classifier
     int specificness; //number of specific CFs
 };
 
-typedef std::forward_list<Classifier> ClassifierList;
+typedef std::unordered_map<int, Classifier> ClassifierMap;
+typedef std::vector<int> ClassifierVector;
+struct ClassifierSet{
+    ClassifierVector ids;
+    ClassifierMap& pop;
+    ClassifierSet(int size, ClassifierMap& population) : pop(population){
+        ids.reserve(size);
+    }
+};
 
-struct ClassifierSet
+struct delete_ClassifierSet
 {
     Classifier *classifier;
-    ClassifierSet *next;
+    delete_ClassifierSet *next;
 };
 
 struct DataSource{

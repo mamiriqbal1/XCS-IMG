@@ -17,20 +17,20 @@ double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
 int gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 
-void setInitialVariables(Classifier *clfr, double setSize, int time){
-    clfr->id = gid++;
-    clfr->prediction = predictionIni;
-    clfr->predictionError = predictionErrorIni;
-    clfr->accuracy = 0.0;
-    clfr->fitness = fitnessIni;
-    clfr->numerosity = 1;
-    clfr->experience = 0;
-    clfr->actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
-    clfr->timeStamp = time;
-    clfr->specificness = numberOfNonDontcares(clfr->condition);
+void setInitialVariables(Classifier &clfr, double setSize, int time){
+    clfr.id = gid++;
+    clfr.prediction = predictionIni;
+    clfr.predictionError = predictionErrorIni;
+    clfr.accuracy = 0.0;
+    clfr.fitness = fitnessIni;
+    clfr.numerosity = 1;
+    clfr.experience = 0;
+    clfr.actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
+    clfr.timeStamp = time;
+    clfr.specificness = numberOfNonDontcares(clfr.condition);
 }
 
-void initializePopulation(ClassifierSet **population, FILE *cfReadingFilePointer){//, FILE *cfWritingFilePointer)
+void initializePopulation(delete_ClassifierSet **population, FILE *cfReadingFilePointer){//, FILE *cfWritingFilePointer)
 
     *population = NULL;
 
@@ -38,8 +38,8 @@ void initializePopulation(ClassifierSet **population, FILE *cfReadingFilePointer
 }
 
 
-double getAvgFitness(ClassifierSet *set){
-    ClassifierSet *setp;
+double getAvgFitness(delete_ClassifierSet *set){
+    delete_ClassifierSet *setp;
     double fitsum=0.0;
     int setsum=0;
 
@@ -51,8 +51,8 @@ double getAvgFitness(ClassifierSet *set){
     return fitsum/(double)setsum;
 }
 
-int getNumFitterCFs(ClassifierSet *set, double avgFitness){
-    ClassifierSet *setp = set;
+int getNumFitterCFs(delete_ClassifierSet *set, double avgFitness){
+    delete_ClassifierSet *setp = set;
     int numCFs = getNumPreviousCFs();
     while(setp!=NULL && setp->classifier->fitness > avgFitness)
     {
@@ -63,16 +63,22 @@ int getNumFitterCFs(ClassifierSet *set, double avgFitness){
 }
 
 
-void remove_classifier(ClassifierList &set, int cl_id) {
-    auto previous_it = set.before_begin();
-    for(auto it =  set.begin(); it != set.end(); it++){
-        if(it->id == cl_id){
-            break;
-        }else{
-            previous_it = it;
+void remove_classifier(ClassifierSet &set, int cl_id) {
+    for(auto it = set.ids.begin(); it != set.ids.end(); it++){
+        if(*it == cl_id){
+            set.ids.erase(it);
+            return;
         }
     }
-    set.erase_after(previous_it);
+}
+
+int get_set_numerosity(ClassifierSet &set, ClassifierMap& pop)
+{
+    int sum = 0;
+    for(auto id : set.ids){
+        sum += pop.at(id).numerosity;
+    }
+
 }
 
 // ####################### match set operations ##########################################
@@ -91,19 +97,18 @@ void remove_classifier(ClassifierList &set, int cl_id) {
   * Overall flow is as per algorithm
   */
 void *
-getMatchSet(ClassifierList &pop, ClassifierList &match_set, float *state, int itTime, int action, int img_id) {
-    Classifier *coverClfr= nullptr;
-    int popSize=0, pop_numerosity=0, representedActions;
+getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
+    int population_numerosity=0, match_set_numerosity=0, representedActions;
 
     bool coveredActions[numActions];
-    popSize = get_set_size(pop);
+    population_numerosity = get_pop_numerosity(pop);
     get_matching_classifiers(pop, state, match_set, img_id, true);
-    pop_numerosity = get_set_numerosity(match_set);
+    match_set_numerosity = get_set_numerosity(match_set, pop);
 
     representedActions = nrActionsInSet(match_set,coveredActions);
 
     // TEMP: insert filters every time
-    if(popSize < maxPopSize/2) {
+    if(population_numerosity < maxPopSize / 2) {
         representedActions = 0;
         for(int i=0; i<numActions; i++){
             coveredActions[i] = false;
@@ -117,30 +122,28 @@ getMatchSet(ClassifierList &pop, ClassifierList &match_set, float *state, int it
                 // add large number of classifier in case of filter approach in covering
                 int add = 1;
                 for(int j=0; j<add; j++){
-                    coverClfr = matchingCondAndSpecifiedAct(state, i, pop_numerosity + 1, itTime);
+                    Classifier coverClfr;
+                    matchingCondAndSpecifiedAct(coverClfr, state, i, match_set_numerosity + 1,
+                                                            itTime);
                     // before inserting the new classifier into the population check for subsumption by a generic one
-                    if(!subsumeClassifierToSet(*coverClfr, pop, nullptr)) {
-                        pop.push_front(*coverClfr);
+                    if(!subsumeClassifierToPop(coverClfr, pop)) {
+                        pop[coverClfr.id] = coverClfr;
+                        match_set.ids.push_back(coverClfr.id);
                     }
-                    if(!subsumeClassifierToSet(*coverClfr, match_set, nullptr)) {
-                        match_set.push_front(*coverClfr);
-                    }
-                    free(coverClfr); // this memory was allocated by matchingConditionAndSpecifidAct
-                    coverClfr= nullptr;
-                    pop_numerosity++;
-                    popSize++;
+                    match_set_numerosity++;
+                    population_numerosity++;
                 }
             }
         }
 
         /* Delete classifier if population is too big and record it in killset */
-        while( popSize > maxPopSize )
+        while(population_numerosity > maxPopSize )
         {
             /* PL */
             int cl_id = deleteStochClassifier(pop);
             // also remove from match set
             remove_classifier(match_set, cl_id);
-            popSize--;
+            population_numerosity--;
         }
         representedActions = nrActionsInSet(match_set,coveredActions);
     }
@@ -148,15 +151,15 @@ getMatchSet(ClassifierList &pop, ClassifierList &match_set, float *state, int it
 /**
  * Returns the number of actions in the set and stores which actions are covered in the array coveredActions.
  */
-int nrActionsInSet(ClassifierList &set, bool *coveredActions)
+int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 {
     int nr=0;
     for(int i=0; i<numActions; i++){
         coveredActions[i] = false;
     }
-    for(auto it=set.begin(); it != set.end() && nr < numActions; it++){
-        if(!coveredActions[it->action]){
-            coveredActions[it->action] = true;
+    for(auto id=match_set.ids.begin(); id != match_set.ids.end() && nr < numActions; id++){
+        if(!coveredActions[match_set.pop[*id].action]){
+            coveredActions[match_set.pop[*id].action] = true;
             nr++;
         }
     }
@@ -188,60 +191,43 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
     }
     return true;
 }
-Classifier* matchingCondAndSpecifiedAct(float state[], int act, int setSize, int time)  //matchingCondAndSpecifiedAct(currentState,i,matchSetNumerositySum+1,time)
+void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize,
+                                 int time)  //matchingCondAndSpecifiedAct(currentState,i,matchSetNumerositySum+1,time)
 {
-    Classifier *clfr;
-    assert((clfr=( struct Classifier*)calloc(1,sizeof(struct Classifier)))!=NULL); // get memory for the new classifier
-    createMatchingCondition(clfr->condition,state);
-    clfr->action = act;
-    setInitialVariables(clfr,setSize,time);
-    return clfr;
+    createMatchingCondition(cl.condition,state);
+    cl.action = act;
+    setInitialVariables(cl,setSize,time);
 }
 void createMatchingCondition(CodeFragment cond[], float state[])
 {
-//    int coun = 0;
-    //printf("in.......\n");
     for(int i=0; i<clfrCondLength; i++)
     {
-       CodeFragment tempCF;
         do
         {
-            //ramped half-and-half, check end for sanity only
-
-            //std::cout<<getNumPreviousCFs();
-            tempCF = createNewCF(getNumPreviousCFs()+countNewCFs);
-            opType* end = randomProgram(tempCF.codeFragment,irand(2),cfMaxDepth,cfMinDepth);
-            validateDepth(tempCF.codeFragment,end); //validate depth
-            /////////////
-            tempCF = addLeafCF(tempCF, state);
-            //std::cout<<"No of eval: "<<coun++<<"\n";
-            //printCF(tempCF);
-
-            /////////////
+            createNewCF(getNumPreviousCFs() + countNewCFs, cond[i]);
+            opType* end = randomProgram(cond[i].codeFragment,irand(2),cfMaxDepth,cfMinDepth);
+            validateDepth(cond[i].codeFragment,end); //validate depth
+            cond[i] = addLeafCF(cond[i], state);
         }
-        while( evaluateCF(tempCF,state)!=1 );
-//            coun  = 0;
-        //while( evaluateCF(tempCF.codeFragment,state)!=1 );
-        memmove(&cond[i],&tempCF,sizeof(CodeFragment));
+        while( evaluateCF(cond[i],state)!=1 );
         countNewCFs++;
     }
-    //printf("out.......\n");
 }
 
 // ######################### prediction array operations ############################################
 
-void getPredictionArray(ClassifierList &match_set)  //determines the prediction array out of the match set ms
+void getPredictionArray(ClassifierSet &match_set)  //determines the prediction array out of the match set ms
 {
     for(int i=0; i<numActions; i++)
     {
         predictionArray[i]=0.0;
         sumClfrFitnessInPredictionArray[i]=0.0;
     }
-    for(auto it : match_set)
+    for(auto id : match_set.ids)
     {
-        int actionValue = it.action;
-        predictionArray[actionValue]+= it.prediction * it.fitness;
-        sumClfrFitnessInPredictionArray[actionValue]+= it.fitness;
+        int actionValue = match_set.pop[id].action;
+        predictionArray[actionValue]+= match_set.pop[id].prediction * match_set.pop[id].fitness;
+        sumClfrFitnessInPredictionArray[actionValue]+= match_set.pop[id].fitness;
     }
     for(int i=0; i<numActions; i++)
     {
@@ -292,12 +278,12 @@ int bestActionWinner()  //Selects the action in the prediction array with the be
 
 // ######################## action set operations #########################################
 
-void *getActionSet(int action, ClassifierList &match_set,
-                   ClassifierList &action_set)  // constructs an action set out of the match set ms.
+void getActionSet(int action, ClassifierSet &match_set,
+                   ClassifierSet &action_set)  // constructs an action set out of the match set ms.
 {
-    for(auto it : match_set){
-        if(action == it.action){
-            action_set.push_front(it);
+    for(auto& id : match_set.ids){
+        if(action == match_set.pop[id].action){
+            action_set.ids.push_back(id);
         }
     }
 }
@@ -316,40 +302,40 @@ void *getActionSet(int action, ClassifierList &match_set,
   * code review notes
   * The formulas are implemented in a slightly differnt form with same end result. Can be simplified as per the paper.
   */
- void updateActionSet(ClassifierList &action_set, double maxPrediction, double reward, ClassifierList &pop)
+ void updateActionSet(ClassifierSet &action_set, double maxPrediction, double reward)
 {
     double P, setsize=0.0;
-    ClassifierSet *setp;
+    delete_ClassifierSet *setp;
 
     P = reward + gama*maxPrediction;
 
-    for(auto it : action_set)
+    for(auto id : action_set.ids)
     {
-        setsize += it.numerosity;
-        it.experience++;
+        setsize += action_set.pop[id].numerosity;
+        action_set.pop[id].experience++;
     }
 
-    for(auto it : action_set)   // update prediction, prediction error and action set size estimate
+    for(auto id : action_set.ids)   // update prediction, prediction error and action set size estimate
     {
-        if((double)it.experience < 1.0/beta)
+        if((double)action_set.pop[id].experience < 1.0 / beta)
         {
             // !first adjustments! -> simply calculate the average
-            it.predictionError = (it.predictionError * ((double)it.experience - 1.0) + absoluteValue(P - it.prediction)) / (double)it.experience;
-            it.prediction = (it.prediction * ((double)it.experience - 1.0) + P) / (double)it.experience;
-            it.actionSetSize = (it.actionSetSize *((double)(it.experience - 1))+setsize)/(double)it.experience;
+            action_set.pop[id].predictionError = (action_set.pop[id].predictionError * ((double)action_set.pop[id].experience - 1.0) + absoluteValue(P - action_set.pop[id].prediction)) / (double)action_set.pop[id].experience;
+            action_set.pop[id].prediction = (action_set.pop[id].prediction * ((double)action_set.pop[id].experience - 1.0) + P) / (double)action_set.pop[id].experience;
+            action_set.pop[id].actionSetSize = (action_set.pop[id].actionSetSize * ((double)(action_set.pop[id].experience - 1)) + setsize) / (double)action_set.pop[id].experience;
         }
         else
         {
             // normal adjustment -> use widrow hoff delta rule
-            it.predictionError += beta * (absoluteValue(P - it.prediction) - it.predictionError);
-            it.prediction += beta * (P - it.prediction);
-            it.actionSetSize += beta * (setsize - it.actionSetSize);
+            action_set.pop[id].predictionError += beta * (absoluteValue(P - action_set.pop[id].prediction) - action_set.pop[id].predictionError);
+            action_set.pop[id].prediction += beta * (P - action_set.pop[id].prediction);
+            action_set.pop[id].actionSetSize += beta * (setsize - action_set.pop[id].actionSetSize);
         }
     }
     updateFitness(action_set);
     if(doActSetSubsumption)
     {
-        doActionSetSubsumption(action_set, pop);
+        doActionSetSubsumption(action_set);
     }
 }
 
@@ -358,26 +344,26 @@ void *getActionSet(int action, ClassifierList &match_set,
  * code review notes
  * correctly implementation
  */
-void updateFitness(ClassifierList &action_set)
+void updateFitness(ClassifierSet &action_set)
 {
-    ClassifierSet *setp;
+    delete_ClassifierSet *setp;
     double ksum=0.0;
 
 
     //First, calculate the accuracies of the classifier and the accuracy sums
-    for(auto it : action_set){
-        if(it.predictionError <= epsilon_0){
-            it.accuracy = 1.0;
+    for(auto id : action_set.ids){
+        if(action_set.pop[id].predictionError <= epsilon_0){
+            action_set.pop[id].accuracy = 1.0;
         }
         else{
-            it.accuracy = alpha * pow(it.predictionError / epsilon_0 , -nu);
+            action_set.pop[id].accuracy = alpha * pow(action_set.pop[id].predictionError / epsilon_0 , -nu);
         }
-        ksum += it.accuracy*(double)it.numerosity;
+        ksum += action_set.pop[id].accuracy * (double)action_set.pop[id].numerosity;
     }
 
     //Next, update the fitnesses accordingly
-    for(auto it : action_set){
-        it.fitness += beta * ( (it.accuracy * it.numerosity) / ksum - it.fitness );
+    for(auto id : action_set.ids){
+        action_set.pop[id].fitness += beta * ((action_set.pop[id].accuracy * action_set.pop[id].numerosity) / ksum - action_set.pop[id].fitness );
     }
 }
 
@@ -387,14 +373,14 @@ void updateFitness(ClassifierList &action_set)
  * The discovery conmponent with the genetic algorithm
  * note: some classifiers in set could be deleted !
  */
-void discoveryComponent(ClassifierList &action_set, ClassifierList &pop, int itTime, float situation[])
+void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTime, float *situation)
 {
-    ClassifierSet *setp;
-    Classifier cl[2], parents[2];
+    Classifier child[2];
+    int parent[2];
     double fitsum=0.0;
     int i, len, setsum=0, gaitsum=0;
     // if the classifier set is empty, return (due to deletion)
-    if(std::distance(action_set.before_begin(), action_set.end()) == 0) return;
+    if(action_set.ids.size() == 0) return;
 
     getDiscoversSums(action_set, &fitsum, &setsum, &gaitsum); // get all sums that are needed to do the discovery
 
@@ -403,81 +389,85 @@ void discoveryComponent(ClassifierList &action_set, ClassifierList &pop, int itT
     {
         return;
     }
-    setTimeStamps(action_set, itTime); // todo how this timestamp is reflected in population???
+    setTimeStamps(action_set, itTime);
 
-    selectTwoClassifiers(cl, parents, action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
+    selectTwoClassifiers(child, parent, action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
     // Prediction, prediction error and fitness is only updated if crossover is done instead of always
     // (this is reverted because of slightly decreased performance)
-    if(crossover(cl[0], cl[1], situation) || true){
-        cl[0].prediction   = (cl[0].prediction + cl[1].prediction) / 2.0;
-        cl[0].predictionError = predictionErrorReduction * ( (cl[0].predictionError + cl[1].predictionError) / 2.0 );
-        cl[0].fitness = fitnessReduction * ( (cl[0].fitness + cl[1].fitness) / 2.0 );
+    if(crossover(child[0], child[1], situation) || true){
+        child[0].prediction   = (child[0].prediction + child[1].prediction) / 2.0;
+        child[0].predictionError = predictionErrorReduction * ((child[0].predictionError + child[1].predictionError) / 2.0 );
+        child[0].fitness = fitnessReduction * ((child[0].fitness + child[1].fitness) / 2.0 );
 
-        cl[1].prediction = cl[0].prediction;
-        cl[1].predictionError = cl[0].predictionError;
-        cl[1].fitness = cl[0].fitness;
+        child[1].prediction = child[0].prediction;
+        child[1].predictionError = child[0].predictionError;
+        child[1].fitness = child[0].fitness;
     }
     for(i=0; i<2; i++)  // do mutation
     {
-        mutation(cl[i], situation);
+        mutation(child[i], situation);
     }
 
-    cl[0].specificness = numberOfNonDontcares(cl[0].condition);
-    cl[1].specificness = numberOfNonDontcares(cl[1].condition);
+    child[0].specificness = numberOfNonDontcares(child[0].condition);
+    child[1].specificness = numberOfNonDontcares(child[1].condition);
 
     // get the length of the population to check if clasifiers have to be deleted
-    len = get_set_numerosity(pop);
+    len = get_pop_numerosity(pop);
 
     // insert the new two classifiers and delete two if necessary
-    insertDiscoveredClassifier(cl, parents, action_set, pop, len, situation);
+    insertDiscoveredClassifier(child, parent, pop, len);
 }
-void getDiscoversSums(ClassifierList action_set, double *fitsum, int *setsum, int *gaitsum)  // Calculate all necessary sums in the set for the discovery component.
+void getDiscoversSums(ClassifierSet &action_set, double *fitsum, int *setsum, int *gaitsum)  // Calculate all necessary sums in the set for the discovery component.
 {
     *fitsum=0.0;
     *setsum=0;
     *gaitsum=0;
-    for(auto setp : action_set)
+    for(auto& id : action_set.ids)
     {
-        (*fitsum)+=setp.fitness;
-        (*setsum)+=setp.numerosity;
-        (*gaitsum) += setp.timeStamp*setp.numerosity;
+        (*fitsum)+=action_set.pop[id].fitness;
+        (*setsum)+=action_set.pop[id].numerosity;
+        (*gaitsum) += action_set.pop[id].timeStamp * action_set.pop[id].numerosity;
     }
 }
-void setTimeStamps(ClassifierList action_set, int itTime)  // Sets the time steps of all classifiers in the set to itTime (because a GA application is occurring in this set!).
+void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time steps of all classifiers in the set to itTime (because a GA application is occurring in this set!).
 {
-    for(auto it : action_set)
+    for(auto id : action_set.ids)
     {
-        it.timeStamp = itTime;
+        action_set.pop[id].timeStamp = itTime;
     }
 }
 
-void tournament_selection(Classifier *child, Classifier* parent, ClassifierList& set, double setsum)
+void tournament_selection(Classifier *child, int *parent, ClassifierSet &set, double setsum)
 {
-    int first = irand(setsum);
-    int second = irand(setsum);
+    int first = irand(set.ids.size());
+    int second = irand(set.ids.size());
     Classifier* first_classifier = nullptr, *second_classifier = nullptr;
     int i=0;
-    for(auto it : set){
+    for(auto id : set.ids){
         if(i == first){
-            first_classifier = &it;
+            first_classifier = &set.pop[id];
         }
         if(i == second){
-            second_classifier = &it;
+            second_classifier = &set.pop[id];
         }
         i++;
     }
     assert(first_classifier != nullptr);
     assert(second_classifier != nullptr);
     if(first_classifier->fitness > second_classifier->fitness){
-        *child = *parent = *first_classifier;
+        *child = *first_classifier;
+        *parent = first_classifier->id;
     }else if(first_classifier->fitness < second_classifier->fitness){
-        *child = *parent = *second_classifier;
+        *child = *second_classifier;
+        *parent = second_classifier->id;
     }else{
         int r = irand(2);
         if(r == 0){
-            *child = *parent = *first_classifier;
+            *child = *first_classifier;
+            *parent = first_classifier->id;
         }else{
-            *child = *parent = *second_classifier;
+            *child = *second_classifier;
+            *parent = second_classifier->id;
         }
     }
 }
@@ -487,8 +477,9 @@ void tournament_selection(Classifier *child, Classifier* parent, ClassifierList&
 /**
  * Select two classifiers using the chosen selection mechanism and copy them as offspring.
  */
-void selectTwoClassifiers(Classifier cl[], Classifier parents[], ClassifierList &action_set, double fitsum, int setsum)
+void selectTwoClassifiers(Classifier *cl, int *parents, ClassifierSet &action_set, double fitsum, int setsum)
 {
+    // todo parents need not be copied externally???
     tournament_selection(&cl[0], &parents[0], action_set, setsum);
     tournament_selection(&cl[1], &parents[1], action_set, setsum);
 
@@ -671,20 +662,23 @@ bool mutateAction(Classifier& clfr)  //Mutates the action of the classifier.
 /**
  * Insert a discovered classifier into the population and respects the population size.
  */
-void insertDiscoveredClassifier(Classifier cl[], Classifier parents[], ClassifierList &action_set, ClassifierList &pop,
-                                int len, float *state)
+void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &pop, int len)
 {
     Classifier *killedp;
     len+=2;
     if(doGASubsumption)
     {
-        subsumeClassifier(cl[0], parents, action_set, pop, state);
-        subsumeClassifier(cl[1], parents, action_set, pop, state);
+        if(!subsumeClassifier(child[0], pop[parent[0]], pop[parent[1]])){
+            pop[child[0].id] = child[0];
+        }
+        if(!subsumeClassifier(child[1], pop[parent[0]], pop[parent[1]])){
+            pop[child[1].id] = child[1];
+        }
     }
     else
     {
-        pop.push_front(cl[0]);
-        pop.push_front(cl[1]);
+        pop[child[0].id] = child[0];
+        pop[child[1].id] = child[1];
     }
 
     while(len > maxPopSize)
@@ -707,89 +701,108 @@ void insertDiscoveredClassifier(Classifier cl[], Classifier parents[], Classifie
 /**
  * Action set subsumption as described in the algorithmic describtion of XCS
  */
-void doActionSetSubsumption(ClassifierList &action_set, ClassifierList &pop)
+void doActionSetSubsumption(ClassifierSet &action_set)
 {
-    Classifier *subsumer=NULL;
+    int subsumer = -1;
 
     /* Find the most general subsumer */
-    for(auto it : action_set)
+    for(auto id : action_set.ids)
     {
-        if(isSubsumer(it))
+        if(isSubsumer(action_set.pop[id]))
         {
-            if(subsumer==NULL || isMoreGeneral(it, *subsumer))
+            if(subsumer== -1 || isMoreGeneral(action_set.pop[id], action_set.pop[subsumer]))
             {
-                subsumer = &it;
+                subsumer = id;
             }
         }
     }
 
     /* If a subsumer was found, subsume all classifiers that are more specific. */
-    if(subsumer!=NULL)
+    if(subsumer!= -1)
     {
-        auto setp = action_set.begin();
-        auto setpl = action_set.begin();
-        int cl_id = 0;
-        for(; setp != action_set.end(); setp++)
-        {
-            while(isMoreGeneral(*subsumer, *setp))
-            {
-                subsumer->numerosity += setp->numerosity;
-                remove_classifier(pop, setpl->id);
-                if(setp == setpl){
-                    setp++;
-                    setpl++;
-                }else{
-                    setp = setpl;
-                }
-            }
-            setpl=setp;
+        for(auto id : action_set.ids){
+            if(isMoreGeneral(action_set.pop[subsumer], action_set.pop[id]))
+                action_set.pop[subsumer].numerosity += action_set.pop[id].numerosity;
+                remove_classifier(action_set, id);
+                action_set.pop.erase(id);
         }
+
     }
 }
 
 /**
  * Tries to subsume the parents.
  */
-void subsumeClassifier(Classifier& cl, Classifier parents[], ClassifierList &action_set, ClassifierList &pop, float *state)
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2)
 {
     int i;
-    for(i=0; i<2; i++)
+    if(subsumes(p1, cl))
     {
-        if(subsumes(parents[i],cl))
-        {
-            parents[i].numerosity++;
-            return;
-        }
+        p1.numerosity++;
+        return true;
     }
+    if(subsumes(p2, cl))
+    {
+        p2.numerosity++;
+        return true;
+    }
+    return false;
+    // as per algorithm child submsumption in population is not done
     // changed from action set subsumption to population subsumption
-    if(subsumeClassifierToSet(cl, pop , nullptr))
-    {
-        return;
-    }
-    pop.push_front(cl);
+//    if(subsumeClassifierToPop(cl, pop))
+//    {
+//        return;
+//    }
+//    pop.push_front(cl);
 }
+
 
 /**
  * Try to subsume in the specified set.
  */
-bool subsumeClassifierToSet(Classifier &cl, ClassifierList &cl_set, ClassifierSet *set)
+bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
 {
-    Classifier *subCl[maxPopSize];
-    int numSub=0;
+    std::vector<int> subsumers;
+    subsumers.reserve(maxPopSize);
 
-    for(auto & it : cl_set)
+    for(auto & id : cl_set.ids)
     {
-        if(subsumes(it,cl))
+        if(subsumes(cl_set.pop[id], cl))
         {
-            subCl[numSub]=&it;
-            numSub++;
+            subsumers.push_back(id);
         }
     }
     /* if there were classifiers found to subsume, then choose randomly one and subsume */
-    if(numSub>0)
+    if(subsumers.size() > 0)
     {
-        numSub = irand(numSub);
-        subCl[numSub]->numerosity++;
+        int k = irand(subsumers.size());
+        cl_set.pop[subsumers[k]].numerosity++;
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Try to subsume in the population.
+ */
+bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
+{
+    std::vector<int> subsumers;
+    subsumers.reserve(maxPopSize);
+
+    for(auto & it : cl_set)
+    {
+        if(subsumes(it.second,cl))
+        {
+            subsumers.push_back(it.second.id);
+        }
+    }
+    /* if there were classifiers found to subsume, then choose randomly one and subsume */
+    if(subsumers.size() > 0)
+    {
+        int k = irand(subsumers.size());
+        cl_set[subsumers[k]].numerosity++;
         return true;
     }
     return false;
@@ -846,62 +859,62 @@ bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fr
  * The classifier that will be deleted is chosen by roulette wheel selection
  * considering the deletion vote. Returns position of the macro-classifier which got decreased by one micro-classifier.
  **/
-int deleteStochClassifier(ClassifierList &pop)
+int deleteStochClassifier(ClassifierMap &pop)
 {
-    double sum=0.0, choicep, meanf=0.0;
+    double vote_sum=0.0, choicep, meanf=0.0;
     int size=0;
 
-    for(auto it : pop){
-        meanf += it.fitness;
-        size += it.numerosity;
+    for(auto& item : pop){
+        meanf += item.second.fitness;
+        size += item.second.numerosity;
     }
     meanf/=(double)size;
 
     /* get the delete proportion, which depends on the average fitness */
-    for(auto it : pop){
-        sum += getDelProp(&it,meanf);
+    for(auto& item : pop){
+        vote_sum += getDelProp(item.second, meanf);
     }
 
     /* choose the classifier that will be deleted */
-    choicep=drand()*sum;
+    choicep= drand() * vote_sum;
     /* look for the classifier */
-    auto setp = pop.begin();
-    auto setpl = pop.begin();
-    sum = getDelProp(&*setp,meanf);
-    while(sum < choicep)
-    {
-        setpl=setp;
-        setp++;
-        sum += getDelProp(&*setp,meanf);
+    vote_sum = 0;
+    int removed_id = -1;
+    for(auto& item : pop){
+        vote_sum += getDelProp(item.second, meanf);
+        if(vote_sum > choicep){
+            removed_id = item.second.id;
+            if(item.second.numerosity > 1){
+                item.second.numerosity--;
+            }else{
+                pop.count(item.second.id);
+            }
+            return removed_id;
+        }
     }
-
-    int cl_id = setp->id; // id of the removed classifier
-    /* delete the classifier */
-    pop.erase_after(setpl);
-
-    /* return the pointer to the deleted classifier, to be able to update other sets */
-    return cl_id;
 }
-double getDelProp(Classifier *clfr, double meanFitness)  //Returns the vote for deletion of the classifier.
+
+
+double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for deletion of the classifier.
 {
-    if(clfr->fitness/(double)clfr->numerosity >= delta*meanFitness || clfr->experience < theta_del)
+    if(clfr.fitness/(double)clfr.numerosity >= delta*meanFitness || clfr.experience < theta_del)
     {
-        return (double)(clfr->actionSetSize*clfr->numerosity);
+        return (double)(clfr.actionSetSize*clfr.numerosity);
     }
     else
     {
-        return (double)clfr->actionSetSize*(double)clfr->numerosity*meanFitness / (clfr->fitness/(double)clfr->numerosity);
+        return (double)clfr.actionSetSize*(double)clfr.numerosity*meanFitness / (clfr.fitness/(double)clfr.numerosity);
     }
 }
 
 //############# concrete deletion of a classifier or a whole classifier set ############
 
 /**
- * Frees only the complete ClassifierSet (not the Classifiers itself)!
+ * Frees only the complete delete_ClassifierSet (not the Classifiers itself)!
  */
-void freeSet(ClassifierSet **cls)
+void freeSet(delete_ClassifierSet **cls)
 {
-    ClassifierSet *clp;
+    delete_ClassifierSet *clp;
     while(*cls!=NULL)
     {
         clp=(*cls)->next;
@@ -911,11 +924,11 @@ void freeSet(ClassifierSet **cls)
 }
 
 /**
- * Frees the complete ClassifierSet with the corresponding Classifiers.
+ * Frees the complete delete_ClassifierSet with the corresponding Classifiers.
  */
-void freeClassifierSet(ClassifierSet **cls)
+void freeClassifierSet(delete_ClassifierSet **cls)
 {
-    ClassifierSet *clp;
+    delete_ClassifierSet *clp;
     while(*cls!=NULL)
     {
         freeClassifier((*cls)->classifier);
@@ -940,9 +953,9 @@ void freeClassifier(Classifier *cl)
 // ############################### output operations ####################################
 
 /**
- * print the classifiers in a ClassifierSet
+ * print the classifiers in a delete_ClassifierSet
  */
-void printClassifierSet(ClassifierSet *head)
+void printClassifierSet(delete_ClassifierSet *head)
 {
     for(; head!=NULL; head=head->next)
     {
@@ -953,13 +966,13 @@ void printClassifierSet(ClassifierSet *head)
 
 
 /**
- * print the classifier in a ClassifierSet to the file fp
+ * print the classifier in a delete_ClassifierSet to the file fp
  */
-void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierSet *head)
+void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, delete_ClassifierSet *head)
 {
     print_filter_stats();
     print_filter_evaluation_stats();
-    ClassifierSet* set;
+    delete_ClassifierSet* set;
     for(set=head; set!=NULL; set=set->next)
     {
         fprintClassifier(fpClfr, set->classifier);
@@ -1139,12 +1152,12 @@ void fprintClassifier(FILE *fp, Classifier *classifier)
  * Sort the classifier set cls in numerosity, prediction, fitness, or error order.
  * type 0 = numerosity order, type 1 = prediction order, type 2 = fitness order, type 3=error order
  */
-ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type)
+delete_ClassifierSet* sortClassifierSet(delete_ClassifierSet **cls, int type)
 {
-    ClassifierSet *clsp, *maxcl, *newcls, *newclshead;
+    delete_ClassifierSet *clsp, *maxcl, *newcls, *newclshead;
     double max;
     max=0.0;
-    assert((newclshead=( struct ClassifierSet *)calloc(1,sizeof(struct ClassifierSet)))!=NULL);
+    assert((newclshead=( struct delete_ClassifierSet *)calloc(1, sizeof(struct delete_ClassifierSet))) != NULL);
     newcls=newclshead;
     do
     {
@@ -1175,7 +1188,7 @@ ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type)
         }
         if(max>-100000.0)
         {
-            assert((newcls->next=( struct ClassifierSet *)calloc(1,sizeof(struct ClassifierSet)))!=NULL);
+            assert((newcls->next=( struct delete_ClassifierSet *)calloc(1, sizeof(struct delete_ClassifierSet))) != NULL);
             newcls=newcls->next;
             newcls->next=NULL;
             newcls->classifier=maxcl->classifier;
@@ -1184,12 +1197,12 @@ ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type)
     }
     while(max>-100000.0);
 
-    // set the new ClassifierSet pointer and free the old stuff
+    // set the new delete_ClassifierSet pointer and free the old stuff
     newcls=newclshead->next;
     free(newclshead);
     freeSet(cls);
 
-    return newcls; // return the pointer to the new ClassifierSet
+    return newcls; // return the pointer to the new delete_ClassifierSet
 }
 
 /*################################## Utilitiy ##########################################*/
@@ -1216,21 +1229,21 @@ double absoluteValue(double value)
  * A promising classifier is one whose error < 10 and experience > 10
  */
 
-void manage_filter_list(ClassifierList &pop){
-    ClassifierSet * setp;
+void manage_filter_list(ClassifierMap &pop){
+    delete_ClassifierSet * setp;
     Classifier* cl;
 
     // reset statistics of all filters before updating
     reset_filter_stats();
 
-    for(auto it : pop){
+    for(auto& item : pop){
         for(int i=0; i<clfrCondLength; i++){
-            for(int j=0; j<it.condition[i].num_filters; j++){
-                Filter& f = get_filter(it.condition[i].filter_id[j]);
+            for(int j=0; j < item.second.condition[i].num_filters; j++){
+                Filter& f = get_filter(item.second.condition[i].filter_id[j]);
                 f.numerosity++;
                 // if classifier is "promising" then increase the fitness of the filter
                 // a promising classifier is one whose error < 10 and experience > 10
-                if(it.predictionError < epsilon_0 && it.experience > theta_filter){
+                if(item.second.predictionError < epsilon_0 && item.second.experience > theta_filter){
                     f.fitness++;
                 }
 
@@ -1243,26 +1256,26 @@ void manage_filter_list(ClassifierList &pop){
     update_evaluation_cache(removed_filters);
 }
 
-int get_set_size(ClassifierList &pop) {
+int get_set_size(ClassifierMap &pop) {
     return std::distance(pop.begin(), pop.end());
 }
 
-int get_set_numerosity(ClassifierList &pop) {
+int get_pop_numerosity(ClassifierMap &pop) {
     int pop_numerosity = 0;
     std::for_each(pop.begin(), pop.end(),
-                  [&pop_numerosity](ClassifierList::value_type& cl)
+                  [&pop_numerosity](ClassifierMap::value_type& item)
                   {
-                      pop_numerosity+= cl.numerosity;
+                      pop_numerosity+= item.second.numerosity;
                   });
     return pop_numerosity;
 }
 
-void get_matching_classifiers(ClassifierList &pop, float *state, ClassifierList &match_set, int img_id, bool train) {
+void get_matching_classifiers(ClassifierMap &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
 
-    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierList::value_type cl)
+    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierMap::value_type& item)
     {
-        if(isConditionMatched(cl, state, img_id, train)){
-            match_set.push_front(cl);
+        if(isConditionMatched(item.second, state, img_id, train)){
+            match_set.ids.push_back(item.first);
         }
     });
 }

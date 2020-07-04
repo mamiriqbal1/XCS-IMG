@@ -114,7 +114,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
         opType c = 0;
         int i = 0;
         int lfNum = 0;
-        previousCF = createNewCF(numReadPreviousCFs+condLength); // start CFs ID numbers from condLength to avoid confusion with CFs and condition bits
+        createNewCF(numReadPreviousCFs + condLength, previousCF); // start CFs ID numbers from condLength to avoid confusion with CFs and condition bits
         //tokenize the previousCFContents
         //int counting = 0;
 
@@ -334,18 +334,16 @@ void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
     }
 }
 
-CodeFragment createNewCF(int id)
+void createNewCF(int id, CodeFragment &cf)
 {
-    CodeFragment newCF;
     for(int i=0; i<cfMaxLength; i++)
     {
-        newCF.codeFragment[i] = OPNOP;
+        cf.codeFragment[i] = OPNOP;
     }
-    newCF.cfID = id;
-    return newCF;
+    cf.cfID = id;
 }
 
-void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
+void storeCFs(delete_ClassifierSet *population, FILE *cfWritingFilePointer)
 {
     double avgFitness = getAvgFitness(population);
     int numFitterCFs = getNumFitterCFs(population,avgFitness);
@@ -411,7 +409,7 @@ void storeCFs(ClassifierSet *population, FILE *cfWritingFilePointer)
     }
 
 
-    for(ClassifierSet* set=population; set!=NULL; set=set->next)  //CFs from the current problem
+    for(delete_ClassifierSet* set=population; set != NULL; set=set->next)  //CFs from the current problem
     {
         if(set->classifier->fitness <= avgFitness)  //store CFs from classifiers with fitness > average fitness of the classifiers population
         {
@@ -806,7 +804,7 @@ inline opType randomFunction(){
     return functionCodes[irand(totalFunctions)];
 }
 //generate reverse polish
-opType* randomProgram(opType* prog,const int isfull,const int maxDepth, const int minDepth){
+opType* randomProgram(opType prog[], const int isfull, const int maxDepth, const int minDepth){
     //if reached max depth or probabilistically reached mindepth
     if( maxDepth<=0 || ( (!isfull) && minDepth<=0 && irand(2) ) )
     {

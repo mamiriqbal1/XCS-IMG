@@ -1,30 +1,30 @@
-void setInitialVariables(Classifier *clfr, double setSize, int time);
-void initializePopulation(ClassifierSet **population, FILE *cfReadingFilePointer);//, FILE *cfWritingFilePointer);
-double getAvgFitness(ClassifierSet *set);
-int getNumFitterCFs(ClassifierSet *set, double avgFitness);
+void setInitialVariables(Classifier &clfr, double setSize, int time);
+void initializePopulation(delete_ClassifierSet **population, FILE *cfReadingFilePointer);//, FILE *cfWritingFilePointer);
+double getAvgFitness(delete_ClassifierSet *set);
+int getNumFitterCFs(delete_ClassifierSet *set, double avgFitness);
 
 void *
-getMatchSet(ClassifierList &pop, ClassifierList &match_set, float *state, int itTime, int action, int img_id);
-int nrActionsInSet(ClassifierList &set, bool *coveredActions);
+getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id);
+int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
 //bool isConditionMatched(CodeFragment clfrCond[], float state[], int cl_id=-1, int img_id=-1);
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
-Classifier* matchingCondAndSpecifiedAct(float state[], int act, int setSize, int time);
+void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);
 void createMatchingCondition(CodeFragment cond[], float state[]);
 
-void getPredictionArray(ClassifierList &match_set);
+void getPredictionArray(ClassifierSet &match_set);
 double getBestValue();
 int randomActionWinner();
 int bestActionWinner();
 
-void *getActionSet(int action, ClassifierList &match_set, ClassifierList &action_set);
-void updateActionSet(ClassifierList &action_set, double maxPrediction, double reward, ClassifierList &pop);
-void updateFitness(ClassifierList &action_set);
+void getActionSet(int action, ClassifierSet &match_set, ClassifierSet &action_set);
+void updateActionSet(ClassifierSet &action_set, double maxPrediction, double reward);
+void updateFitness(ClassifierSet &action_set);
 
-void discoveryComponent(ClassifierList &action_set, ClassifierList &pop, int itTime, float situation[]);
-void getDiscoversSums(ClassifierList action_set, double *fitsum, int *setsum, int *gaitsum);
-void setTimeStamps(ClassifierList action_set, int itTime);
+void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTime, float *situation);
+void getDiscoversSums(ClassifierSet &action_set, double *fitsum, int *setsum, int *gaitsum);
+void setTimeStamps(ClassifierSet &action_set, int itTime);
 
-void selectTwoClassifiers(Classifier cl[], Classifier parents[], ClassifierList &action_set, double fitsum, int setsum);
+void selectTwoClassifiers(Classifier *cl, int *parents, ClassifierSet &action_set, double fitsum, int setsum);
 
 bool crossover(Classifier &cl1, Classifier &cl2, float situation[]);
 
@@ -35,36 +35,35 @@ bool applyNicheMutation2(Classifier *clfr, float state[]);
 bool applyGeneralMutation(Classifier *clfr, float state[]);
 bool mutateAction(Classifier& clfr);
 
-void insertDiscoveredClassifier(Classifier cl[], Classifier parents[], ClassifierList &action_set, ClassifierList &pop,
-                                int len, float *state);
+void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &pop, int len);
 
-void doActionSetSubsumption(ClassifierList &action_set, ClassifierList &pop);
-void subsumeClassifier(Classifier& cl, Classifier parents[], ClassifierList &action_set, ClassifierList &pop, float *state);
-bool subsumeClassifierToSet(Classifier &cl, ClassifierList &cl_set, ClassifierSet *set);
+void doActionSetSubsumption(ClassifierSet &action_set);
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2);
+bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set);
 bool subsumes(Classifier &cl1, Classifier & cl2);
 bool isSubsumer(Classifier &cl);
 bool isMoreGeneral(Classifier &clfr1, Classifier &clfr2);
 
-int deleteStochClassifier(ClassifierList &pop);
-double getDelProp(Classifier *clfr, double meanFitness);
+int deleteStochClassifier(ClassifierMap &pop);
+double getDelProp(Classifier &clfr, double meanFitness);
 
-void freeSet(ClassifierSet **cls);
-void freeClassifierSet(ClassifierSet **cls);
+void freeSet(delete_ClassifierSet **cls);
+void freeClassifierSet(delete_ClassifierSet **cls);
 void freeClassifier(Classifier *cl);
 
-void printClassifierSet(ClassifierSet *head);
-void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierSet *head);
+void printClassifierSet(delete_ClassifierSet *head);
+void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, delete_ClassifierSet *head);
 void printClassifier(Classifier *clfr);
 void fprintClassifier(FILE *fp, Classifier *classifier);
 
-ClassifierSet* sortClassifierSet(ClassifierSet **cls, int type);
+delete_ClassifierSet* sortClassifierSet(delete_ClassifierSet **cls, int type);
 
 double absoluteValue(double value);
 float computeDistance(CodeFragment clfrCond[], float cond[]);
 
 
-void manage_filter_list(ClassifierList &pop);
+void manage_filter_list(ClassifierMap &pop);
 
-int get_set_size(ClassifierList& pop);
-int get_set_numerosity(ClassifierList& pop);
-void get_matching_classifiers(ClassifierList& pop, float state[], ClassifierList& match_set, int img_id, bool train);
+int get_set_size(ClassifierMap& pop);
+int get_pop_numerosity(ClassifierMap& pop);
+void get_matching_classifiers(ClassifierMap& pop, float *state, ClassifierSet &match_set, int img_id, bool train);

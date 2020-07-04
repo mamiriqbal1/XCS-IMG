@@ -17,8 +17,8 @@ bool isDontcareCF(CodeFragment cf);
 int numberOfNonDontcares(CodeFragment cond[]);
 void printCF(CodeFragment cf);
 void validateDepth(opType* cf, opType* end);
-CodeFragment createNewCF(int id);
-void storeCFs(ClassifierSet* population, FILE *cfWritingFilePointer);
+void createNewCF(int id, CodeFragment &cf);
+void storeCFs(delete_ClassifierSet* population, FILE *cfWritingFilePointer);
 
 bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2);
 
@@ -31,7 +31,7 @@ opType leafOpCode(const int r);
 opType randomLeaf();
 int validLeaf(const opType opcode);
 opType randomFunction();
-opType* randomProgram(opType* prog,const int isfull,const int maxDepth, const int minDepth);
+opType* randomProgram(opType prog[], const int isfull, const int maxDepth, const int minDepth);
 char* leafname(const opType code);
 
 void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth);
