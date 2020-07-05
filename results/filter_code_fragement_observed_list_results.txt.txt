@@ -1255,3 +1255,153 @@ real	92m29.339s
 user	92m22.967s
 sys	0m3.432s
 
+
+
+
+
+##benchmark of linked list population
+
+Same as experiment #4 only for 2 epochs
+
+
+15:26:12 amir@:cmake-build-debug$ time ./RCFC_kb_ll ../config/experiment_config_2.txt 
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.75  error: 351.072  set size: 1045
+Training: 2000  accuracy: 0.856  error: 229.702  set size: 1190
+Training: 3000  accuracy: 0.891  error: 194.444  set size: 1352
+Training: 4000  accuracy: 0.897  error: 185.952  set size: 1512
+Training: 5000  accuracy: 0.913  error: 159.859  set size: 1626
+Training: 6000  accuracy: 0.918  error: 149.455  set size: 1585
+Training: 7000  accuracy: 0.912  error: 145.799  set size: 1564
+Training: 8000  accuracy: 0.926  error: 131.566  set size: 1511
+Training: 9000  accuracy: 0.931  error: 120.374  set size: 1520
+Training: 10000  accuracy: 0.926  error: 127.591  set size: 1517
+Training: 11000  accuracy: 0.935  error: 104.223  set size: 1507
+Validation: 1984  accuracy: 0.929435  error: 124.606  set size: 1524
+Training: 12000  accuracy: 0.938  error: 94.9982  set size: 1523
+Training: 13000  accuracy: 0.943  error: 95.7017  set size: 1515
+Training: 14000  accuracy: 0.936  error: 109.59  set size: 1554
+Training: 15000  accuracy: 0.919  error: 124.576  set size: 1557
+Training: 16000  accuracy: 0.925  error: 115.166  set size: 1569
+Training: 17000  accuracy: 0.931  error: 114.569  set size: 1566
+Training: 18000  accuracy: 0.934  error: 113.495  set size: 1593
+Training: 19000  accuracy: 0.934  error: 103.213  set size: 1584
+Training: 20000  accuracy: 0.949  error: 87.5727  set size: 1593
+Training: 21000  accuracy: 0.942  error: 90.8695  set size: 1597
+Training: 22000  accuracy: 0.933  error: 96.7658  set size: 1607
+Training: 23000  accuracy: 0.943  error: 87.4221  set size: 1640
+Validation: 1984  accuracy: 0.939516  error: 85.0718  set size: 1629
+
+--- Filter Stats ---
+gid: 9302
+filter list size: 1691
+avg numerosity: 1.10349 , max numerosity: 4 , min numerosity: 1
+avg fitness: 0.253696 , max fitness: 2 , min fitness: 0
+promising filters: 400
+filter size 3 count: 1
+filter size 5 count: 749
+filter size 7 count: 941
+dilated filters: 1023
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 12868674
+total evaluations recorded: 5670065 , total evaluated filters: 1669
+avg positive: 77.5315 , max positive: 2190 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 14766
+
+real	5m18.493s
+user	5m17.825s
+sys	0m0.336s
+
+
+
+## after implementing population map
+
+18:41:27 amir@:cmake-build-debug$ time ./RCFC_kb ../config/experiment_config_2.txt 
+train_file_name ../data/mnist/mnist_train_3_8.txt
+test_file_name ../data/mnist/mnist_test_3_8.txt
+num_actions 2
+use_kb no
+kb_file output/kb_file.txt
+output_path output_2/
+max_population_size 2000
+epochs 2
+test_frequency 1000
+testing no
+Training instances: 11982
+Test instances: 1984
+Test frequency: 1000
+Validation frequency: 11982
+
+Loading Input! Please wait ....
+
+It is in progress! Please wait ....
+Training: 1000  accuracy: 0.775  error: 304.183  set size: 1100
+Training: 2000  accuracy: 0.903  error: 181.833  set size: 1295
+Training: 3000  accuracy: 0.894  error: 189.199  set size: 1487
+Training: 4000  accuracy: 0.877  error: 211.841  set size: 1678
+Training: 5000  accuracy: 0.917  error: 164.883  set size: 1868
+Training: 6000  accuracy: 0.883  error: 194.435  set size: 1997
+Training: 7000  accuracy: 0.885  error: 205.54  set size: 1996
+Training: 8000  accuracy: 0.906  error: 168.964  set size: 1995
+Training: 9000  accuracy: 0.919  error: 156.089  set size: 1994
+Training: 10000  accuracy: 0.91  error: 157.657  set size: 1994
+Training: 11000  accuracy: 0.903  error: 170.923  set size: 1991
+Validation: 1984  accuracy: 0.875504  error: 151.234  set size: 1990
+Training: 12000  accuracy: 0.896  error: 177.769  set size: 1990
+Training: 13000  accuracy: 0.915  error: 151.038  set size: 1989
+Training: 14000  accuracy: 0.923  error: 138.814  set size: 1985
+Training: 15000  accuracy: 0.923  error: 137.725  set size: 1980
+Training: 16000  accuracy: 0.924  error: 147.145  set size: 1979
+Training: 17000  accuracy: 0.894  error: 166.822  set size: 1973
+Training: 18000  accuracy: 0.927  error: 146.26  set size: 1968
+Training: 19000  accuracy: 0.932  error: 125.95  set size: 1955
+Training: 20000  accuracy: 0.939  error: 114.759  set size: 1952
+Training: 21000  accuracy: 0.926  error: 138.352  set size: 1938
+Training: 22000  accuracy: 0.918  error: 140.634  set size: 1927
+Training: 23000  accuracy: 0.937  error: 118.888  set size: 1928
+Validation: 1984  accuracy: 0.940524  error: 84.7218  set size: 1921
+
+--- Filter Stats ---
+gid: 3816
+filter list size: 1651
+avg numerosity: 1.20775 , max numerosity: 7 , min numerosity: 1
+avg fitness: 0.311932 , max fitness: 7 , min fitness: 0
+promising filters: 401
+filter size 3 count: 216
+filter size 5 count: 306
+filter size 7 count: 1129
+dilated filters: 1005
+--- Filter Stats ---
+
+--- Filter Evaluation Stats ---
+map hits: 26887707
+total evaluations recorded: 11200172 , total evaluated filters: 1651
+avg positive: 1341.83 , max positive: 10341 , min positive: 0
+--- Filter Evaluation Stats ---
+
+Global Classifier ID: 5664
+
+real	4m29.175s
+user	4m28.530s
+sys	0m0.488s

@@ -343,10 +343,10 @@ void createNewCF(int id, CodeFragment &cf)
     cf.cfID = id;
 }
 
-void storeCFs(delete_ClassifierSet *population, FILE *cfWritingFilePointer)
+void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
 {
-    double avgFitness = getAvgFitness(population);
-    int numFitterCFs = getNumFitterCFs(population,avgFitness);
+    double avgFitness = getAvgFitness(pop);
+    int numFitterCFs = getNumFitterCFs(pop, avgFitness);
     int firstCFID = 0;
 
     char *buf;
@@ -409,26 +409,26 @@ void storeCFs(delete_ClassifierSet *population, FILE *cfWritingFilePointer)
     }
 
 
-    for(delete_ClassifierSet* set=population; set != NULL; set=set->next)  //CFs from the current problem
+    for(auto & item : pop)  //CFs from the current problem
     {
-        if(set->classifier->fitness <= avgFitness)  //store CFs from classifiers with fitness > average fitness of the classifiers population
+        if(item.second.fitness <= avgFitness)  //store CFs from classifiers with fitness > average fitness of the classifiers population
         {
             break;
         }
         for(int i=0; i<clfrCondLength; i++)
         {
-        if(!isDontcareCF(set->classifier->condition[i]))
+        if(!isDontcareCF(item.second.condition[i]))
             {
                 //outprog(set->classifier->condition[i].codeFragment,cfMaxLength,cfWritingFilePointer);
-                outprog(set->classifier->condition[i],cfMaxLength,cfWritingFilePointer);
+                outprog(item.second.condition[i],cfMaxLength,cfWritingFilePointer);
                //sprintf(buf," ---------> %d",set->classifier->condition[i].cfID); fwrite(buf,strlen(buf),1,cfWritingFilePointer);
-                len = snprintf(NULL,0," ---------> %d",set->classifier->condition[i].cfID);
+                len = snprintf(NULL,0," ---------> %d",item.second.condition[i].cfID);
                 if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
                 {
                     printf("\nError in file writing ...\n");
                     exit(0);
                 }
-                len = snprintf(buf,len+1," ---------> %d",set->classifier->condition[i].cfID);
+                len = snprintf(buf,len+1," ---------> %d",item.second.condition[i].cfID);
 
                 fwrite(buf,strlen(buf),1,cfWritingFilePointer);
                 free(buf);

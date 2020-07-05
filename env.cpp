@@ -14,14 +14,6 @@
 float lowerLimit[condLength];
 float upperLimit[condLength];
 
-void initializeLimit(){
-    for (int i = 0; i<condLength; i++)
-    {
-        lowerLimit[i] = 0.0;
-        upperLimit[i] = 0.0;
-    }
-}
-
 void initializeInput(DataSource inputArray[],int numofRows){
     int featureIndex,docIndex;
     for(docIndex=0;docIndex<numofRows;docIndex++)

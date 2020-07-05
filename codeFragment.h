@@ -18,7 +18,7 @@ int numberOfNonDontcares(CodeFragment cond[]);
 void printCF(CodeFragment cf);
 void validateDepth(opType* cf, opType* end);
 void createNewCF(int id, CodeFragment &cf);
-void storeCFs(delete_ClassifierSet* population, FILE *cfWritingFilePointer);
+void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer);
 
 bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2);
 

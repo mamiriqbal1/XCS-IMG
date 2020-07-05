@@ -131,12 +131,6 @@ struct ClassifierSet{
     }
 };
 
-struct delete_ClassifierSet
-{
-    Classifier *classifier;
-    delete_ClassifierSet *next;
-};
-
 struct DataSource{
     float *state;
     int action;

@@ -102,7 +102,7 @@ void writePerformance(ClassifierMap &pop, int *performance, double *sysError, in
     }
     perf/=testFrequency;
     serr/=testFrequency;
-    setSize = get_set_size(pop);
+    setSize = pop.size();
 
     snprintf(buf,strlen(buf),"%d ",exploreProbC);
 
@@ -136,7 +136,7 @@ void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError
     serr/=testNumInstances;
    // std::cout<<"testing";
 
-    int setSize = get_set_size(pop);
+    int setSize = pop.size();
 
     sprintf(buf,"%d ",exploreProbC);
     fwrite(buf,strlen(buf),1,testPerformance);
@@ -156,8 +156,8 @@ void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierMap &pop, delete_ClassifierSet **population, DataSource *object, int counter, int img_id,
-                            int correct[], double sysError[]) {
+void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter, int img_id, int correct[],
+                            double sysError[]) {
 
     bool wasCorrect = false;
     ClassifierSet match_set(maxPopSize, pop);
@@ -215,7 +215,7 @@ void doOneSingleStepProblem(ClassifierMap &pop, delete_ClassifierSet **populatio
  * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
  * modified to calculate training and validation accuracies after every epoch.
  */
-void doOneSingleStepExperiment(ClassifierMap &pop, delete_ClassifierSet **to_be_removed) {  //Executes one single-step experiment monitoring the performance.
+void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step experiment monitoring the performance.
 
     int correct[testFrequency];
     double sysError[testFrequency];
@@ -234,7 +234,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop, delete_ClassifierSet **to_be_
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
 
-        doOneSingleStepProblem(pop, nullptr, state, exploreProbC, img_id, correct, sysError);
+        doOneSingleStepProblem(pop, state, exploreProbC, img_id, correct, sysError);
 
        if(exploreProbC%testFrequency==0 && exploreProbC>0){
             writePerformance(pop,correct,sysError,exploreProbC);
@@ -305,31 +305,21 @@ void doOneSingleStepTest(ClassifierMap &pop){
 	int class1FP=0, class2FP=0, class3FP=0, class4FP=0, class5FP=0, class6FP=0, class7FP=0, class8FP=0, class9FP=0, class10FP=0;
 	int class11FP=0, class12FP=0, class13FP=0, class14FP=0, class15FP=0, class16FP=0, class17FP=0, class18FP=0, class19FP=0, class20FP=0, class21FP=0, class22FP=0, class23FP=0;
 
-	ClassifierSet match_set(maxPopSize, pop);
 
-    //loadDataFile(false);
     int cc = 0;
 
 	for(int t=0; t<testNumInstances; t++){
+        ClassifierSet match_set(maxPopSize, pop);
         std::cout<<t<<"/"<<testNumInstances<<"\r";
-		delete_ClassifierSet *mset=NULL, *poppointer;
 		bool isMatched = false;
-		//resetStateTesting(testState,t);
 		testState = &testingData[t];
-    /*
-		for(int i =0;i<condLength;i++)
-            if(testState->state[i]!=0.0)
-                std::cout<<i<<":"<<testState->state[i]<<" ";
-            std::cout<<"=="<<testState->action;
-            std::cout<<std::endl;
-            getchar();*/
 
         get_matching_classifiers(pop, testState->state, match_set, t, false);
         isMatched = match_set.ids.size() > 0;
         if(isMatched == false){
             cc++;
             tmpnotmatched++;
-            int popSize = get_set_size(pop);
+            int popSize = pop.size();
 			distanceInputClassifier distanceArray[popSize];
 			int i = 0;
 			int k = popSize*tournamentSize;
@@ -355,7 +345,6 @@ void doOneSingleStepTest(ClassifierMap &pop){
         double reward = executeAction(actionWinner,testState->action,wasCorrect);
         sysError[t] = absoluteValue(reward - getBestValue());
 
-		//float error = computeError(computedSaliencyMap,state.output);
 		if(wasCorrect)
         {
                 correct[t]=1;
@@ -365,13 +354,8 @@ void doOneSingleStepTest(ClassifierMap &pop){
         {
                correct[t]=0;
         }
-		freeSet(&mset);
     }
     writeTestPerformance(pop, correct, sysError, testNumInstances);
-	//std::ofstream resFile;
-    //resFile.open(resultFile,std::ios::app);
-    //std::string wLine = "";
-    //std::string wLine2 = "";
 
 //    std::cout<<"N = "<<maxPopSize<<std::endl;
 //    std::cout<<"P# = "<<P_dontcare<<std::endl;
@@ -386,9 +370,7 @@ void doOneSingleStepTest(ClassifierMap &pop){
 
 void startXCS(){
     startTimer();
-    delete_ClassifierSet *population;
     ClassifierMap pop;
-    initializePopulation(&population,cfReadingFilePointer);//,cfWritingFilePointer);
     printf("\nLoading Input! Please wait ....\n");
     //inp = new ds[totalNumInstances];
     //loadData(inp);
@@ -409,8 +391,7 @@ void startXCS(){
 
     printf("\nIt is in progress! Please wait ....\n");
 
-    doOneSingleStepExperiment(pop, &population);
-    //simplifyPopulation(&population);
+    doOneSingleStepExperiment(pop);
 
     if(Testing){
             printf("\nTesting\n");
@@ -418,9 +399,7 @@ void startXCS(){
             doOneSingleStepTest(pop); // testing
     }
 
-    population = sortClassifierSet(&population,2); // sort according to 'fitness'
-    fprintClassifierSet(fileClassifierPopulation,cfWritingFilePointer,population);
-    freeClassifierSet(&population); // free population for this experiment
+    fprintClassifierSet(fileClassifierPopulation,cfWritingFilePointer,pop);
     //delete []input;
     delete []testingData;
     delete []trainingData;
