@@ -1,5 +1,5 @@
 # with filter 78% training accuracy speed is slow
-# condition has only one filter
+# code_fragment has only one filter
 # with only one function AND
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
@@ -44,7 +44,7 @@ sys	0m0.144s
 
 
 # with filter
-# condition has two filters
+# code_fragment has two filters
 # with only one function AND
 
 
@@ -75,7 +75,7 @@ sys	0m0.112s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with always cover
 
@@ -120,7 +120,7 @@ sys	0m0.956s
 
 
 # with filter 
-# condition has 8 filters
+# code_fragment has 8 filters
 # with only one function AND
 
 
@@ -150,7 +150,7 @@ sys	0m1.108s
 
 
 # with filter 
-# condition has 6 filters
+# code_fragment has 6 filters
 # with only one function AND
 
 train_file_name ../data/mnist/mnist_train_3_8.txt
@@ -196,7 +196,7 @@ sys	0m1.088s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with covering to stop when numerositySum is more than maxPopulation/2
 
@@ -241,7 +241,7 @@ sys	0m0.280s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with covering to stop when numerositySum is more than maxPopulation/8
 
@@ -285,7 +285,7 @@ sys	0m0.172s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with default covering mechanism
 
@@ -333,7 +333,7 @@ sys	0m0.988s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with default continuous covering and maxpopulationsize 5000
 
@@ -362,7 +362,7 @@ sys	0m2.387s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only four functions AND, or, nad, nor
 # with default continuous covering and maxpopulationsize 5000
 
@@ -392,7 +392,7 @@ sys	0m0.257s
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with covering to stop when numerositySum is more than maxPopulation/2
 # after correction in add leaf (float instead of int is used)
@@ -447,7 +447,7 @@ above experiment with four operators and or nand and nor - produced poor results
 
 
 # with filter 
-# condition has 4 filters
+# code_fragment has 4 filters
 # with only one function AND
 # with covering to stop when numerositySum is more than maxPopulation/2
 # after correction in add leaf (float instead of int is used)

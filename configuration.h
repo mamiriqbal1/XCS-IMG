@@ -35,9 +35,13 @@ extern int testFrequency;// = trainNumInstances; // 1034;
 extern int validation_frequency;
 const int filter_list_management_frequency = 500;
 
-const char outputFileName[] = "output_training.txt";
-const char featureFileName[] = "feature_codefragments.txt";
-const char ruleFileName[] = "rule_with_codefragements.txt";
+const char output_training_file_name[] = "training_performance.txt";
+const char output_test_file_name[] = "test_performance.txt";
+const char output_classifier_file_name[] = "classifier.txt";
+const char output_code_fragment_file_name[] = "code_fragment.txt";
+const char output_filter_file_name[] = "filter.txt";
+const char code_fragment_file_name[] = "feature_codefragments.txt";
+const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
 const int clfrCondLength = 1; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
@@ -97,7 +101,7 @@ struct Leaf
 
 struct CodeFragment
 {
-    opType codeFragment[cfMaxLength];
+    opType reverse_polish[cfMaxLength];
     //Leaf leaf[numLeaf];
     int num_filters; // equal to number of leaves to be determined at run time
     //Filter filter[numLeaf];
@@ -108,7 +112,7 @@ struct CodeFragment
 struct Classifier
 {
     int id;
-    CodeFragment condition[clfrCondLength];
+    CodeFragment code_fragment[clfrCondLength];
     int action;
     double prediction;
     double predictionError;

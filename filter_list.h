@@ -14,5 +14,6 @@ void reset_filter_stats();
 void remove_unused_filters(std::forward_list<int>& removed_filters);
 void print_filter_stats();
 int get_promising_filter_id();
+void output_filter_to_file(std::ofstream& output_filter_file);
 
 #endif //RCFC_KB_FILTER_LIST_H

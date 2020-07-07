@@ -7,7 +7,7 @@ getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTi
 int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);
-void createMatchingCondition(CodeFragment cond[], float state[]);
+void createMatchingCondition(CodeFragment code_fragment[], float state[]);
 
 void getPredictionArray(ClassifierSet &match_set);
 double getBestValue();
@@ -42,12 +42,13 @@ bool isMoreGeneral(Classifier &clfr1, Classifier &clfr2);
 int deleteStochClassifier(ClassifierMap &pop);
 double getDelProp(Classifier &clfr, double meanFitness);
 
-void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierMap &pop);
+void fprintClassifierSet(ClassifierMap &pop);
 
-void fprintClassifier(FILE *fp, Classifier &classifier);
+void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
+                      std::ofstream &output_code_fragment_file, std::ofstream &output_filter_file);
 
 double absoluteValue(double value);
-float computeDistance(CodeFragment clfrCond[], float cond[]);
+float computeDistance(CodeFragment code_fragment[], float cond[]);
 
 
 void manage_filter_list(ClassifierMap &pop);

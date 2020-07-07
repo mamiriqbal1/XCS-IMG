@@ -91,8 +91,8 @@ void Exit(FILE *fp){
  * @param sysError The system error in the last fifty exploration trials.
  * @param exploreProbC The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC){
-    char buf[1000];
+void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC,
+                      std::ofstream &output_training_file) {
     double perf=0.0, serr=0.0;
     int setSize;
     for(int i=0; i<testFrequency; i++)
@@ -103,27 +103,13 @@ void writePerformance(ClassifierMap &pop, int *performance, double *sysError, in
     perf/=testFrequency;
     serr/=testFrequency;
     setSize = pop.size();
-
-    snprintf(buf,strlen(buf),"%d ",exploreProbC);
-
-    sprintf(buf,"%d ",exploreProbC);
-    fwrite(buf,strlen(buf),1,filePerformance);
-    sprintf(buf,"%f ",perf);
-    fwrite(buf,strlen(buf),1,filePerformance);
-    sprintf(buf,"%f ",serr);
-    fwrite(buf,strlen(buf),1,filePerformance);
-    sprintf(buf,"%d ",setSize);
-    fwrite(buf,strlen(buf),1,filePerformance);
-    fwrite("\n",strlen("\n"),1,filePerformance);
-
+    output_training_file << exploreProbC << " " << perf << " " << serr << " " << setSize << std::endl;
     std::cout<<"Training: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
-      //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
-    //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC){
-    char buf[100];
+void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC,
+                          std::ofstream &output_test_file) {
     double perf=0.0, serr=0.0;
 
     for(int i=0; i<testNumInstances; i++)
@@ -131,26 +117,11 @@ void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError
         perf+=performance[i];
         serr+=sysError[i];
     }
-
     perf/=testNumInstances;
     serr/=testNumInstances;
-   // std::cout<<"testing";
-
     int setSize = pop.size();
-
-    sprintf(buf,"%d ",exploreProbC);
-    fwrite(buf,strlen(buf),1,testPerformance);
-    sprintf(buf,"%f ",perf);
-    fwrite(buf,strlen(buf),1,testPerformance);
-    sprintf(buf,"%f ",serr);
-    fwrite(buf,strlen(buf),1,testPerformance);
-    sprintf(buf,"%d ",setSize);
-    fwrite(buf,strlen(buf),1,testPerformance);
-    fwrite("\n",strlen("\n"),1,testPerformance);
-
+    output_test_file << exploreProbC << " " << perf << " " << serr << " " << setSize << std::endl;
     std::cout<<"Validation: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
-    //int numerositySum = getNumerositySum(population); printf("%d %f %f %d %d\n",exploreProbC,perf,serr,setSize,numerositySum);
-    //printf("%d %f %f %d\n",exploreProbC,perf,serr,setSize);
 }
 
 
@@ -217,6 +188,19 @@ void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter,
  */
 void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step experiment monitoring the performance.
 
+    std::ofstream output_training_file;
+    output_training_file.open(output_path + output_training_file_name);
+    if(!output_training_file.is_open()){
+        std::cout << "Could not open output training file";
+        exit(1);
+    }
+    std::ofstream output_test_file;
+    output_test_file.open(output_path + output_test_file_name);
+    if(!output_test_file.is_open()){
+        std::cout << "Could not open output test file";
+        exit(1);
+    }
+
     int correct[testFrequency];
     double sysError[testFrequency];
 
@@ -237,16 +221,17 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
         doOneSingleStepProblem(pop, state, exploreProbC, img_id, correct, sysError);
 
        if(exploreProbC%testFrequency==0 && exploreProbC>0){
-            writePerformance(pop,correct,sysError,exploreProbC);
+           writePerformance(pop, correct, sysError, exploreProbC, output_training_file);
         }
         if(exploreProbC%validation_frequency==0 && exploreProbC>0){
-            doOneSingleStepTest(pop);
+            doOneSingleStepTest(pop, output_test_file);
         }
         if(exploreProbC%filter_list_management_frequency==0 && exploreProbC>0){
             manage_filter_list(pop);
         }
     }
-//    delete state;
+    output_training_file.close();
+    output_test_file.close();
 }
 
 void sortAll(distanceInputClassifier arrayToBeSorted[], int size){ // Bubble Sort Function for Ascending Order
@@ -291,7 +276,7 @@ std::string NumberToString(int num){
     return ss.str();
 }
 
-void doOneSingleStepTest(ClassifierMap &pop){
+void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file) {
 	bool wasCorrect = false;
 	int correctCounter = 0;
 	int correct[testNumInstances];
@@ -327,7 +312,7 @@ void doOneSingleStepTest(ClassifierMap &pop){
 
 			for(auto& item : pop){
 			  distanceArray[i].posClassifier = i;
-			  distanceArray[i].distance = computeDistance(item.second.condition, testState->state);
+			  distanceArray[i].distance = computeDistance(item.second.code_fragment, testState->state);
 			  i++;
 			}
 			sortAll(distanceArray,popSize);
@@ -355,7 +340,7 @@ void doOneSingleStepTest(ClassifierMap &pop){
                correct[t]=0;
         }
     }
-    writeTestPerformance(pop, correct, sysError, testNumInstances);
+    writeTestPerformance(pop, correct, sysError, testNumInstances, output_test_file);
 
 //    std::cout<<"N = "<<maxPopSize<<std::endl;
 //    std::cout<<"P# = "<<P_dontcare<<std::endl;
@@ -393,13 +378,9 @@ void startXCS(){
 
     doOneSingleStepExperiment(pop);
 
-    if(Testing){
-            printf("\nTesting\n");
-            //loadDataFile(false); //load test data
-            doOneSingleStepTest(pop); // testing
-    }
-
-    fprintClassifierSet(fileClassifierPopulation,cfWritingFilePointer,pop);
+    // clean filter list finally before writing to file
+    manage_filter_list(pop);
+    fprintClassifierSet(pop);
     //delete []input;
     delete []testingData;
     delete []trainingData;
@@ -514,7 +495,7 @@ void LoadConfig(char* file)
 /*
 void copy_filter_to_condition(Classifier *classifer, xt::xtensor<float, 1> filter)
 {
-     Leaf *leaf = classifer->condition[0].leaf;
+     Leaf *leaf = classifer->code_fragment[0].leaf;
 
      for (int i = 0; i < numLeaf; i++) {
         leaf[i].lowerBound = filter(i*2);
@@ -527,10 +508,10 @@ void count_matches_for_filters(xt::xtensor<float, 2> good_filters, xt::xtensor<f
 
     int num_filters = good_actions.shape()[0];
     Classifier *classifier;
-    // create a dummy classifier condition and reuse for all filters later
+    // create a dummy classifier code_fragment and reuse for all filters later
     DataSource *obj = &trainingData[0];
     classifier = matchingCondAndSpecifiedAct(obj->state, 0, 1, 1);
-    CodeFragment *cfs = classifier->condition;
+    CodeFragment *cfs = classifier->code_fragment;
 
     for (int i = 0; i < num_filters; i++) {
         int match_0 = 0;
@@ -616,53 +597,12 @@ int main(int argc, char **argv){
         //mkdir(path);
         setSeed(seeds[j]);
 
-        filePerformance=fopen((output_path + outputFileName).c_str(), "w"); //open outputFile in writing mode
-        if (filePerformance == NULL)
-        {
-            printf("Error in opening a file.. %s", outputFileName);
-            exit(1);
-        }
-
-        cfWritingFilePointer=fopen((output_path + featureFileName).c_str(), "w"); //open outputFile2 in writing mode
-        if(cfWritingFilePointer == NULL)
-        {
-            printf("Error in opening a file.. %s", featureFileName);
-            exit(1);
-        }
-
-        fileClassifierPopulation=fopen((output_path + ruleFileName).c_str(), "w"); //open outputFile3 in writing mode
-        if (fileClassifierPopulation == NULL)
-        {
-            printf("Error in opening a file.. %s", ruleFileName);
-            exit(1);
-        }
-        testPerformance = fopen((output_path + "/test_4626sts_10k_100k_200CF_33_testing_1k_1034.txt").c_str(), "w"); //open outputFile1 in writing mode
-        if (testPerformance == NULL)
-        {
-            printf("Error in opening a file.. %s", "test File");
-            exit(1);
-        }
         if (use_kb)
         {
-            cfReadingFilePointer=fopen(kb_file.c_str(), "r"); //open inputFile in reading mode
-            if(cfReadingFilePointer == NULL)
-            {
-                printf("Error in opening a file.. %s", kb_file.c_str());
-                exit(1);
-            }
+            // open kb file
         }
-
-
-  //      printf("%d have %d\n", omp_get_thread_num(), j);
-        //printf("%dText Classification : %d\n",condLength,j);
         startXCS();
-        //Exit(filePerformance);
-
     }
-
-    fclose(filePerformance);//close outputFile
-    fclose(cfWritingFilePointer);//close
-    fclose(fileClassifierPopulation);//close
 
     exit(0);
 }//end main

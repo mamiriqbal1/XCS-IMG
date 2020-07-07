@@ -11,6 +11,8 @@
 #include "classifier.h"
 #include "env.h"
 #include "filter_list.h"
+#include <float.h>
+#include <iomanip>
 
 int countNewCFs = 0;
 double predictionArray[max_actions]; //prediction array
@@ -27,7 +29,7 @@ void setInitialVariables(Classifier &clfr, double setSize, int time){
     clfr.experience = 0;
     clfr.actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
     clfr.timeStamp = time;
-    clfr.specificness = numberOfNonDontcares(clfr.condition);
+    clfr.specificness = numberOfNonDontcares(clfr.code_fragment);
 }
 
 
@@ -157,11 +159,11 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
     }
     return nr;
 }
-float computeDistance(CodeFragment clfrCond[], float cond[]){
+float computeDistance(CodeFragment code_fragment[], float cond[]){
 
   float mid, sum = 0.0;
   for(int i=0; i<clfrCondLength; i++){
-            if( isDontcareCF(clfrCond[i]) || evaluateCF(clfrCond[i],cond)==1 )
+            if(isDontcareCF(code_fragment[i]) || evaluateCF(code_fragment[i], cond) == 1 )
             {
                 sum += 1;
             }
@@ -175,8 +177,8 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
     for(int i=0; i<clfrCondLength; i++)
     {
         //std::cout<<"iscond\n";
-        //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].codeFragment,state)==0 )
-        if(!isDontcareCF(cl.condition[i]) && evaluateCF(cl.condition[i], state, cl.id, img_id, train) == 0 )
+        //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].reverse_polish,state)==0 )
+        if(!isDontcareCF(cl.code_fragment[i]) && evaluateCF(cl.code_fragment[i], state, cl.id, img_id, train) == 0 )
         {
             return false;
         }
@@ -186,22 +188,22 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize,
                                  int time)  //matchingCondAndSpecifiedAct(currentState,i,matchSetNumerositySum+1,time)
 {
-    createMatchingCondition(cl.condition,state);
+    createMatchingCondition(cl.code_fragment, state);
     cl.action = act;
     setInitialVariables(cl,setSize,time);
 }
-void createMatchingCondition(CodeFragment cond[], float state[])
+void createMatchingCondition(CodeFragment code_fragment[], float state[])
 {
     for(int i=0; i<clfrCondLength; i++)
     {
         do
         {
-            createNewCF(getNumPreviousCFs() + countNewCFs, cond[i]);
-            opType* end = randomProgram(cond[i].codeFragment,irand(2),cfMaxDepth,cfMinDepth);
-            validateDepth(cond[i].codeFragment,end); //validate depth
-            cond[i] = addLeafCF(cond[i], state);
+            createNewCF(getNumPreviousCFs() + countNewCFs, code_fragment[i]);
+            opType* end = randomProgram(code_fragment[i].reverse_polish, irand(2), cfMaxDepth, cfMinDepth);
+            validateDepth(code_fragment[i].reverse_polish, end); //validate depth
+            code_fragment[i] = addLeafCF(code_fragment[i], state);
         }
-        while( evaluateCF(cond[i],state)!=1 );
+        while(evaluateCF(code_fragment[i], state) != 1 );
         countNewCFs++;
     }
 }
@@ -398,8 +400,8 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
         mutation(child[i], situation);
     }
 
-    child[0].specificness = numberOfNonDontcares(child[0].condition);
-    child[1].specificness = numberOfNonDontcares(child[1].condition);
+    child[0].specificness = numberOfNonDontcares(child[0].code_fragment);
+    child[1].specificness = numberOfNonDontcares(child[1].code_fragment);
 
     // get the length of the population to check if clasifiers have to be deleted
     len = get_pop_numerosity(pop);
@@ -513,15 +515,15 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
 
     for (int i = 0; i < clfrCondLength; i++) {
         if(drand() < pX){  // swap CF with pX probability
-            CodeFragment temp = cl1.condition[i];
-            cl1.condition[i] = cl2.condition[i];
-            cl2.condition[i] = temp;
+            CodeFragment temp = cl1.code_fragment[i];
+            cl1.code_fragment[i] = cl2.code_fragment[i];
+            cl2.code_fragment[i] = temp;
             continue; // if cf crossover done then skip filter crossover
         }
-        for(int j=0; j < cl1.condition[i].num_filters && j < cl2.condition[i].num_filters; j++) {
+        for(int j=0; j < cl1.code_fragment[i].num_filters && j < cl2.code_fragment[i].num_filters; j++) {
             if(drand() < pX) {  // filter crossover with pX probability
-                filter1 = get_filter(cl1.condition[i].filter_id[j]);
-                filter2 = get_filter(cl2.condition[i].filter_id[j]);
+                filter1 = get_filter(cl1.code_fragment[i].filter_id[j]);
+                filter2 = get_filter(cl2.code_fragment[i].filter_id[j]);
                 // Skip crossover if filters are not of the same size or type
                 if(filter1.filter_size != filter2.filter_size ||
                 filter1.is_dilated != filter2.is_dilated) continue;
@@ -531,12 +533,12 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
                     crossover_filter(filter1, filter2);
                     if (filter1_result == evaluate_filter(filter1, situation)
                         && filter2_result == evaluate_filter(filter2, situation)) {
-                        cl1.condition[i].filter_id[j] = add_filter(filter1);
-                        cl2.condition[i].filter_id[j] = add_filter(filter2);
+                        cl1.code_fragment[i].filter_id[j] = add_filter(filter1);
+                        cl2.code_fragment[i].filter_id[j] = add_filter(filter2);
                         break;
                     } else {
-                        filter1 = get_filter(cl1.condition[i].filter_id[j]);
-                        filter2 = get_filter(cl2.condition[i].filter_id[j]);
+                        filter1 = get_filter(cl1.code_fragment[i].filter_id[j]);
+                        filter2 = get_filter(cl2.code_fragment[i].filter_id[j]);
                     }
                 }
             }
@@ -574,30 +576,30 @@ bool mutation(Classifier &clfr, float *state)
     for(int i=0; i<clfrCondLength; i++){
         // 2 level mutation (CF and filter)
         if(drand() < pM){
-           if(mutate_cf(clfr.condition[i])) {
+           if(mutate_cf(clfr.code_fragment[i])) {
                continue; // if cf is mutated then skip filter mutation
            }
         }
-        for(int j=0; j<clfr.condition[i].num_filters; j++) {
+        for(int j=0; j<clfr.code_fragment[i].num_filters; j++) {
             if(drand() >= pM) continue; // mutate only with probability of pM
 
             // if current filter is not promising and there is promising filter available in filter store
             // then use it with probability p_ol
-            if(get_filter(clfr.condition[i].filter_id[j]).fitness < 1 && drand() < p_ol){
+            if(get_filter(clfr.code_fragment[i].filter_id[j]).fitness < 1 && drand() < p_ol){
                 int id = get_promising_filter_id();
                 if(id != -1){   // if promising filter found
-                   clfr.condition[i].filter_id[j] = id;
+                   clfr.code_fragment[i].filter_id[j] = id;
                 }
             }
-            filter_to_mutate = get_filter(clfr.condition[i].filter_id[j]);
+            filter_to_mutate = get_filter(clfr.code_fragment[i].filter_id[j]);
             previous_evaluation_result = evaluate_filter(filter_to_mutate, state);
             for(int tries = 0; tries < 100; tries++){
                 apply_filter_mutation(filter_to_mutate, state);
                 if(previous_evaluation_result == evaluate_filter(filter_to_mutate, state)){
-                    clfr.condition[i].filter_id[j] = add_filter(filter_to_mutate);
+                    clfr.code_fragment[i].filter_id[j] = add_filter(filter_to_mutate);
                     break;
                 }else{
-                    filter_to_mutate = get_filter(clfr.condition[i].filter_id[j]);
+                    filter_to_mutate = get_filter(clfr.code_fragment[i].filter_id[j]);
                 }
             }
         }
@@ -763,11 +765,11 @@ bool isSubsumer(Classifier &cl)
 // To subsume a CF to more general CF
 // filhal randomly selected two CFs, In future will select CFs based on their Fitness
 
-bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fragments[])
+bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fragment[])
 {
     for(int i=0; i<clfrCondLength; i++){
-        for(int j=0; j < code_fragments[i].num_filters; j++) {
-            if(filter_to_check_id == code_fragments[i].filter_id[j]){
+        for(int j=0; j < code_fragment[i].num_filters; j++) {
+            if(filter_to_check_id == code_fragment[i].filter_id[j]){
                 return true;
             }
         }
@@ -782,8 +784,8 @@ bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fr
  bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
  {
      for(int i=0; i<clfrCondLength; i++){
-         for(int j=0; j < clfr_specific.condition[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(clfr_specific.condition[i].filter_id[j], clfr_general.condition)) {
+         for(int j=0; j < clfr_specific.code_fragment[i].num_filters; j++) {
+             if (!is_filter_covered_by_condition(clfr_specific.code_fragment[i].filter_id[j], clfr_general.code_fragment)) {
                  return false;
              }
          }
@@ -853,20 +855,67 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 // ############################### output operations ####################################
 
 
+void print_population_stats(ClassifierMap& pop)
+{
+    int size = pop.size();
+    std::cout<<"\n--- Population Stats ---\n";
+    std::cout << "Global Classifier ID: " << gid << std::endl;
+    std::cout << "Population set size: " << size << std::endl;
+    std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+    int n_total = 0, n_min = INT16_MAX, n_max = -1;
+    float f_total = 0, f_min = FLT_MAX, f_max = -1;
+    std::for_each(pop.begin(), pop.end(),
+                  [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
+                          (const ClassifierMap::value_type & item)
+                  {
+                      n_total+= item.second.numerosity;
+                      if(n_min > item.second.numerosity) n_min = item.second.numerosity;
+                      if(n_max < item.second.numerosity) n_max = item.second.numerosity;
+                      f_total+= item.second.fitness;
+                      if(f_min > item.second.fitness) f_min = item.second.fitness;
+                      if(f_max < item.second.fitness) f_max = item.second.fitness;
+                  });
+    std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
+    std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    std::cout<<"--- Population Stats ---\n\n";
+}
 
 /**
  * print the classifier in a delete_ClassifierSet to the file fp
  */
-void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierMap &pop)
+void fprintClassifierSet(ClassifierMap &pop)
 {
+    std::ofstream output_classifier_file;
+    output_classifier_file.open(output_path + output_classifier_file_name);
+    if(!output_classifier_file.is_open()){
+        std::cout << "Could not open output classifier file";
+        exit(1);
+    }
+    std::ofstream output_code_fragment_file;
+    output_code_fragment_file.open(output_path + output_code_fragment_file_name);
+    if(!output_code_fragment_file.is_open()){
+        std::cout << "Could not open output code fragment file";
+        exit(1);
+    }
+    std::ofstream output_filter_file;
+    output_filter_file.open(output_path + output_filter_file_name);
+    if(!output_filter_file.is_open()){
+        std::cout << "Could not open output code filter file";
+        exit(1);
+    }
+
+    print_population_stats(pop);
     print_filter_stats();
     print_filter_evaluation_stats();
     for(auto& item : pop)
     {
-        fprintClassifier(fpClfr, item.second);
+        fprintClassifier(item.second, output_classifier_file, output_code_fragment_file, output_filter_file);
     }
-    std::cout << "Global Classifier ID: " << gid << std::endl;
-    storeCFs(pop, fpCF);
+    output_filter_to_file(output_filter_file);
+    //storeCFs(pop, fpCF);
+    output_classifier_file.close();
+    output_code_fragment_file.close();
+    output_filter_file.close();
 }
 
 /**
@@ -876,7 +925,7 @@ void fprintClassifierSet(FILE *fpClfr, FILE *fpCF, ClassifierMap &pop)
 void fprintClassifier(FILE *fp, Classifier *classifier){
 	char buf[1000];
 	for(int i=0; i<clfrCondLength; i++){
-		outprog(classifier->condition[i].codeFragment,cfMaxLength,fp);
+		outprog(classifier->code_fragment[i].reverse_polish,cfMaxLength,fp);
 		fwrite("\n",strlen("\n"),1,fp);
 	}
 	sprintf(buf,"Action: %d\n",classifier->action); fwrite(buf,strlen(buf),1,fp);
@@ -890,128 +939,46 @@ void fprintClassifier(FILE *fp, Classifier *classifier){
 }
 */
 
-void fprintClassifier(FILE *fp, Classifier &classifier)
+
+
+void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
+                      std::ofstream &output_code_fragment_file, std::ofstream &output_filter_file)
 {
-    char *buf;
-    int len;
     for(int i=0; i<clfrCondLength; i++)
     {
-        //outprog(classifier->condition[i].codeFragment,cfMaxLength,fp);
-        outprog(classifier.condition[i],cfMaxLength,fp);
-        fwrite("\n",strlen("\n"),1,fp);
+        output_code_fragment_to_file(classifier.code_fragment[i], output_code_fragment_file);
     }
 
-    len = snprintf(NULL,0,"Action: %d\n",classifier.action);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Action: %d\n",classifier.action);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"id: %d ",classifier.id);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"id: %d ",classifier.id);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Numerosity: %d ",classifier.numerosity);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Numerosity: %d ",classifier.numerosity);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Accuracy: %f ",classifier.accuracy);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Accuracy: %f ",classifier.accuracy);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Fitness: %f ",classifier.fitness);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Fitness: %f ",classifier.fitness);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"PredictionError: %f ",classifier.predictionError);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"PredictionError: %f ",classifier.predictionError);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Prediction: %f ",classifier.prediction);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Prediction: %f ",classifier.prediction);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Experience: %d ",classifier.experience);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Experience: %d ",classifier.experience);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"Specificness: %d ",classifier.specificness);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"Specificness: %d ",classifier.specificness);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"ActionSetSize: %f ",classifier.actionSetSize);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"ActionSetSize: %f ",classifier.actionSetSize);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    len = snprintf(NULL,0,"TimeStamp: %d\n",classifier.timeStamp);
-    if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
-    {
-        printf("\nError in file writing ...\n");
-        exit(0);
-    }
-    len = snprintf(buf,len+1,"TimeStamp: %d\n",classifier.timeStamp);
-    fwrite(buf,strlen(buf),1,fp);
-    free(buf);
-
-    fflush(fp);
+    output_classifier_file << "id ";
+    output_classifier_file.width(5);
+    output_classifier_file << classifier.id;
+    output_classifier_file << " num ";
+    output_classifier_file << classifier.numerosity;
+    output_classifier_file << " exp ";
+    output_classifier_file.width(5);
+    output_classifier_file << classifier.experience;
+    output_classifier_file << " specificness ";
+    output_classifier_file << classifier.specificness;
+    output_classifier_file << " fitness ";
+    output_classifier_file.width(11);
+    output_classifier_file << classifier.fitness;
+    output_classifier_file << " accuracy ";
+    output_classifier_file.width(11);
+    output_classifier_file << classifier.accuracy;
+    output_classifier_file << " prediction ";
+    output_classifier_file.width(11);
+    output_classifier_file << classifier.prediction;
+    output_classifier_file << " error ";
+    output_classifier_file.width(11);
+    output_classifier_file << classifier.predictionError;
+    output_classifier_file << " action_set_size ";
+    output_classifier_file.width(7);
+    output_classifier_file << classifier.actionSetSize;
+    output_classifier_file << " time_stamp ";
+    output_classifier_file.width(5);
+    output_classifier_file << classifier.timeStamp;
+    output_classifier_file << " action ";
+    output_classifier_file << classifier.action << std::endl;
 }
 
 /*###################### sorting the classifier list ###################################*/
@@ -1046,8 +1013,8 @@ void manage_filter_list(ClassifierMap &pop){
 
     for(auto& item : pop){
         for(int i=0; i<clfrCondLength; i++){
-            for(int j=0; j < item.second.condition[i].num_filters; j++){
-                Filter& f = get_filter(item.second.condition[i].filter_id[j]);
+            for(int j=0; j < item.second.code_fragment[i].num_filters; j++){
+                Filter& f = get_filter(item.second.code_fragment[i].filter_id[j]);
                 f.numerosity++;
                 // if classifier is "promising" then increase the fitness of the filter
                 // a promising classifier is one whose error < 10 and experience > 10

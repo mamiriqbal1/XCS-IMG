@@ -54,7 +54,7 @@ void print_filter_evaluation_stats(){
     std::cout<<"--- Filter Evaluation Stats ---\n\n";
 }
 
-void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *cfWritingFilePointer)
+void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *code_fragment_file)
 {
     if(use_kb)
     {
@@ -114,7 +114,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
         opType c = 0;
         int i = 0;
         int lfNum = 0;
-        createNewCF(numReadPreviousCFs + condLength, previousCF); // start CFs ID numbers from condLength to avoid confusion with CFs and condition bits
+        createNewCF(numReadPreviousCFs + condLength, previousCF); // start CFs ID numbers from condLength to avoid confusion with CFs and code_fragment bits
         //tokenize the previousCFContents
         //int counting = 0;
 
@@ -130,7 +130,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
                 //std::cout<<pch;
                 // todo: loading of previous CF to be adapted
                 //previousCF.leaf[lfNum] = leafNode(pch);
-                previousCF.codeFragment[i++] = lfNum;
+                previousCF.reverse_polish[i++] = lfNum;
                 lfNum++;
                 //std::cout<<"Pch with D: "<<pch<<std::endl;
 
@@ -141,7 +141,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
             {
                 //printf("\n%d\n",*pch);
                 c = getOpType(pch);
-                previousCF.codeFragment[i++] = c;
+                previousCF.reverse_polish[i++] = c;
 
                 //std::cout<<"C: "<<c<<std::endl;
 
@@ -214,7 +214,7 @@ opType getOpType(char str[])
     return ret;
 }
 
-bool isExists(CodeFragment newCF, CodeFragment cfPopulation[], int numCFs)
+bool isExists(CodeFragment &newCF, CodeFragment *cfPopulation, int numCFs)
 {
 
     for(int i=0; i<numCFs; i++)
@@ -229,16 +229,16 @@ bool isExists(CodeFragment newCF, CodeFragment cfPopulation[], int numCFs)
     return false;
 }
 
-bool equalTwoCFs(CodeFragment cf1, CodeFragment cf2)
+bool equalTwoCFs(CodeFragment &cf1, CodeFragment &cf2)
 {
 
     for(int i=0; i<cfMaxLength; i++)
     {
-        if(cf1.codeFragment[i] == cf2.codeFragment[i])
+        if(cf1.reverse_polish[i] == cf2.reverse_polish[i])
         {
-            if(0<=cf1.codeFragment[i] && cf1.codeFragment[i]<numLeaf)
+            if(0<=cf1.reverse_polish[i] && cf1.reverse_polish[i] < numLeaf)
             {
-                if(cf1.filter_id[cf1.codeFragment[i]] != cf2.filter_id[cf2.codeFragment[i]])
+                if(cf1.filter_id[cf1.reverse_polish[i]] != cf2.filter_id[cf2.reverse_polish[i]])
                     return false;
             }
         }else
@@ -255,18 +255,18 @@ int getNumPreviousCFs()
     return numPreviousCFs;
 }
 
-bool isDontcareCF(CodeFragment cf)
+bool isDontcareCF(CodeFragment &cf)
 {
     return (cf.cfID == -1) ? true : false;
-    //return (cf.codeFragment[0] == OPUNITY) ? true : false;
+    //return (cf.reverse_polish[0] == OPUNITY) ? true : false;
 }
 
-int numberOfNonDontcares(CodeFragment cond[])  //returns the number of specific CFs in cond
+int numberOfNonDontcares(CodeFragment cf[])  //returns the number of specific CFs in cf
 {
     int count=0;
     for(int i=0; i<clfrCondLength; i++)
     {
-        if(!isDontcareCF(cond[i]))
+        if(!isDontcareCF(cf[i]))
         {
             count++;
         }
@@ -274,24 +274,24 @@ int numberOfNonDontcares(CodeFragment cond[])  //returns the number of specific 
     return count;
 }
 
-void printCF(CodeFragment cf)
+void printCF(CodeFragment &cf)
 {
     printf("Printing CF ...... ");
     char* temp = NULL;
     for(int j = 0; j<cfMaxLength; j++)
     {
-        if (cf.codeFragment[j]>=0 && cf.codeFragment[j]<numLeaf)
+        if (cf.reverse_polish[j] >= 0 && cf.reverse_polish[j] < numLeaf)
         {
             // todo: printing of CF to be revisited
-            //temp = "leaf name tbd"; // leafname(cf.leaf[cf.codeFragment[j]]);
+            //temp = "leaf name tbd"; // leafname(cf.leaf[cf.reverse_polish[j]]);
             printf("%s ","leaf name revisit");
         }
         else
         {
-            temp = opchar(cf.codeFragment[j]);
+            temp = opchar(cf.reverse_polish[j]);
             printf("%s ",temp);
         }
-        if(cf.codeFragment[j]==OPNOP)
+        if(cf.reverse_polish[j] == OPNOP)
                 break; //reduce size of output
     }
     printf(" ------> %d",cf.cfID);
@@ -338,7 +338,7 @@ void createNewCF(int id, CodeFragment &cf)
 {
     for(int i=0; i<cfMaxLength; i++)
     {
-        cf.codeFragment[i] = OPNOP;
+        cf.reverse_polish[i] = OPNOP;
     }
     cf.cfID = id;
 }
@@ -353,7 +353,7 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
     int len;
 
     // number of CFs
-    //sprintf(buf,"%d\n",numFitterCFs); fwrite(buf,strlen(buf),1,cfWritingFilePointer); // number of CFs
+    //sprintf(buf,"%d\n",numFitterCFs); fwrite(buf,strlen(buf),1,code_fragment_file); // number of CFs
     len = snprintf(NULL,0,"%d\n",numFitterCFs);
 
     if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
@@ -371,7 +371,7 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
         firstCFID = previousCFPopulation[0].cfID;
     }
     // cfID of first CF
-    //sprintf(buf,"%d\n",firstCFID); fwrite(buf,strlen(buf),1,cfWritingFilePointer); // cfID of first CF
+    //sprintf(buf,"%d\n",firstCFID); fwrite(buf,strlen(buf),1,code_fragment_file); // cfID of first CF
     len = snprintf(NULL,0,"%d\n",firstCFID);
     if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
     {
@@ -389,9 +389,9 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
 
     for(int i=0; i<numPreviousCFs; i++)  //first store CFs from previous level problems
     {
-        outprog(previousCFPopulation[i],cfMaxLength, cfWritingFilePointer);
+        outprog(previousCFPopulation[i], cfWritingFilePointer);
 
-        //sprintf(buf," ---------> %d",previousCFPopulation[i].cfID); fwrite(buf,strlen(buf),1,cfWritingFilePointer);
+        //sprintf(buf," ---------> %d",previousCFPopulation[i].cfID); fwrite(buf,strlen(buf),1,code_fragment_file);
         len = snprintf(NULL,0," ---------> %d",previousCFPopulation[i].cfID);
         if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
         {
@@ -417,18 +417,18 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
         }
         for(int i=0; i<clfrCondLength; i++)
         {
-        if(!isDontcareCF(item.second.condition[i]))
+        if(!isDontcareCF(item.second.code_fragment[i]))
             {
-                //outprog(set->classifier->condition[i].codeFragment,cfMaxLength,cfWritingFilePointer);
-                outprog(item.second.condition[i],cfMaxLength,cfWritingFilePointer);
-               //sprintf(buf," ---------> %d",set->classifier->condition[i].cfID); fwrite(buf,strlen(buf),1,cfWritingFilePointer);
-                len = snprintf(NULL,0," ---------> %d",item.second.condition[i].cfID);
+                //outprog(set->classifier->code_fragment[i].reverse_polish,cfMaxLength,code_fragment_file);
+                outprog(item.second.code_fragment[i], cfWritingFilePointer);
+               //sprintf(buf," ---------> %d",set->classifier->code_fragment[i].cfID); fwrite(buf,strlen(buf),1,code_fragment_file);
+                len = snprintf(NULL,0," ---------> %d",item.second.code_fragment[i].cfID);
                 if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
                 {
                     printf("\nError in file writing ...\n");
                     exit(0);
                 }
-                len = snprintf(buf,len+1," ---------> %d",item.second.condition[i].cfID);
+                len = snprintf(buf,len+1," ---------> %d",item.second.code_fragment[i].cfID);
 
                 fwrite(buf,strlen(buf),1,cfWritingFilePointer);
                 free(buf);
@@ -485,17 +485,17 @@ void create_new_filter_from_input(Filter& filter, float *state)
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position
-CodeFragment addLeafCF(CodeFragment cf, float state[]){
+CodeFragment addLeafCF(CodeFragment &cf, float *state){
 
     // count number of leaves
     int count = 0;
     for(int i=0; i<cfMaxLength; i++){
-        const opType opcode = cf.codeFragment[i];
+        const opType opcode = cf.reverse_polish[i];
         if(opcode == OPNOP)
         {
             break;
         }
-        if(0<=opcode && opcode<condLength)  //condition bit
+        if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             count++;
         }
@@ -506,14 +506,14 @@ CodeFragment addLeafCF(CodeFragment cf, float state[]){
     int leafNum = 0;
     for(int i=0; i<cfMaxLength; i++)
     {
-        const opType opcode = cf.codeFragment[i];
+        const opType opcode = cf.reverse_polish[i];
         if(opcode == OPNOP)
         {
             break;
         }
-        if(0<=opcode && opcode<condLength)  //condition bit
+        if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
-            cf.codeFragment[i] = leafNum;
+            cf.reverse_polish[i] = leafNum;
             // With probability p_ol if there is promising filter available in filter store then use it
             int id = -1;
             if(drand() < p_ol){
@@ -566,6 +566,7 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
     std::forward_list<int>::iterator it;
     for(it = removed_filters.begin(); it != removed_filters.end(); it++){
         evaluation_map.erase(*it);
+        evaluation_validation_map.erase((*it));
     }
 }
 
@@ -604,11 +605,11 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     return evaluation;
 }
 
-bool mutate_cf(CodeFragment cf){
+bool mutate_cf(CodeFragment &cf){
     int functions_index[cfMaxLength];  // collect indices of functions for possible mutation
     int functions_i = 0;
     for(int i=0; /*i<cfMaxLength*/; i++){
-        const opType opcode = cf.codeFragment[i];
+        const opType opcode = cf.reverse_polish[i];
         if(opcode == OPNOP){
             break;
         }else if(getNumberOfArguments(opcode) > 1){  // only select binary functions for now
@@ -621,8 +622,8 @@ bool mutate_cf(CodeFragment cf){
     opType new_function=0;
     do{
         new_function = randomFunction(); // there is a possiblity of selecting the same function
-        if(getNumberOfArguments(new_function) == getNumberOfArguments(cf.codeFragment[functions_index[k]])){
-            cf.codeFragment[functions_index[k]] = new_function;
+        if(getNumberOfArguments(new_function) == getNumberOfArguments(cf.reverse_polish[functions_index[k]])){
+            cf.reverse_polish[functions_index[k]] = new_function;
             break;
         }
     }while(true);
@@ -637,7 +638,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     int tmptmpfval1 = 0;
     for(int i=0; /*i<cfMaxLength*/; i++)
     {
-        const opType opcode = cf.codeFragment[i];
+        const opType opcode = cf.reverse_polish[i];
         if(opcode == OPNOP)
         {
             break;
@@ -648,7 +649,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             int valueOfCF = evaluateCF(previousCFPopulation[opcode - condLength], state, train);
             stack[SP++] = valueOfCF;
         }
-        else if(0<=opcode && opcode<numLeaf)  //condition bit
+        else if(0<=opcode && opcode<numLeaf)  //code_fragment bit
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
@@ -864,6 +865,7 @@ char* leafname(const Leaf leaf){
     return globalBuf;
 }//end leafname
 
+
 char* opchar(const opType code){
     switch(code)
     {
@@ -937,20 +939,17 @@ char* leafInterval(const Leaf leaf){
     return (char*)"-1";
 }
 
-//void outprog(const opType* const prog, int size, FILE *fp){
-void outprog(CodeFragment prog, int size, FILE *fp){
-    //printf("\nDisplaying Program...\n");
-    //char* temp = NULL;
+
+void outprog(CodeFragment &cf, FILE *fp) {
     opType code;
 
-    for(int j = 0; j<size; j++)
-    //for(int j = 0; j<cfMaxLength; j++)
+    for(int j = 0; j < cfMaxLength; j++)
     {
         char* temp = NULL;
-        code = prog.codeFragment[j];
+        code = cf.reverse_polish[j];
         if(0<=code && code<numLeaf)
         {
-            // todo: printing for filiter to be implemented
+            // todo: printing for filter to be implemented
             temp = new char[strlen("filter to be printed") + 1];
             strcpy(temp, "filter to be printed");
 
@@ -958,7 +957,7 @@ void outprog(CodeFragment prog, int size, FILE *fp){
             //sprintf(temp,"D%d ",leafDes);
 
             //sprintf(globalBuf,"D%d ",validLeaf(code));
-            //temp = leafInterval(prog.leaf);
+            //temp = leafInterval(cf.leaf);
             delete temp;
         }
         else if (code>=condLength&&isPreviousLevelsCode(code))
@@ -985,10 +984,51 @@ void outprog(CodeFragment prog, int size, FILE *fp){
 
         //printf("%s ",temp);
         fwrite(temp,strlen(temp),1,fp);
-        if(prog.codeFragment[j]==OPNOP)
+        if(cf.reverse_polish[j] == OPNOP)
             break; //reduce size of output
     }
     //printf("\n");
     //fwrite("\n",strlen("\n"),1,fp);
 }
-// ------------------------- End Display Functions ----------------------------------
+
+inline std::string op_to_str(opType code)
+{
+    switch(code)
+    {
+        case OPAND:
+            return std::string("&");
+        case OPOR:
+            return std::string("|");
+        case OPNAND:
+            return std::string("d");
+        case OPNOR:
+            return std::string("r");
+        case OPNOT:
+            return std::string("~");
+        case OPNOP:
+            return std::string("o");
+        default:
+            return std::string("[" + std::to_string(code) + "!!]");
+    }//end switch code
+
+}
+
+void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
+{
+    std::string str;
+    opType code = 0;
+    for(int i=0; i<cfMaxLength; i++){
+        code = cf.reverse_polish[i];
+        if(code == OPNOP){
+            break;
+        }else if(0<=code && code<numLeaf){  // if code is zero then it is a filter_id index
+            output_code_fragment_file << "D" << cf.filter_id[code] << " "; // print filter id
+        }else if (code>=condLength && isPreviousLevelsCode(code)){
+            // output previous when implemented
+        }else{
+            // output code str
+            output_code_fragment_file << op_to_str(code) << " ";
+        }
+    }
+    output_code_fragment_file << std::endl;
+}

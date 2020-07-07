@@ -5,8 +5,10 @@
 #include "filter_list.h"
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <numeric>
 #include <vector>
+#include <float.h>
 
 FilterList master_filter_list; // The main filter list that is maintained
 
@@ -99,10 +101,11 @@ void remove_unused_filters(std::forward_list<int>& removed_filters){
 void print_filter_stats(){
     std::cout<<"\n--- Filter Stats ---\n";
     std::cout<<"gid: "<<master_filter_list.gid<<std::endl;
-    int size = std::distance(master_filter_list.filters.begin(), master_filter_list.filters.end());
+    int size = master_filter_list.filters.size();
     std::cout<<"filter list size: "<<size<<std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
-    int f_total = 0, f_min = INT16_MAX, f_max = -1, promising_filters = 0;
+    float f_total = 0, f_min = FLT_MAX, f_max = -1;
+    int promising_filters = 0;
     int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
     int num_dilated = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
@@ -157,4 +160,37 @@ int get_promising_filter_id(){
     }else{
         return selected[irand(2)];  // return randomly if both have equal fitness
     }
+}
+
+void output_bounds_to_file(Filter& filter, std::ofstream &output_filter_file) {
+    output_filter_file << "lower_bound ";
+    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
+        output_filter_file.width(4);
+        output_filter_file << filter.lower_bounds[i] << " ";
+    }
+    output_filter_file << "\nupper_bound ";
+    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
+        output_filter_file.width(4);
+        output_filter_file << filter.upper_bounds[i] << " ";
+    }
+}
+void output_filter_to_file(std::ofstream &output_filter_file) {
+    for(auto & item : master_filter_list.filters){
+        output_filter_file << "id ";
+        output_filter_file.width(5);
+        output_filter_file << item.second.id;
+        output_filter_file << " size ";
+        output_filter_file << item.second.filter_size;
+        output_filter_file << " num ";
+        output_filter_file << item.second.numerosity;
+        output_filter_file << " fitness ";
+        output_filter_file.width(11);
+        output_filter_file << item.second.fitness;
+        output_filter_file << " dilated ";
+        output_filter_file << item.second.is_dilated << std::endl;
+        output_bounds_to_file(item.second, output_filter_file);
+        output_filter_file << std::endl;
+    }
+
+
 }
