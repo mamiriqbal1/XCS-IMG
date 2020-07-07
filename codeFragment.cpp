@@ -274,30 +274,6 @@ int numberOfNonDontcares(CodeFragment cf[])  //returns the number of specific CF
     return count;
 }
 
-void printCF(CodeFragment &cf)
-{
-    printf("Printing CF ...... ");
-    char* temp = NULL;
-    for(int j = 0; j<cfMaxLength; j++)
-    {
-        if (cf.reverse_polish[j] >= 0 && cf.reverse_polish[j] < numLeaf)
-        {
-            // todo: printing of CF to be revisited
-            //temp = "leaf name tbd"; // leafname(cf.leaf[cf.reverse_polish[j]]);
-            printf("%s ","leaf name revisit");
-        }
-        else
-        {
-            temp = opchar(cf.reverse_polish[j]);
-            printf("%s ",temp);
-        }
-        if(cf.reverse_polish[j] == OPNOP)
-                break; //reduce size of output
-    }
-    printf(" ------> %d",cf.cfID);
-    printf("\n");
-}
-
 void validateDepth(opType* cf, opType* end)
 {
     //display 'cf' for debugging

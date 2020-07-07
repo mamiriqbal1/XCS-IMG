@@ -15,7 +15,7 @@ bool equalTwoCFs(CodeFragment &cf1, CodeFragment &cf2);
 int getNumPreviousCFs();
 bool isDontcareCF(CodeFragment &cf);
 int numberOfNonDontcares(CodeFragment cf[]);
-void printCF(CodeFragment &cf);
+
 void validateDepth(opType* cf, opType* end);
 void createNewCF(int id, CodeFragment &cf);
 void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer);

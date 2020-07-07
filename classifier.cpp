@@ -471,7 +471,6 @@ void tournament_selection(Classifier *child, int *parent, ClassifierSet &set, do
  */
 void selectTwoClassifiers(Classifier *cl, int *parents, ClassifierSet &action_set, double fitsum, int setsum)
 {
-    // todo parents need not be copied externally???
     tournament_selection(&cl[0], &parents[0], action_set, setsum);
     tournament_selection(&cl[1], &parents[1], action_set, setsum);
 
@@ -553,7 +552,6 @@ void apply_filter_mutation(Filter& filter, float state[])
     float delta = 0;
 
     for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        // todo: pM should be used only to initiate mutation. Prob of mutating each elle should be less?
         if(drand() < pM) {  // mutation based on mutation probability
             delta = drand()*m;  // how much to mutate
             if(drand() < 0.5){  // revert sign with 50% probability
