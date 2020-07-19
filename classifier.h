@@ -33,7 +33,7 @@ bool mutateAction(Classifier& clfr);
 void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &pop, int len);
 
 void doActionSetSubsumption(ClassifierSet &action_set);
-bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2);
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierMap &pop);
 bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set);
 bool subsumes(Classifier &cl1, Classifier & cl2);
 bool isSubsumer(Classifier &cl);

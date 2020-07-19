@@ -635,10 +635,10 @@ void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &p
     len+=2;
     if(doGASubsumption)
     {
-        if(!subsumeClassifier(child[0], pop[parent[0]], pop[parent[1]])){
+        if(!subsumeClassifier(child[0], pop[parent[0]], pop[parent[1]], pop)){
             pop[child[0].id] = child[0];
         }
-        if(!subsumeClassifier(child[1], pop[parent[0]], pop[parent[1]])){
+        if(!subsumeClassifier(child[1], pop[parent[0]], pop[parent[1]], pop)){
             pop[child[1].id] = child[1];
         }
     }
@@ -700,7 +700,7 @@ void doActionSetSubsumption(ClassifierSet &action_set)
 /**
  * Tries to subsume the parents.
  */
-bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2)
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierMap &pop)
 {
     int i;
     if(subsumes(p1, cl))
@@ -713,14 +713,12 @@ bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2)
         p2.numerosity++;
         return true;
     }
-    return false;
     // as per algorithm child submsumption in population is not done
     // changed from action set subsumption to population subsumption
-//    if(subsumeClassifierToPop(cl, pop))
-//    {
-//        return;
-//    }
-//    pop.push_front(cl);
+    if(subsumeClassifierToPop(cl, pop)){
+        return true;
+    }
+    return false;
 }
 
 
