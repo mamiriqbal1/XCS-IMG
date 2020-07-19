@@ -472,7 +472,9 @@ void tournament_selection(Classifier *child, int *parent, ClassifierSet &set, do
 void selectTwoClassifiers(Classifier *cl, int *parents, ClassifierSet &action_set, double fitsum, int setsum)
 {
     tournament_selection(&cl[0], &parents[0], action_set, setsum);
-    tournament_selection(&cl[1], &parents[1], action_set, setsum);
+    do {
+        tournament_selection(&cl[1], &parents[1], action_set, setsum);
+    }while(cl[1].id == cl[0].id);
 
     for(int i=0; i<2; i++) {
         cl[i].id = gid++;
