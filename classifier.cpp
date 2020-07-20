@@ -429,7 +429,61 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
     }
 }
 
+
 void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
+{
+    double best_fitness = -1, prediction_error=0;
+    ClassifierVector winner_set;
+
+    while(winner_set.empty()) {
+        for (auto &id : set.ids) {
+            prediction_error = set.pop[id].predictionError;
+            if (winner_set.empty() ||
+                (!doGAErrorBasedSelect &&
+                 best_fitness - selectTolerance <= set.pop[id].fitness / set.pop[id].numerosity) ||
+                (doGAErrorBasedSelect && best_fitness + selectTolerance * maxPayoff >= prediction_error)) {
+                for (int i = 0; i < set.pop[id].numerosity; i++) {
+                    if (drand() < tournamentSize) {
+                        if (winner_set.empty()) {
+                            winner_set.push_back(id);
+                            if (doGAErrorBasedSelect) {
+                                best_fitness = prediction_error;
+                            } else {
+                                best_fitness = set.pop[id].fitness / set.pop[id].numerosity;
+                            }
+                        } else {
+                            /* another guy in the tournament */
+                            if ((!doGAErrorBasedSelect &&
+                                 best_fitness + selectTolerance > set.pop[id].fitness / set.pop[id].numerosity) ||
+                                (doGAErrorBasedSelect &&
+                                 best_fitness - selectTolerance * maxPayoff < prediction_error)) {
+                                /* both classifiers in tournament have a similar fitness/error */
+                                winner_set.push_back(id);
+                            } else {
+                                /* new classifier in tournament is clearly better */
+                                winner_set.clear();
+                                winner_set.push_back(id);
+                                if (doGAErrorBasedSelect) {
+                                    best_fitness = prediction_error;
+                                } else {
+                                    best_fitness = set.pop[id].fitness / set.pop[id].numerosity;
+                                }
+                            }
+                        }
+                        break; /* go to next classifier since this one is already a winner*/
+                    }
+                }
+            }
+        }
+    }
+    /* choose one of the equally best winners at random */
+    assert(!winner_set.empty());
+    int selected = winner_set[irand(winner_set.size())];
+    child = set.pop[selected];
+    parent = selected;
+}
+
+void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
     int first_index = irand(set.ids.size());
     int second_index = irand(set.ids.size());
@@ -474,7 +528,7 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     tournament_selection(child1, parent1, action_set, setsum);
     do {
         tournament_selection(child2, parent2, action_set, setsum);
-    }while(child1.id == child2.id);
+    }while(child1.id == child2.id && action_set.ids.size() > 1);
 
     child1.id = gid++;
     child1.numerosity = 1;
