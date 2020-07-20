@@ -533,9 +533,11 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     child1.id = gid++;
     child1.numerosity = 1;
     child1.experience = 0;
+    child1.fitness = child1.fitness / child1.numerosity;
     child2.id = gid++;
     child2.numerosity = 1;
     child2.experience = 0;
+    child2.fitness = child2.fitness / child2.numerosity;
 }
 
 // ########################## crossover and mutation ########################################
