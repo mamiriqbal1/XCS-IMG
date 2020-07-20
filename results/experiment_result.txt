@@ -1,9 +1,0 @@
-Experiment results
-##1 date: 7 Jul 8:40 PM after git commit
-4 digits
-3 types of filters + dilated
-0 depth code fragments
-1 code fragment per classifier
-
-
-
