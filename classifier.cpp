@@ -383,7 +383,7 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
     }
     setTimeStamps(action_set, itTime);
 
-    selectTwoClassifiers(child, parent, action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
+    selectTwoClassifiers(child[0], child[1] , parent[0], parent[1], action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
     // Prediction, prediction error and fitness is only updated if crossover is done instead of always
     // (this is reverted because of slightly decreased performance)
     if(crossover(child[0], child[1], situation) || true){
@@ -429,39 +429,38 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
     }
 }
 
-void tournament_selection(Classifier *child, int *parent, ClassifierSet &set, double setsum)
+void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
-    int first = irand(set.ids.size());
-    int second = irand(set.ids.size());
-    Classifier* first_classifier = nullptr, *second_classifier = nullptr;
-    int i=0;
-    for(auto& id : set.ids){
-        if(i == first){
-            first_classifier = &set.pop[id];
-        }
-        if(i == second){
-            second_classifier = &set.pop[id];
-        }
-        i++;
+    int first_index = irand(set.ids.size());
+    int second_index = irand(set.ids.size());
+    if(first_index > second_index){
+        int temp = first_index;
+        first_index = second_index;
+        second_index = temp;
     }
-    assert(first_classifier != nullptr);
-    assert(second_classifier != nullptr);
-    if(first_classifier->fitness > second_classifier->fitness){
-        *child = *first_classifier;
-        *parent = first_classifier->id;
-    }else if(first_classifier->fitness < second_classifier->fitness){
-        *child = *second_classifier;
-        *parent = second_classifier->id;
+    int first=-1, second=-1;
+    auto it = set.ids.begin();
+    it += first_index;
+    first = *it;
+    it += second_index - first_index;
+    second = *it;
+    assert(first != -1);
+    assert(second != -1);
+    int selected = -1;
+    if(set.pop[first].fitness > set.pop[second].fitness){
+        selected = first;
+    }else if(set.pop[first].fitness < set.pop[second].fitness){
+        selected = second;
     }else{
         int r = irand(2);
         if(r == 0){
-            *child = *first_classifier;
-            *parent = first_classifier->id;
+            selected = first;
         }else{
-            *child = *second_classifier;
-            *parent = second_classifier->id;
+            selected = second;
         }
     }
+    child = set.pop[selected];
+    parent = selected;
 }
 
 // ########################### selection mechanism ########################################
@@ -469,18 +468,20 @@ void tournament_selection(Classifier *child, int *parent, ClassifierSet &set, do
 /**
  * Select two classifiers using the chosen selection mechanism and copy them as offspring.
  */
-void selectTwoClassifiers(Classifier *cl, int *parents, ClassifierSet &action_set, double fitsum, int setsum)
+void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, int &parent2, ClassifierSet &action_set,
+                          double fitsum, int setsum)
 {
-    tournament_selection(&cl[0], &parents[0], action_set, setsum);
+    tournament_selection(child1, parent1, action_set, setsum);
     do {
-        tournament_selection(&cl[1], &parents[1], action_set, setsum);
-    }while(cl[1].id == cl[0].id);
+        tournament_selection(child2, parent2, action_set, setsum);
+    }while(child1.id == child2.id);
 
-    for(int i=0; i<2; i++) {
-        cl[i].id = gid++;
-        cl[i].numerosity = 1;
-        cl[i].experience = 0;
-    }
+    child1.id = gid++;
+    child1.numerosity = 1;
+    child1.experience = 0;
+    child2.id = gid++;
+    child2.numerosity = 1;
+    child2.experience = 0;
 }
 
 // ########################## crossover and mutation ########################################
