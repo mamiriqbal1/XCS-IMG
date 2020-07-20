@@ -526,9 +526,7 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
                           double fitsum, int setsum)
 {
     tournament_selection(child1, parent1, action_set, setsum);
-    do {
-        tournament_selection(child2, parent2, action_set, setsum);
-    }while(child1.id == child2.id && action_set.ids.size() > 1);
+    tournament_selection(child2, parent2, action_set, setsum);
 
     child1.id = gid++;
     child1.numerosity = 1;
