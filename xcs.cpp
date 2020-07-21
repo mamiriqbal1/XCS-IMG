@@ -211,7 +211,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
     {
         int pop_size = pop.size();
         int pop_numerosity = get_pop_numerosity(pop);
-        std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
+        //std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
