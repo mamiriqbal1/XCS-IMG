@@ -295,7 +295,7 @@ void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file) {
 
 	for(int t=0; t<testNumInstances; t++){
         ClassifierSet match_set(maxPopSize, pop);
-        std::cout<<t<<"/"<<testNumInstances<<"\r";
+        //std::cout<<t<<"/"<<testNumInstances<<"\r";
 		bool isMatched = false;
 		testState = &testingData[t];
 
