@@ -11,7 +11,6 @@
 #include "codeFragment.h"
 #include "env.h"
 #include "filter_list.h"
-#include <boost/functional/hash.hpp>
 #include <unordered_map>
 #include <utility>
 #include <algorithm>

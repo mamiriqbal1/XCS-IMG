@@ -1,6 +1,4 @@
 #include "xcsMacros.h"
-#include <boost/random/linear_congruential.hpp>
-#include <boost/random/uniform_01.hpp>
 
 
 
@@ -18,17 +16,6 @@ long getSeed()
     return seed;
 }
 
-//boost::rand48 intgen(114665);
-//boost::uniform_01<boost::rand48> gen(intgen);
-
-//boost::mt19937 intgen(114665);
-//boost::uniform_01<boost::mt19937> gen(intgen);
-
-
-//double drand()
-//{
-//    return gen();
-//}
 
 double drand()  // returns a floating-point random number generated according to uniform distribution from [0,1)
 {

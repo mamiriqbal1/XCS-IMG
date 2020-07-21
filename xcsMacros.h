@@ -1,9 +1,6 @@
 #ifndef XCSMACROS_H
 #define XCSMACROS_H
 
-//#include <boost/random/linear_congruential.hpp>
-//#include <boost/random/mersenne_twister.hpp>
-//#include <boost/random/uniform_01.hpp>
 
 /**
  * Most parameter-names are chosen similar to the 'An Algorithmic Description of XCS' ( Butz&Wilson, IlliGAL report 2000017).
@@ -47,11 +44,6 @@ const int N_filter_ol = 2500;  // maximum limit of filters in the managed observ
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).
 
-//extern boost::rand48 intgen;
-//extern boost::uniform_01<boost::rand48> gen;
-
-//extern boost::mt19937 intgen; //(114665);
-//extern boost::uniform_01<boost::mt19937> gen; //(intgen);
 
 void setSeed(long newSeed);
 long getSeed();
