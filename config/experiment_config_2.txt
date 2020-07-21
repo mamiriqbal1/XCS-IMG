@@ -1,5 +1,5 @@
-train_file_name=../data/mnist/mnist_train_3_8.txt
-test_file_name=../data/mnist/mnist_test_3_8.txt
+train_file_name=../data/data/mnist/mnist_train_3_8.txt
+test_file_name=../data/data/mnist/mnist_test_3_8.txt
 num_actions=2
 use_kb=no
 kb_file=output/kb_file.txt
