@@ -12,7 +12,7 @@ int add_filter(Filter filter_to_add);
 Filter& get_filter(int filter_id);
 void reset_filter_stats();
 void remove_unused_filters(std::forward_list<int>& removed_filters);
-void print_filter_stats();
+void print_filter_stats(std::ofstream &output_stats_file);
 int get_promising_filter_id();
 void output_filter_to_file(std::ofstream& output_filter_file);
 

@@ -380,6 +380,8 @@ void startXCS(){
 
     // clean filter list finally before writing to file
     manage_filter_list(pop);
+
+
     fprintClassifierSet(pop);
     //delete []input;
     delete []testingData;

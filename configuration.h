@@ -40,6 +40,7 @@ const char output_test_file_name[] = "test_performance.txt";
 const char output_classifier_file_name[] = "classifier.txt";
 const char output_code_fragment_file_name[] = "code_fragment.txt";
 const char output_filter_file_name[] = "filter.txt";
+const char output_stats_file_name[] = "stats.txt";
 const char code_fragment_file_name[] = "feature_codefragments.txt";
 const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";

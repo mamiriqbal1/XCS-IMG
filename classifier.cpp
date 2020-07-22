@@ -908,13 +908,18 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 // ############################### output operations ####################################
 
 
-void print_population_stats(ClassifierMap& pop)
+void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file)
 {
     int size = pop.size();
     std::cout<<"\n--- Population Stats ---\n";
     std::cout << "Global Classifier ID: " << gid << std::endl;
     std::cout << "Population set size: " << size << std::endl;
     std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+
+    output_stats_file<<"\n--- Population Stats ---\n";
+    output_stats_file<< "Global Classifier ID: " << gid << std::endl;
+    output_stats_file<< "Population set size: " << size << std::endl;
+    output_stats_file<< "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
     std::for_each(pop.begin(), pop.end(),
@@ -931,6 +936,10 @@ void print_population_stats(ClassifierMap& pop)
     std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     std::cout<<"--- Population Stats ---\n\n";
+
+    output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
+    output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    output_stats_file<<"--- Population Stats ---\n\n";
 }
 
 /**
@@ -956,10 +965,15 @@ void fprintClassifierSet(ClassifierMap &pop)
         std::cout << "Could not open output code filter file";
         exit(1);
     }
-
-    print_population_stats(pop);
-    print_filter_stats();
-    print_filter_evaluation_stats();
+    std::ofstream output_stats_file;
+    output_stats_file.open(output_path + output_stats_file_name);
+    if(!output_stats_file.is_open()){
+        std::cout << "Could not open output stats file";
+        exit(1);
+    }
+    print_population_stats(pop, output_stats_file);
+    print_filter_stats(output_stats_file);
+    print_filter_evaluation_stats(output_stats_file);
     for(auto& item : pop)
     {
         fprintClassifier(item.second, output_classifier_file, output_code_fragment_file, output_filter_file);
@@ -969,6 +983,7 @@ void fprintClassifierSet(ClassifierMap &pop)
     output_classifier_file.close();
     output_code_fragment_file.close();
     output_filter_file.close();
+    output_stats_file.close();
 }
 
 /**

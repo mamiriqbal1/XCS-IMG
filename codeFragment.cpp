@@ -29,8 +29,10 @@ FilterMap evaluation_validation_map;
 int map_hits = 0;
 
 
-void print_filter_evaluation_stats(){
+void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
     std::cout<<"--- Filter Evaluation Stats ---\n";
+
+    output_stats_file<<"--- Filter Evaluation Stats ---\n";
     int size = std::distance(evaluation_map.begin(), evaluation_map.end());
     int total = 0, positive = 0, min = INT16_MAX, max = -1;
     std::for_each(evaluation_map.begin(), evaluation_map.end(),
@@ -51,6 +53,11 @@ void print_filter_evaluation_stats(){
     std::cout<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
     std::cout<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
     std::cout<<"--- Filter Evaluation Stats ---\n\n";
+
+    output_stats_file<<"map hits: "<<map_hits<<std::endl;
+    output_stats_file<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
+    output_stats_file<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
+    output_stats_file<<"--- Filter Evaluation Stats ---\n\n";
 }
 
 void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *code_fragment_file)

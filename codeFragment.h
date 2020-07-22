@@ -46,6 +46,6 @@ void outprog(CodeFragment &cf, FILE *fp);
 
 bool evaluate_filter(const Filter& filter, float state[], int cl_id=-1, int img_id=-1, bool train=true);
 void update_evaluation_cache(std::forward_list<int>& removed_filters);
-void print_filter_evaluation_stats();
+void print_filter_evaluation_stats(std::ofstream &output_stats_file);
 bool mutate_cf(CodeFragment &cf);
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
