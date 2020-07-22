@@ -45,12 +45,12 @@ const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
 const int clfrCondLength = 1; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
-const int cfMaxDepth = 0;
+const int cfMaxDepth = 1;
 const int cfMinDepth = 0;
-const int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
+const int cfMaxLength = 4;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
-const int numLeaf = 1; // 2^cfMaxDepth
+const int numLeaf = 2; // 2^cfMaxDepth
 
 typedef int opType;
 const int opSize = sizeof(opType);
