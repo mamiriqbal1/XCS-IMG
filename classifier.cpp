@@ -542,8 +542,10 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
 
 void crossover_filter(Filter& parent1, Filter& parent2)
 {
-    int point1 = irand(numLeaf);
-    int point2 = irand(numLeaf);
+    assert(parent1.filter_size == parent2.filter_size);
+    assert((parent1.is_dilated == parent2.is_dilated));
+    int point1 = irand(parent1.filter_size*parent1.filter_size);
+    int point2 = irand(parent1.filter_size*parent1.filter_size);
 
     if(point1 > point2){
         int temp = point1;
@@ -943,9 +945,10 @@ void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file
 }
 
 /**
- * print the classifier in a delete_ClassifierSet to the file fp
+ * This function saves the classifier population and outputs various stats.
+ * This function also saves promising code fragments and filters for reuse by the subsequent experiments
  */
-void fprintClassifierSet(ClassifierMap &pop)
+void save_experiment_results(ClassifierMap &pop)
 {
     std::ofstream output_classifier_file;
     output_classifier_file.open(output_path + output_classifier_file_name);
@@ -1012,11 +1015,6 @@ void fprintClassifier(FILE *fp, Classifier *classifier){
 void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
                       std::ofstream &output_code_fragment_file, std::ofstream &output_filter_file)
 {
-    for(int i=0; i<clfrCondLength; i++)
-    {
-        output_code_fragment_to_file(classifier.code_fragment[i], output_code_fragment_file);
-    }
-
     output_classifier_file << "id ";
     output_classifier_file.width(5);
     output_classifier_file << classifier.id;
@@ -1047,6 +1045,13 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file << classifier.timeStamp;
     output_classifier_file << " action ";
     output_classifier_file << classifier.action << std::endl;
+
+    for(auto & cf : classifier.code_fragment)
+    {
+        output_classifier_file << cf.cfID << " ";
+        output_code_fragment_to_file(cf, output_code_fragment_file);
+    }
+    output_classifier_file << std::endl;
 }
 
 /*###################### sorting the classifier list ###################################*/

@@ -631,7 +631,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             int valueOfCF = evaluateCF(previousCFPopulation[opcode - condLength], state, train);
             stack[SP++] = valueOfCF;
         }
-        else if(0<=opcode && opcode<numLeaf)  //code_fragment bit
+        else if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
@@ -997,6 +997,7 @@ inline std::string op_to_str(opType code)
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
+    output_code_fragment_file<<cf.cfID<<" ";
     std::string str;
     opType code = 0;
     for(int i=0; i<cfMaxLength; i++){

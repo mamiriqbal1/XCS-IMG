@@ -43,7 +43,7 @@ bool isMoreGeneral(Classifier &clfr1, Classifier &clfr2);
 int deleteStochClassifier(ClassifierMap &pop);
 double getDelProp(Classifier &clfr, double meanFitness);
 
-void fprintClassifierSet(ClassifierMap &pop);
+void save_experiment_results(ClassifierMap &pop);
 
 void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
                       std::ofstream &output_code_fragment_file, std::ofstream &output_filter_file);

@@ -382,7 +382,7 @@ void startXCS(){
     manage_filter_list(pop);
 
 
-    fprintClassifierSet(pop);
+    save_experiment_results(pop);
     //delete []input;
     delete []testingData;
     delete []trainingData;
