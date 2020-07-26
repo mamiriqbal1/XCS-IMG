@@ -600,7 +600,7 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
                 int filter_index_1 = irand(cl1.code_fragment[cf_index1].num_filters);
                 int filter_index_2 = irand(cl2.code_fragment[cf_index2].num_filters);
 
-                // just swap the filters
+                // just swap the filters - just as good as crossover of filters
                 int temp = cl1.code_fragment[cf_index1].filter_id[filter_index_1];
                 cl1.code_fragment[cf_index1].filter_id[filter_index_1] = cl2.code_fragment[cf_index2].filter_id[filter_index_2];
                 cl2.code_fragment[cf_index2].filter_id[filter_index_2] = temp;

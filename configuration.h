@@ -47,7 +47,7 @@ const char code_fragment_file_name[] = "feature_codefragments.txt";
 const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
-const int clfrCondLength = 1; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
+const int clfrCondLength = 2; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 const int cfMaxDepth = 2;
 const int cfMinDepth = 0;
 const int cfMaxLength = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
