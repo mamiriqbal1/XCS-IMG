@@ -263,7 +263,7 @@ int getNumPreviousCFs()
 
 bool isDontcareCF(CodeFragment &cf)
 {
-    return (cf.cfID == -1) ? true : false;
+    return (cf.cf_id == -1) ? true : false;
     //return (cf.reverse_polish[0] == OPUNITY) ? true : false;
 }
 
@@ -322,7 +322,7 @@ void createNewCF(int id, CodeFragment &cf)
     {
         cf.reverse_polish[i] = OPNOP;
     }
-    cf.cfID = id;
+    cf.cf_id = id;
 }
 
 void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
@@ -350,10 +350,10 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
 
     if(use_kb)
     {
-        firstCFID = previousCFPopulation[0].cfID;
+        firstCFID = previousCFPopulation[0].cf_id;
     }
-    // cfID of first CF
-    //sprintf(buf,"%d\n",firstCFID); fwrite(buf,strlen(buf),1,code_fragment_file); // cfID of first CF
+    // cf_id of first CF
+    //sprintf(buf,"%d\n",firstCFID); fwrite(buf,strlen(buf),1,code_fragment_file); // cf_id of first CF
     len = snprintf(NULL,0,"%d\n",firstCFID);
     if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
     {
@@ -373,14 +373,14 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
     {
         outprog(previousCFPopulation[i], cfWritingFilePointer);
 
-        //sprintf(buf," ---------> %d",previousCFPopulation[i].cfID); fwrite(buf,strlen(buf),1,code_fragment_file);
-        len = snprintf(NULL,0," ---------> %d",previousCFPopulation[i].cfID);
+        //sprintf(buf," ---------> %d",previousCFPopulation[i].cf_id); fwrite(buf,strlen(buf),1,code_fragment_file);
+        len = snprintf(NULL,0," ---------> %d",previousCFPopulation[i].cf_id);
         if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
         {
             printf("\nError in file writing ...\n");
             exit(0);
         }
-        len = snprintf(buf,len+1," ---------> %d",previousCFPopulation[i].cfID);
+        len = snprintf(buf,len+1," ---------> %d",previousCFPopulation[i].cf_id);
 
         fwrite(buf,strlen(buf),1,cfWritingFilePointer);
         free(buf);
@@ -403,14 +403,14 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
             {
                 //outprog(set->classifier->code_fragment[i].reverse_polish,cfMaxLength,code_fragment_file);
                 outprog(item.second.code_fragment[i], cfWritingFilePointer);
-               //sprintf(buf," ---------> %d",set->classifier->code_fragment[i].cfID); fwrite(buf,strlen(buf),1,code_fragment_file);
-                len = snprintf(NULL,0," ---------> %d",item.second.code_fragment[i].cfID);
+               //sprintf(buf," ---------> %d",set->classifier->code_fragment[i].cf_id); fwrite(buf,strlen(buf),1,code_fragment_file);
+                len = snprintf(NULL,0," ---------> %d",item.second.code_fragment[i].cf_id);
                 if(!(buf = (char*)malloc((len + 1) * sizeof(char))))
                 {
                     printf("\nError in file writing ...\n");
                     exit(0);
                 }
-                len = snprintf(buf,len+1," ---------> %d",item.second.code_fragment[i].cfID);
+                len = snprintf(buf,len+1," ---------> %d",item.second.code_fragment[i].cf_id);
 
                 fwrite(buf,strlen(buf),1,cfWritingFilePointer);
                 free(buf);
@@ -724,7 +724,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
 bool isPreviousLevelsCode(const opType code){
     if(use_kb)
     {
-        return ( previousCFPopulation[0].cfID<=code && code<(previousCFPopulation[0].cfID + numPreviousCFs) ) ? true : false;
+        return (previousCFPopulation[0].cf_id <= code && code < (previousCFPopulation[0].cf_id + numPreviousCFs) ) ? true : false;
     }
     return false;
 }
@@ -766,7 +766,7 @@ inline opType randomLeaf(){
         return leaf;
     }
     int n = irand(numPreviousCFs);
-    leaf = previousCFPopulation[n].cfID;
+    leaf = previousCFPopulation[n].cf_id;
     //printf("n: %d leaf_3 %d\n",n,leaf);
     return leaf;
 }
@@ -997,7 +997,7 @@ inline std::string op_to_str(opType code)
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
-    output_code_fragment_file<<cf.cfID<<" ";
+    output_code_fragment_file << cf.cf_id << " ";
     std::string str;
     opType code = 0;
     for(int i=0; i<cfMaxLength; i++){

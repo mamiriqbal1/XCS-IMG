@@ -1048,7 +1048,7 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
 
     for(auto & cf : classifier.code_fragment)
     {
-        output_classifier_file << cf.cfID << " ";
+        output_classifier_file << cf.cf_id << " ";
         output_code_fragment_to_file(cf, output_code_fragment_file);
     }
     output_classifier_file << std::endl;
