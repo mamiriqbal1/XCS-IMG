@@ -23,7 +23,7 @@ FilterList master_filter_list; // The main filter list that is maintained
 int add_filter(Filter filter_to_add){
     // use find_if from <algorithm> to find a more general filter.
     auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&filter_to_add](const FilterStore::value_type & filter_item) -> bool
+            [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
             {
                 if(filter_item.second.fitness < 1) return false; // only a promising filter can subsume;
                 // only filter of same size and type can subsume
@@ -73,7 +73,7 @@ Filter& get_filter(int filter_id){
  */
 void reset_filter_stats(){
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-                            [](FilterStore::value_type & filter_item)
+                            [](FilterMap::value_type & filter_item)
                             {
                                 filter_item.second.numerosity=0;
                                 filter_item.second.fitness=0;
@@ -115,7 +115,7 @@ void print_filter_stats(std::ofstream &output_stats_file) {
     int num_dilated = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters, &filter_sizes_count, &num_dilated]
-            (const FilterStore::value_type & filter_item)
+            (const FilterMap::value_type & filter_item)
             {
                 n_total+= filter_item.second.numerosity;
                 if(n_min > filter_item.second.numerosity) n_min = filter_item.second.numerosity;

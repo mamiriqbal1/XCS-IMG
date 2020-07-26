@@ -20,12 +20,13 @@ char globalBuf[1000];
 int numPreviousCFs = 0;     //When to set
 int startingPreviousCFID = 0;   //what is this value
 
+CodeFragmentMap previous_cf;
 CodeFragment *previousCFPopulation;
 
-typedef std::unordered_map<int, bool> ImageMap;
-typedef std::unordered_map<int, ImageMap> FilterMap;
-FilterMap evaluation_map;
-FilterMap evaluation_validation_map;
+typedef std::unordered_map<int, bool> ImageEvaluationMap;
+typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;
+FilterEvaluationMap evaluation_map;
+FilterEvaluationMap evaluation_validation_map;
 int map_hits = 0;
 
 
@@ -36,11 +37,11 @@ void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
     int size = std::distance(evaluation_map.begin(), evaluation_map.end());
     int total = 0, positive = 0, min = INT16_MAX, max = -1;
     std::for_each(evaluation_map.begin(), evaluation_map.end(),
-                  [&total, &positive, &min, &max](const FilterMap::value_type & item)
+                  [&total, &positive, &min, &max](const FilterEvaluationMap::value_type & item)
                   {
                       int size = item.second.size();
                       int yes = std::count_if(item.second.begin(), item.second.end(),
-                              [](const ImageMap::value_type & item2)
+                              [](const ImageEvaluationMap::value_type & item2)
                               {
                                 return item2.second;
                               });
@@ -558,13 +559,13 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     if(img_id >=0){
         // return prior result if it is found
         if(train){
-            ImageMap& inner_map = evaluation_map[filter.id];
+            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
             if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
                 map_hits++;
                 return inner_map[img_id];
             }
         }else {
-            ImageMap &inner_map = evaluation_validation_map[filter.id];
+            ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
             if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
                 map_hits++;
                 return inner_map[img_id];
@@ -577,10 +578,10 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     // set hasmap entry for re-using evaluation
     if(img_id >=0) {
         if(train){
-            ImageMap& inner_map = evaluation_map[filter.id];
+            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
             inner_map[img_id] = evaluation;
         }else{
-            ImageMap& inner_map = evaluation_validation_map[filter.id];
+            ImageEvaluationMap& inner_map = evaluation_validation_map[filter.id];
             inner_map[img_id] = evaluation;
         }
     }

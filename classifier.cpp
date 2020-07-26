@@ -1103,7 +1103,6 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
         output_code_fragment_to_file(cf, output_code_fragment_file);
         // output promising code fragments separately
         if(is_promising_classifier(classifier)){
-            output_promising_code_fragment_file << cf.cf_id << " ";
             output_code_fragment_to_file(cf, output_promising_code_fragment_file);
         }
     }

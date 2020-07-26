@@ -373,6 +373,7 @@ void startXCS(){
     loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
     updateRange(trainingData,trainNumInstances);
     updateRange(testingData,testNumInstances);
+    //load_kb();
 
     printf("\nIt is in progress! Please wait ....\n");
 

@@ -87,10 +87,10 @@ struct Filter{
     float upper_bounds[max_filter_size*max_filter_size];
 };
 
-typedef std::unordered_map<int, Filter> FilterStore;
+typedef std::unordered_map<int, Filter> FilterMap;
 
 struct FilterList{
-    FilterStore filters;
+    FilterMap filters;
     int gid = 0;
     int max_size_limit = N_filter_ol;
 };
@@ -109,6 +109,8 @@ struct CodeFragment
     int filter_id[numLeaf];
     int cf_id;
 };
+
+typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
 
 struct Classifier
 {
