@@ -599,26 +599,33 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
                 tries_filter++;
                 int filter_index_1 = irand(cl1.code_fragment[cf_index1].num_filters);
                 int filter_index_2 = irand(cl2.code_fragment[cf_index2].num_filters);
-                filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
-                filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
-                // Only do crossover if filters are of the same size or type
-                if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-                    filter1_result = evaluate_filter(filter1, situation);
-                    filter2_result = evaluate_filter(filter2, situation);
-                    for (int tries = 0; tries < 100; tries++) {
-                        crossover_filter(filter1, filter2);
-                        if (filter1_result == evaluate_filter(filter1, situation)
-                            && filter2_result == evaluate_filter(filter2, situation)) {
-                            cl1.code_fragment[cf_index1].filter_id[filter_index_1] = add_filter(filter1);
-                            cl2.code_fragment[cf_index2].filter_id[filter_index_2] = add_filter(filter2);
-                            success = true;
-                            break;
-                        } else {
-                            filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
-                            filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
-                        }
-                    }
-                }
+
+                // just swap the filters
+                int temp = cl1.code_fragment[cf_index1].filter_id[filter_index_1];
+                cl1.code_fragment[cf_index1].filter_id[filter_index_1] = cl2.code_fragment[cf_index2].filter_id[filter_index_2];
+                cl2.code_fragment[cf_index2].filter_id[filter_index_2] = temp;
+                success = true;
+
+//                filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
+//                filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
+//                // Only do crossover if filters are of the same size or type
+//                if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
+//                    filter1_result = evaluate_filter(filter1, situation);
+//                    filter2_result = evaluate_filter(filter2, situation);
+//                    for (int tries = 0; tries < 100; tries++) {
+//                        crossover_filter(filter1, filter2);
+//                        if (filter1_result == evaluate_filter(filter1, situation)
+//                            && filter2_result == evaluate_filter(filter2, situation)) {
+//                            cl1.code_fragment[cf_index1].filter_id[filter_index_1] = add_filter(filter1);
+//                            cl2.code_fragment[cf_index2].filter_id[filter_index_2] = add_filter(filter2);
+//                            success = true;
+//                            break;
+//                        } else {
+//                            filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
+//                            filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
+//                        }
+//                    }
+//                }
             } while (!success && tries_filter < cl1.code_fragment[cf_index1].num_filters);
         }
     }while(!success && tries_cf < clfrCondLength);
