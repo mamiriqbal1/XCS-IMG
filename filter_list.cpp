@@ -100,10 +100,10 @@ void remove_unused_filters(std::forward_list<int>& removed_filters){
  */
 void print_filter_stats(std::ofstream &output_stats_file) {
     std::cout<<"\n--- Filter Stats ---\n";
-    std::cout<<"gid: "<<master_filter_list.gid<<std::endl;
+    std::cout<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
 
     output_stats_file<<"\n--- Filter Stats ---\n";
-    output_stats_file<<"gid: "<<master_filter_list.gid<<std::endl;
+    output_stats_file<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
     int size = master_filter_list.filters.size();
     std::cout<<"filter list size: "<<size<<std::endl;
 
@@ -187,23 +187,29 @@ void output_bounds_to_file(Filter& filter, std::ofstream &output_filter_file) {
         output_filter_file << filter.upper_bounds[i] << " ";
     }
 }
-void output_filter_to_file(std::ofstream &output_filter_file) {
+
+void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
+    output_filter_file << "id ";
+    output_filter_file.width(5);
+    output_filter_file << filter.id;
+    output_filter_file << " size ";
+    output_filter_file << filter.filter_size;
+    output_filter_file << " dilated ";
+    output_filter_file << filter.is_dilated;
+    output_filter_file << " fitness ";
+    output_filter_file.width(11);
+    output_filter_file << filter.fitness;
+    output_filter_file << " num ";
+    output_filter_file << filter.numerosity << std::endl;
+    output_bounds_to_file(filter, output_filter_file);
+    output_filter_file << std::endl;
+}
+
+void output_filters(std::ofstream &output_filter_file, std::ofstream &output_promising_filter_file) {
     for(auto & item : master_filter_list.filters){
-        output_filter_file << "id ";
-        output_filter_file.width(5);
-        output_filter_file << item.second.id;
-        output_filter_file << " size ";
-        output_filter_file << item.second.filter_size;
-        output_filter_file << " num ";
-        output_filter_file << item.second.numerosity;
-        output_filter_file << " fitness ";
-        output_filter_file.width(11);
-        output_filter_file << item.second.fitness;
-        output_filter_file << " dilated ";
-        output_filter_file << item.second.is_dilated << std::endl;
-        output_bounds_to_file(item.second, output_filter_file);
-        output_filter_file << std::endl;
+        output_filter_to_file(item.second, output_filter_file);
+        if(item.second.fitness > 0) {
+            output_filter_to_file(item.second, output_promising_filter_file);
+        }
     }
-
-
 }

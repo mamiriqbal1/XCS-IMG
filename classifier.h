@@ -46,7 +46,8 @@ double getDelProp(Classifier &clfr, double meanFitness);
 void save_experiment_results(ClassifierMap &pop);
 
 void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
-                      std::ofstream &output_code_fragment_file, std::ofstream &output_filter_file);
+                      std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file,
+                      std::ofstream &output_promising_filter_file);
 
 double absoluteValue(double value);
 float computeDistance(CodeFragment code_fragment[], float cond[]);
@@ -56,3 +57,4 @@ void manage_filter_list(ClassifierMap &pop);
 
 int get_pop_numerosity(ClassifierMap& pop);
 void get_matching_classifiers(ClassifierMap& pop, float *state, ClassifierSet &match_set, int img_id, bool train);
+bool is_promising_classifier(Classifier& cl);
