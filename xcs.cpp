@@ -28,7 +28,8 @@ bool Testing = true;
 int numActions = 2;
 std::string inputTrainingFile;
 std::string inputTestFile;
-std::string kb_file;
+std::string kb_cf_file;
+std::string kb_filter_file;
 std::string output_path;
 int trainNumInstances=0;// = 11982;
 int testNumInstances=0;// = 1984;
@@ -373,7 +374,9 @@ void startXCS(){
     loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
     updateRange(trainingData,trainNumInstances);
     updateRange(testingData,testNumInstances);
-    //load_kb();
+    if(use_kb) {
+        load_kb(kb_cf_file, kb_filter_file);
+    }
 
     printf("\nIt is in progress! Please wait ....\n");
 
@@ -439,8 +442,10 @@ void LoadConfig(char* file)
                 }else if(value == "yes"){
                     use_kb = true;
                 }
-            }else if(name == "kb_file"){
-                kb_file = value;
+            }else if(name == "kb_cf_file"){
+                kb_cf_file = value;
+            }else if(name == "kb_filter_file"){
+                kb_filter_file = value;
             }else if(name == "output_path"){
                 output_path = value;
             }else if(name == "max_population_size"){

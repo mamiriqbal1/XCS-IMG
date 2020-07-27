@@ -6,10 +6,13 @@
 #include <math.h>
 #include <string.h>
 #include <cstring>
+#include <assert.h>
 #include "xcsMacros.h"
 #include "configuration.h"
 #include "env.h"
 
+CodeFragmentMap kb_cf;
+FilterMap kb_filter;
 //DataSource allData[1];
 float lowerLimit[condLength];
 float upperLimit[condLength];
@@ -125,5 +128,41 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
     }
     infile.close();
     //updateRange(inputArray,totalNumInstances);
+}
+
+void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
+
+    std::string line;
+    std::ifstream filter_file(kb_filter_file_name);
+    if (!filter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(kb_filter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(filter_file, line)){
+        Filter f;
+        std::string str;
+        std::stringstream line1(line);
+        line1 >> str;
+        line1 >> f.id;
+        line1 >> str;
+        line1 >> f.filter_size;
+        line1 >> str;
+        line1 >> f.is_dilated;
+        getline(filter_file, line);
+        std::stringstream line2(line);
+        line2 >> str;
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line2 >> f.lower_bounds[i];
+        }
+        getline(filter_file, line);
+        std::stringstream line3(line);
+        line3 >> str;
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line3 >> f.upper_bounds[i];
+        }
+        kb_filter[f.id] = f;
+    }
 }
 

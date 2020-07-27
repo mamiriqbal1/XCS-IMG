@@ -88,6 +88,7 @@ struct Filter{
 };
 
 typedef std::unordered_map<int, Filter> FilterMap;
+extern FilterMap kb_filter;
 
 struct FilterList{
     FilterMap filters;

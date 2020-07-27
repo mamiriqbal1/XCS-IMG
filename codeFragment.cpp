@@ -20,7 +20,6 @@ char globalBuf[1000];
 int numPreviousCFs = 0;     //When to set
 int startingPreviousCFID = 0;   //what is this value
 
-CodeFragmentMap previous_cf;
 CodeFragment *previousCFPopulation;
 
 typedef std::unordered_map<int, bool> ImageEvaluationMap;
@@ -69,6 +68,7 @@ void initializeCFPopulation(FILE *cfReadingFilePointer)//, FILE *code_fragment_f
        getPreviousCFPopulation(cfReadingFilePointer);
     }
 }
+
 
 void getPreviousCFPopulation(FILE *cfReadingFilePointer)
 {
@@ -499,15 +499,24 @@ CodeFragment addLeafCF(CodeFragment &cf, float *state){
             cf.reverse_polish[i] = leafNum;
             // With probability p_ol if there is promising filter available in filter store then use it
             int id = -1;
+            Filter kb_filter;
+            kb_filter.id  = -1;
             if(drand() < p_ol){
                 id = get_promising_filter_id();
             }
-            if(id != -1){
-               cf.filter_id[leafNum] = id;
-            }else {
-                Filter new_filter;
-                create_new_filter_from_input(new_filter, state);
-                cf.filter_id[leafNum] = add_filter(new_filter);
+            if(id != -1) {
+                cf.filter_id[leafNum] = id;
+            }else{
+                if(use_kb && drand() < 0.5) {    // get kb filter
+                    kb_filter = get_kb_filter(state);
+                }
+                if(kb_filter.id != -1){
+                    cf.filter_id[leafNum] = add_filter(kb_filter);
+                }else {
+                    Filter new_filter;
+                    create_new_filter_from_input(new_filter, state);
+                    cf.filter_id[leafNum] = add_filter(new_filter);
+                }
             }
             leafNum++;
         }
@@ -723,10 +732,6 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
 */
 
 bool isPreviousLevelsCode(const opType code){
-    if(use_kb)
-    {
-        return (previousCFPopulation[0].cf_id <= code && code < (previousCFPopulation[0].cf_id + numPreviousCFs) ) ? true : false;
-    }
     return false;
 }
 
@@ -753,22 +758,7 @@ inline opType leafOpCode(const int r){
 
 inline opType randomLeaf(){
     opType leaf = OPNOP;
-    if(numPreviousCFs==0 || !use_kb)
-    {
-        leaf = 0; // feature number is no more used irand(condLength);
-        //printf("leaf_1 %d\n",leaf);
-        return leaf;
-    }
-    double p = drand();
-    if(p < 0.5)
-    {
-        leaf =  0; // feature number is no more irand(condLength);
-        //printf("leaf_2 %d\n",leaf);
-        return leaf;
-    }
-    int n = irand(numPreviousCFs);
-    leaf = previousCFPopulation[n].cf_id;
-    //printf("n: %d leaf_3 %d\n",n,leaf);
+    leaf = 0; // feature number is no more used irand(condLength);
     return leaf;
 }
 
@@ -1015,4 +1005,29 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
         }
     }
     output_code_fragment_file << std::endl;
+}
+
+
+/*
+ * Return a matching filter randomly.
+ * Returns filder with id -1 if not found in multiple tries
+ */
+
+Filter get_kb_filter(float* state)
+{
+    Filter f;
+    auto random_it = kb_filter.begin();
+    bool matched = false;
+    int tries=0;
+    do{
+        tries++;
+        random_it = std::next(kb_filter.begin(), irand(kb_filter.size()));
+        matched = evaluate_filter(random_it->second, state);
+    }while(!matched && tries < 100);
+    if(matched){
+        f = random_it->second;
+    }else{
+        f.id = -1;
+    }
+    return f;
 }
