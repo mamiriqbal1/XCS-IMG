@@ -427,6 +427,27 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
     delete[] previousCFPopulation;
 }
 
+// create without regard to state
+void create_new_filter_from_input_new(Filter& filter, float *state)
+{
+    // randomly selects a position in the image to create filter bounds
+    //int filter_size = (int)sqrt(numLeaf);  // filter size
+    int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
+    bool is_dilated = false;
+    if(allow_dilated_filters){
+        is_dilated = irand(2) != 0;
+    }
+    for(int i=0; i<new_filter_size*new_filter_size; i++){
+        float lower = drand();
+        float upper = drand();
+        if(lower > upper) std::swap(lower,upper);
+
+        filter.lower_bounds[i] = roundRealValue(fmax(lower, 0), precisionDigits);
+        filter.upper_bounds[i] = roundRealValue(fmin(upper, 1),precisionDigits);
+    }
+    filter.filter_size = new_filter_size;
+    filter.is_dilated = is_dilated;
+}
 // new function for setting filter bounds
 void create_new_filter_from_input(Filter& filter, float *state)
 {
@@ -1022,7 +1043,9 @@ Filter get_kb_filter(float* state)
     do{
         tries++;
         random_it = std::next(kb_filter.begin(), irand(kb_filter.size()));
-        matched = evaluate_filter(random_it->second, state);
+        // ignore the state for now.
+        //matched = evaluate_filter(random_it->second, state);
+        matched = true;
     }while(!matched && tries < 100);
     if(matched){
         f = random_it->second;

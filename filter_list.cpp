@@ -148,7 +148,7 @@ void print_filter_stats(std::ofstream &output_stats_file) {
 }
 
 /*
- * Returns a promising filter using tournament selection to be used in mutation or covering
+ * Returns a promising filter using binary tournament selection to be used in mutation or covering
  * Tournament size = 2
  * Returns -1 if no promising filter found
  */
