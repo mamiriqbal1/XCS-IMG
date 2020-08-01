@@ -10,6 +10,8 @@
 #include "xcsMacros.h"
 #include "configuration.h"
 #include "env.h"
+#include "codeFragment.h"
+
 
 CodeFragmentMap kb_cf;
 FilterMap kb_filter;
@@ -163,6 +165,28 @@ void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
             line3 >> f.upper_bounds[i];
         }
         kb_filter[f.id] = f;
+    }
+
+    std::ifstream cf_file(kb_cf_file_name);
+    if (!cf_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(kb_cf_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cf_file, line)) {
+       // load cf
+       CodeFragment cf;
+       int id=0;
+       std::stringstream line1(line);
+       line1>>id;
+       createNewCF(id, cf);
+       while(line1.eof()){
+           std::string token;
+           line1>>token;
+       }
+
+
     }
 }
 
