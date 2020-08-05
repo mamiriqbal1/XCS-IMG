@@ -89,8 +89,7 @@ int get_set_numerosity(ClassifierSet &set)
   * Code review
   * Overall flow is as per algorithm
   */
-void *
-getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
+void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
     int population_numerosity=0, match_set_numerosity=0, representedActions;
 
     bool coveredActions[numActions];
@@ -185,25 +184,48 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
     }
     return true;
 }
-void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize,
-                                 int time)  //matchingCondAndSpecifiedAct(currentState,i,matchSetNumerositySum+1,time)
+void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time)
 {
     createMatchingCondition(cl.code_fragment, state);
     cl.action = act;
     setInitialVariables(cl,setSize,time);
 }
+
+/*
+ * Transfer the filters from kb to running state (i.e. the filter master list)
+ */
+void transfer_kb_filter(CodeFragment & cf)
+{
+    for(int i=0; i<cf.num_filters; i++){
+        cf.filter_id[i] = add_filter(kb_filter[cf.filter_id[i]]);
+    }
+}
+
+
 void createMatchingCondition(CodeFragment code_fragment[], float state[])
 {
-    for(int i=0; i<clfrCondLength; i++)
-    {
-        do
-        {
-            createNewCF(getNumPreviousCFs() + cf_gid, code_fragment[i]);
-            opType* end = randomProgram(code_fragment[i].reverse_polish, irand(2), cfMaxDepth, cfMinDepth);
-            validateDepth(code_fragment[i].reverse_polish, end); //validate depth
+    for(int i=0; i<clfrCondLength; i++){
+        code_fragment[i].cf_id = -1;
+        if(use_kb && drand() < 0.5){
+            code_fragment[i] = get_kb_code_fragment(state);
+            // add the filters from kb to master filter list
+            transfer_kb_filter(code_fragment[i]);
+        }
+        if(code_fragment[i].cf_id == -1) { // if cf not received from kb
+            initializeNewCF(getNumPreviousCFs() + cf_gid, code_fragment[i]);
+            opType *end = randomProgram(code_fragment[i].reverse_polish, irand(2), cfMaxDepth, cfMinDepth);
+            assert(validateDepth(code_fragment[i].reverse_polish) <= cfMaxDepth); //validate depth
             code_fragment[i] = addLeafCF(code_fragment[i], state);
         }
-        while(evaluateCF(code_fragment[i], state) != 1 );
+
+        if (evaluateCF(code_fragment[i], state) != 1){
+            if(!negate_cf(code_fragment[i])){
+                do{
+                    mutate_cf(code_fragment[i]); // mutate operators till it matches
+                }while(evaluateCF(code_fragment[i], state) != 1);
+
+            }
+        }
         cf_gid++;
     }
 }

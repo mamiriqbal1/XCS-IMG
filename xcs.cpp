@@ -505,7 +505,7 @@ void copy_filter_to_condition(Classifier *classifer, xt::xtensor<float, 1> filte
 {
      Leaf *leaf = classifer->code_fragment[0].leaf;
 
-     for (int i = 0; i < numLeaf; i++) {
+     for (int i = 0; i < cfMaxLeaf; i++) {
         leaf[i].lowerBound = filter(i*2);
         leaf[i].upperBound = filter(i*2+1);
      }

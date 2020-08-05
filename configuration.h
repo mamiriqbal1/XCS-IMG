@@ -48,16 +48,21 @@ const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
 const int clfrCondLength = 2; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
-const int cfMaxDepth = 3;
+const int cfMaxDepth = 2;
 const int cfMinDepth = 0;
-const int cfMaxLength = 16;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
+const int cfMaxLength = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
-const int numLeaf = 8; // 2^cfMaxDepth
+const int cfMaxLeaf = 4; // 2^cfMaxDepth
 
 typedef int opType;
 const int opSize = sizeof(opType);
-
+/*
+ * We have pairs of operators (positive and negative). They will cover all combinations without the use of NOT
+ * There is only one case which require NOT and that is single filter with NOT.
+ * So NOT is not used to build GP tree except when there is only only filter.
+ * This can be used when growing a tree of depth zero. As soon as the tree depth increases, the NOT will be removed.
+ */
 const opType OPNOP = -100; //to be used as ending symbol
 const opType OPAND = -101;
 const opType OPOR = -102;
@@ -66,8 +71,8 @@ const opType OPNOR = -104;
 const opType OPNOT = -105;
 //const opType OPUNITY = -106;
 
-const int totalFunctions = 5;
-const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR, OPNOT};
+const int totalFunctions = 4;
+const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR};
 
 
 const int num_filter_sizes = 4;
@@ -106,12 +111,14 @@ struct Leaf
 struct CodeFragment
 {
     opType reverse_polish[cfMaxLength];
-    int num_filters; // equal to number of leaves to be determined at run time
-    int filter_id[numLeaf];
-    int cf_id;
+    int num_filters = -1; // equal to number of leaves to be determined at run time
+    int filter_id[cfMaxLeaf];
+    int cf_id = -1;
 };
 
 typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
+extern CodeFragmentMap kb_cf;
+
 
 struct Classifier
 {

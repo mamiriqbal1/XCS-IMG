@@ -121,7 +121,7 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
         opType c = 0;
         int i = 0;
         int lfNum = 0;
-        createNewCF(numReadPreviousCFs + condLength, previousCF); // start CFs ID numbers from condLength to avoid confusion with CFs and code_fragment bits
+        initializeNewCF(numReadPreviousCFs + condLength, previousCF); // start CFs ID numbers from condLength to avoid confusion with CFs and code_fragment bits
         //tokenize the previousCFContents
         //int counting = 0;
 
@@ -194,6 +194,20 @@ void getPreviousCFPopulation(FILE *cfReadingFilePointer)
 
 }
 
+
+opType str_to_opt(std::string str)
+{
+    if(!str.compare("o")) return OPNOP;
+    if(!str.compare("&")) return OPAND;
+    if(!str.compare("|")) return OPOR;
+    if(!str.compare("d")) return OPNAND;
+    if(!str.compare("r")) return OPNOR;
+    if(!str.compare("~")) return OPNOT;
+    std::string error("Error: wrong operator ");
+    error.append(str).append(" exiting...");
+    throw std::runtime_error(error);
+}
+
 opType getOpType(char str[])
 {
     opType ret;
@@ -243,7 +257,7 @@ bool equalTwoCFs(CodeFragment &cf1, CodeFragment &cf2)
     {
         if(cf1.reverse_polish[i] == cf2.reverse_polish[i])
         {
-            if(0<=cf1.reverse_polish[i] && cf1.reverse_polish[i] < numLeaf)
+            if(0<=cf1.reverse_polish[i] && cf1.reverse_polish[i] < cfMaxLeaf)
             {
                 if(cf1.filter_id[cf1.reverse_polish[i]] != cf2.filter_id[cf2.reverse_polish[i]])
                     return false;
@@ -281,7 +295,7 @@ int numberOfNonDontcares(CodeFragment cf[])  //returns the number of specific CF
     return count;
 }
 
-void validateDepth(opType* cf, opType* end)
+int validateDepth(opType *cf)
 {
     //display 'cf' for debugging
     /*
@@ -292,13 +306,21 @@ void validateDepth(opType* cf, opType* end)
     	printf("%s ",temp);
     }
     */
+    opType* end = nullptr;
+    for(int i=0; i<cfMaxLength; i++){
+        if(cf[i] == OPNOP){
+            end = &cf[i];
+            break;
+        }
+    }
     const opType* start = cf;
     opType* p = end -1;
     int a =1;
     int depth = -1;
     DepthMax(start,&p,a,depth);
     //printf("Depth: %d\n",depth);
-    assert(depth<=cfMaxDepth);
+    //assert(depth<=cfMaxDepth);
+    return depth; // return depth of the cf
 }
 
 void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
@@ -317,11 +339,14 @@ void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
     }
 }
 
-void createNewCF(int id, CodeFragment &cf)
+void initializeNewCF(int id, CodeFragment &cf)
 {
     for(int i=0; i<cfMaxLength; i++)
     {
         cf.reverse_polish[i] = OPNOP;
+    }
+    for(int i=0; i < cfMaxLeaf; i++){
+        cf.filter_id[i] = -1;
     }
     cf.cf_id = id;
 }
@@ -431,7 +456,7 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
 void create_new_filter_from_input_new(Filter& filter, float *state)
 {
     // randomly selects a position in the image to create filter bounds
-    //int filter_size = (int)sqrt(numLeaf);  // filter size
+    //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
     int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
     bool is_dilated = false;
     if(allow_dilated_filters){
@@ -452,7 +477,7 @@ void create_new_filter_from_input_new(Filter& filter, float *state)
 void create_new_filter_from_input(Filter& filter, float *state)
 {
     // randomly selects a position in the image to create filter bounds
-    //int filter_size = (int)sqrt(numLeaf);  // filter size
+    //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
     int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
     bool is_dilated = false;
     if(allow_dilated_filters){
@@ -528,7 +553,8 @@ CodeFragment addLeafCF(CodeFragment &cf, float *state){
             if(id != -1) {
                 cf.filter_id[leafNum] = id;
             }else{
-                if(use_kb && drand() < 0.5) {    // get kb filter
+                // disable as we are using code fragment kb
+                if(false && use_kb && drand() < 0.5) {    // get kb filter
                     kb_filter = get_kb_filter(state);
                 }
                 if(kb_filter.id != -1){
@@ -618,6 +644,33 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     return evaluation;
 }
 
+
+/*
+ * If the top most operator is OPNOT then remove it otherwise add an OPNOT at the top
+ * Do nothing if cf is full and top operator is not OPNOT
+ */
+bool negate_cf(CodeFragment &cf){
+    bool success = false;
+    for(int i=0; i<cfMaxLength; i++){
+        if(cf.reverse_polish[i] == OPNOP){ // reached end
+            if(cf.reverse_polish[i-1] == OPNOT){
+                cf.reverse_polish[i-1] = OPNOP;
+                success = true;
+            }else if(i < cfMaxLength-1){  // only add OPNOT if there is room
+                cf.reverse_polish[i] = OPNOT;
+                cf.reverse_polish[i+1] = OPNOP;
+                success = true;
+            }
+            break;
+        }
+    }
+    return success;
+}
+
+
+/*
+ * Mutate CF by randomly changing an operator
+ */
 bool mutate_cf(CodeFragment &cf){
     int functions_index[cfMaxLength];  // collect indices of functions for possible mutation
     int functions_i = 0;
@@ -719,7 +772,7 @@ int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
         }
     }
     // set featureNumber appropriately and then call evaluateCF_old
-    int size = (int)sqrt(numLeaf);  // filter size
+    int size = (int)sqrt(cfMaxLeaf);  // filter size
     int index[size*size];
     bool done = false;
     int return_value = 0;
@@ -941,7 +994,7 @@ void outprog(CodeFragment &cf, FILE *fp) {
     {
         char* temp = NULL;
         code = cf.reverse_polish[j];
-        if(0<=code && code<numLeaf)
+        if(0<=code && code < cfMaxLeaf)
         {
             // todo: printing for filter to be implemented
             temp = new char[strlen("filter to be printed") + 1];
@@ -1016,7 +1069,7 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
         code = cf.reverse_polish[i];
         if(code == OPNOP){
             break;
-        }else if(0<=code && code<numLeaf){  // if code is zero then it is a filter_id index
+        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_id index
             output_code_fragment_file << "D" << cf.filter_id[code] << " "; // print filter id
         }else if (code>=condLength && isPreviousLevelsCode(code)){
             // output previous when implemented
@@ -1054,3 +1107,27 @@ Filter get_kb_filter(float* state)
     }
     return f;
 }
+
+
+CodeFragment get_kb_code_fragment(float* state)
+{
+    CodeFragment cf;
+    auto random_it = kb_cf.begin();
+    bool matched = false;
+    int tries = 0;
+    do{
+        tries++;
+        random_it = std::next(kb_cf.begin(), irand(kb_cf.size()));
+        // ignore the state for now
+        // transfer all filters to the list before evaluation
+        //matched = evaluateCF(random_it->second, state);
+        matched = true;
+    }while(!matched && tries < 100);
+    if(matched){
+        cf = random_it->second;
+    }else{
+        cf.cf_id = -1;
+    }
+    return cf;
+}
+

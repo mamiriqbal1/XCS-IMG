@@ -16,8 +16,8 @@ int getNumPreviousCFs();
 bool isDontcareCF(CodeFragment &cf);
 int numberOfNonDontcares(CodeFragment cf[]);
 
-void validateDepth(opType* cf, opType* end);
-void createNewCF(int id, CodeFragment &cf);
+int validateDepth(opType *cf);
+void initializeNewCF(int id, CodeFragment &cf);
 void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer);
 
 bool isMoreGeneralLeaf(Leaf lf1, Leaf lf2);
@@ -48,5 +48,8 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id=-1, int img_
 void update_evaluation_cache(std::forward_list<int>& removed_filters);
 void print_filter_evaluation_stats(std::ofstream &output_stats_file);
 bool mutate_cf(CodeFragment &cf);
+bool negate_cf(CodeFragment &cf);
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 Filter get_kb_filter(float* state);
+opType str_to_opt(std::string str);
+CodeFragment get_kb_code_fragment(float* state);

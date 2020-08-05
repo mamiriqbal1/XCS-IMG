@@ -180,13 +180,26 @@ void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
        int id=0;
        std::stringstream line1(line);
        line1>>id;
-       createNewCF(id, cf);
-       while(line1.eof()){
+        initializeNewCF(id, cf);
+       int index = 0, leaf_index = 0;
+       while(!line1.eof()){
            std::string token;
            line1>>token;
+           // last token is "" that needs to be handled
+           if(token.empty()) break;
+           if(token.substr(0,1) == "D"){ // this is filter id
+               int filter_id = std::stoi(token.substr(1));
+               cf.filter_id[leaf_index] = filter_id;
+               cf.reverse_polish[index] = leaf_index;
+               leaf_index++;
+           }else{ // this is operator
+               cf.reverse_polish[index] = str_to_opt(token);
+           }
+           index++;
        }
-
-
+       cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
+       cf.num_filters = leaf_index;
+       kb_cf[cf.cf_id] = cf;
     }
 }
 
