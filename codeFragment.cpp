@@ -406,12 +406,17 @@ bool add_operator(CodeFragment& cf, float* state){
     std::vector<int> temp_reverse_polish;
     temp_reverse_polish.reserve(cfMaxLength);
     temp_reverse_polish.assign(cfMaxLength, OPNOP);
-    std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
+    temp_reverse_polish = cf.reverse_polish;
+    //std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
     int new_filter_id = get_new_filter(state);
     for(int i=0; i<cfMaxLength; i++){
         if(cf.reverse_polish[i] >= 0){ // its an operand
             // shift right all the contents to make room for one operand and one operator
-            std::copy(temp_reverse_polish.begin()+(i+1), temp_reverse_polish.end()-2, cf.reverse_polish.begin()+(i+3));
+            std::copy(
+                    std::next(temp_reverse_polish.begin(),i+1),
+                    std::prev(temp_reverse_polish.end(),1),
+                    std::next(cf.reverse_polish.begin(),i+3)
+                    );
             cf.reverse_polish[i+1] = cf.num_filters;
             cf.filter_id[cf.num_filters] = new_filter_id;
             cf.num_filters++;
@@ -419,7 +424,8 @@ bool add_operator(CodeFragment& cf, float* state){
             if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
                 return true;
             }else{  // reset and try the next operand
-                std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
+                cf.reverse_polish = temp_reverse_polish;
+                //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
                 cf.num_filters--;
                 cf.filter_id[cf.num_filters] = -1;
             }
@@ -453,7 +459,7 @@ bool add_cf(Classifier &cl, float* state){
     if(cl.cf[num_cf].cf_id == -1) { // if cf not received from kb
         // create a cf of depth zero to start with
         opType *end = randomProgram(cl.cf[num_cf].reverse_polish.data(), 0, 0, 0);
-        assert(validateDepth(cl.cf[num_cf].reverse_polish.data()) <= cfMaxDepth); //validate depth
+        //assert(validateDepth(cl.cf[num_cf].reverse_polish.data()) <= cfMaxDepth); //validate depth
         addLeafCF(cl.cf[num_cf], state);
     }
     if (evaluateCF(cl.cf[num_cf], state) != 1){

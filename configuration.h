@@ -118,7 +118,7 @@ struct CodeFragment
     int cf_id;
     CodeFragment(){
         reverse_polish.reserve(cfMaxLength);
-        reverse_polish.assign(cfMaxLeaf, OPNOP);
+        reverse_polish.assign(cfMaxLength, OPNOP);
         filter_id.reserve(cfMaxLeaf);
         filter_id.assign(cfMaxLeaf, -1);
         num_filters = -1;
