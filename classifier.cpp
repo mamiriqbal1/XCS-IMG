@@ -213,18 +213,13 @@ void createMatchingCondition(CodeFragment code_fragment[], float state[])
         }
         if(code_fragment[i].cf_id == -1) { // if cf not received from kb
             initializeNewCF(getNumPreviousCFs() + cf_gid, code_fragment[i]);
-            opType *end = randomProgram(code_fragment[i].reverse_polish, irand(2), cfMaxDepth, cfMinDepth);
+            // create a cf of depth zero to start with
+            opType *end = randomProgram(code_fragment[i].reverse_polish, 0, 0, 0);
             assert(validateDepth(code_fragment[i].reverse_polish) <= cfMaxDepth); //validate depth
             code_fragment[i] = addLeafCF(code_fragment[i], state);
         }
-
         if (evaluateCF(code_fragment[i], state) != 1){
-            if(!negate_cf(code_fragment[i])){
-                do{
-                    mutate_cf(code_fragment[i]); // mutate operators till it matches
-                }while(evaluateCF(code_fragment[i], state) != 1);
-
-            }
+            negate_cf(code_fragment[i]);
         }
         cf_gid++;
     }
@@ -610,9 +605,7 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
         int cf_index1 = irand(clfrCondLength);
         int cf_index2 = irand(clfrCondLength);
         if(drand() < 0.5){  // swap CF with 50% probability
-            CodeFragment temp = cl1.code_fragment[cf_index1];
-            cl1.code_fragment[cf_index1] = cl2.code_fragment[cf_index2];
-            cl2.code_fragment[cf_index2] = temp;
+            std::swap(cl1.code_fragment[cf_index1], cl2.code_fragment[cf_index2]);
             success = true;
         }else {
             // crossover two filters randomly
@@ -621,11 +614,8 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
                 tries_filter++;
                 int filter_index_1 = irand(cl1.code_fragment[cf_index1].num_filters);
                 int filter_index_2 = irand(cl2.code_fragment[cf_index2].num_filters);
-
                 // just swap the filters - just as good as crossover of filters
-                int temp = cl1.code_fragment[cf_index1].filter_id[filter_index_1];
-                cl1.code_fragment[cf_index1].filter_id[filter_index_1] = cl2.code_fragment[cf_index2].filter_id[filter_index_2];
-                cl2.code_fragment[cf_index2].filter_id[filter_index_2] = temp;
+                std::swap(cl1.code_fragment[cf_index1].filter_id[filter_index_1], cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
                 success = true;
 
 //                filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
@@ -688,6 +678,10 @@ bool mutation(Classifier &clfr, float *state)
         // 2 level mutation (CF and filter)
         int cf_index = irand(clfrCondLength);
         if(drand() < 0.5){
+            if(grow_cf(clfr.code_fragment[cf_index], state)){
+                success = true;
+            }
+        } else if(drand() < 0.5){
            if(mutate_cf(clfr.code_fragment[cf_index])) {
                success = true;
            }

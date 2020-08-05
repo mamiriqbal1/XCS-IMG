@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
+#include <stack>
 //using namespace std;
 
 char globalBuf[1000];
@@ -543,31 +544,11 @@ CodeFragment addLeafCF(CodeFragment &cf, float *state){
         if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             cf.reverse_polish[i] = leafNum;
-            // With probability p_ol if there is promising filter available in filter store then use it
-            int id = -1;
-            Filter kb_filter;
-            kb_filter.id  = -1;
-            if(drand() < p_ol){
-                id = get_promising_filter_id();
-            }
-            if(id != -1) {
-                cf.filter_id[leafNum] = id;
-            }else{
-                // disable as we are using code fragment kb
-                if(false && use_kb && drand() < 0.5) {    // get kb filter
-                    kb_filter = get_kb_filter(state);
-                }
-                if(kb_filter.id != -1){
-                    cf.filter_id[leafNum] = add_filter(kb_filter);
-                }else {
-                    Filter new_filter;
-                    create_new_filter_from_input(new_filter, state);
-                    cf.filter_id[leafNum] = add_filter(new_filter);
-                }
-            }
+            cf.filter_id[leafNum] = get_new_filter(state);
             leafNum++;
         }
     }
+    assert(cf.num_filters == leafNum);
     return cf;
 }
 
@@ -644,21 +625,43 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
     return evaluation;
 }
 
+opType negate_operator(opType op){
+    switch(op){
+        case OPAND:
+            return OPNAND;
+        case OPNAND:
+            return OPAND;
+        case OPOR:
+            return OPNOR;
+        case OPNOR:
+            return OPOR;
+        default:
+            assert(false);
+    }// end switch
+}
+
 
 /*
- * If the top most operator is OPNOT then remove it otherwise add an OPNOT at the top
- * Do nothing if cf is full and top operator is not OPNOT
+ * Replace the operator with its negative.
+ * If the depth is zero then add a NOT operator
+ * If the top most operator is OPNOT then depth must be 1 so remove it
  */
 bool negate_cf(CodeFragment &cf){
     bool success = false;
+    int depth = validateDepth(cf.reverse_polish);
+    if(depth == 0){ // add a NOT operator
+       cf.reverse_polish[1] = OPNOT;
+       cf.reverse_polish[2] = OPNOP;
+       return true;
+    }
     for(int i=0; i<cfMaxLength; i++){
         if(cf.reverse_polish[i] == OPNOP){ // reached end
-            if(cf.reverse_polish[i-1] == OPNOT){
+            if(cf.reverse_polish[i-1] == OPNOT){ // it must be depth 1 cf
+                assert(depth == 1 && cf.num_filters == 1);
                 cf.reverse_polish[i-1] = OPNOP;
                 success = true;
-            }else if(i < cfMaxLength-1){  // only add OPNOT if there is room
-                cf.reverse_polish[i] = OPNOT;
-                cf.reverse_polish[i+1] = OPNOP;
+            }else if(i < cfMaxLength-1){  // negate the top operator
+                cf.reverse_polish[i-1] = negate_operator(cf.reverse_polish[i-1]);
                 success = true;
             }
             break;
@@ -667,6 +670,81 @@ bool negate_cf(CodeFragment &cf){
     return success;
 }
 
+/*
+ * Get a new filter either from promising filters or create a new from the state
+ */
+int get_new_filter(float *state) {
+    int id = -1;
+    if(drand() < p_ol){
+        id = get_promising_filter_id();
+    }
+    if(id == -1) {
+        Filter new_filter;
+        create_new_filter_from_input(new_filter, state);
+        id = add_filter(new_filter);
+    }
+    return id;
+}
+
+bool is_full(CodeFragment& cf){
+    int i=0;
+    for(i=0; i<cfMaxLength; i++){
+        if(cf.reverse_polish[i] == OPNOP){
+            break;
+        }
+    }
+    if(i >= cfMaxLength - 2) {
+        return true;
+    }else {
+        return false;
+    }
+}
+
+
+/*
+ * Adds a new operator to the cf from the operator list. The operator list does not include OPNOT operator.
+ * OPNOT will only be added as a result of negation of zero depth cf.
+ */
+bool add_operator(CodeFragment& cf, float* state){
+    int depth = validateDepth(cf.reverse_polish);
+    if(is_full(cf)) return false;
+//    if(depth >= cfMaxDepth) return false;
+
+    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
+        assert(depth == 1 && cf.num_filters == 1);
+        negate_cf(cf); // remove NOT operator
+    }
+    opType selected_operator = functionCodes[irand(totalFunctions)];
+    int temp_reverse_polish[cfMaxLength];
+    std::copy(std::begin(cf.reverse_polish), std::end(cf.reverse_polish), std::begin(temp_reverse_polish));
+    int new_filter_id = get_new_filter(state);
+    for(int i=0; i<cfMaxLength; i++){
+        if(cf.reverse_polish[i] >= 0){ // its an operand
+            // shift right all the contents to make room for one operand and one operator
+            std::copy(std::begin(temp_reverse_polish)+(i+1), std::end(temp_reverse_polish)-2, std::begin(cf.reverse_polish)+(i+3));
+            cf.reverse_polish[i+1] = cf.num_filters;
+            cf.filter_id[cf.num_filters] = new_filter_id;
+            cf.num_filters++;
+            cf.reverse_polish[i+2] = selected_operator;
+            if(validateDepth(cf.reverse_polish) <= cfMaxDepth) {
+                return true;
+            }else{  // reset and try the next operand
+                std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
+                cf.num_filters--;
+                cf.filter_id[cf.num_filters] = -1;
+            }
+        }
+    }
+    assert(false); // should not reach here
+}
+
+
+/*
+ * Grow cf by adding a new operator to it respecting the maximum depth
+ */
+bool grow_cf(CodeFragment &cf, float* state){
+    return add_operator(cf, state);
+}
 
 /*
  * Mutate CF by randomly changing an operator

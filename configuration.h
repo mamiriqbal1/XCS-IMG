@@ -62,6 +62,7 @@ const int opSize = sizeof(opType);
  * There is only one case which require NOT and that is single filter with NOT.
  * So NOT is not used to build GP tree except when there is only only filter.
  * This can be used when growing a tree of depth zero. As soon as the tree depth increases, the NOT will be removed.
+ * This will allow easy negation of the code fragment
  */
 const opType OPNOP = -100; //to be used as ending symbol
 const opType OPAND = -101;
@@ -72,7 +73,10 @@ const opType OPNOT = -105;
 //const opType OPUNITY = -106;
 
 const int totalFunctions = 4;
+// OPNOT must be the last operator
 const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR};
+const int num_negative_binary_operators = 2;
+const opType negative_binary_operators[] = {OPNAND, OPNOR};
 
 
 const int num_filter_sizes = 4;
@@ -111,8 +115,8 @@ struct Leaf
 struct CodeFragment
 {
     opType reverse_polish[cfMaxLength];
-    int num_filters = -1; // equal to number of leaves to be determined at run time
-    int filter_id[cfMaxLeaf];
+    int num_filters = -1; // equal to number of leaves/filters to be determined at run time
+    int filter_id[cfMaxLeaf];  // leaves: ids of the filters included in this code fragment
     int cf_id = -1;
 };
 
