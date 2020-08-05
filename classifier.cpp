@@ -29,7 +29,8 @@ void setInitialVariables(Classifier &clfr, double setSize, int time){
     clfr.experience = 0;
     clfr.actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
     clfr.timeStamp = time;
-    clfr.specificness = numberOfNonDontcares(clfr.code_fragment);
+    clfr.num_cf = 1;
+    clfr.specificness = clfr.num_cf;
 }
 
 
@@ -158,11 +159,10 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
     }
     return nr;
 }
-float computeDistance(CodeFragment code_fragment[], float cond[]){
-
+float computeDistance(Classifier &cl, float *cond){
   float mid, sum = 0.0;
-  for(int i=0; i<clfrCondLength; i++){
-            if(isDontcareCF(code_fragment[i]) || evaluateCF(code_fragment[i], cond) == 1 )
+  for(int i=0; i < cl.num_cf; i++){
+            if(isDontcareCF(cl.code_fragment[i]) || evaluateCF(cl.code_fragment[i], cond) == 1 )
             {
                 sum += 1;
             }
@@ -173,7 +173,7 @@ float computeDistance(CodeFragment code_fragment[], float cond[]){
 
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
-    for(int i=0; i<clfrCondLength; i++)
+    for(int i=0; i < cl.num_cf; i++)
     {
         //std::cout<<"iscond\n";
         //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].reverse_polish,state)==0 )
@@ -186,7 +186,7 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 }
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time)
 {
-    createMatchingCondition(cl.code_fragment, state);
+    createMatchingCondition(cl, state);
     cl.action = act;
     setInitialVariables(cl,setSize,time);
 }
@@ -202,27 +202,10 @@ void transfer_kb_filter(CodeFragment & cf)
 }
 
 
-void createMatchingCondition(CodeFragment code_fragment[], float state[])
+void createMatchingCondition(Classifier &cl, float *state)
 {
-    for(int i=0; i<clfrCondLength; i++){
-        code_fragment[i].cf_id = -1;
-        if(use_kb && drand() < 0.5){
-            code_fragment[i] = get_kb_code_fragment(state);
-            // add the filters from kb to master filter list
-            transfer_kb_filter(code_fragment[i]);
-        }
-        if(code_fragment[i].cf_id == -1) { // if cf not received from kb
-            initializeNewCF(getNumPreviousCFs() + cf_gid, code_fragment[i]);
-            // create a cf of depth zero to start with
-            opType *end = randomProgram(code_fragment[i].reverse_polish, 0, 0, 0);
-            assert(validateDepth(code_fragment[i].reverse_polish) <= cfMaxDepth); //validate depth
-            code_fragment[i] = addLeafCF(code_fragment[i], state);
-        }
-        if (evaluateCF(code_fragment[i], state) != 1){
-            negate_cf(code_fragment[i]);
-        }
-        cf_gid++;
-    }
+    add_cf(cl, state);
+
 }
 
 // ######################### prediction array operations ############################################
@@ -417,8 +400,8 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
         mutation(child[i], situation);
     }
 
-    child[0].specificness = numberOfNonDontcares(child[0].code_fragment);
-    child[1].specificness = numberOfNonDontcares(child[1].code_fragment);
+    child[0].specificness = child[0].num_cf;
+    child[1].specificness = child[1].num_cf;
 
     // get the length of the population to check if clasifiers have to be deleted
     len = get_pop_numerosity(pop);
@@ -554,10 +537,10 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     child2.experience = 0;
     child2.fitness = child2.fitness / child2.numerosity;
 
-    for(int i=0; i<clfrCondLength; i++){
+    for(int i=0; i < child1.num_cf; i++){
         child1.code_fragment[i].cf_id = cf_gid++;
     }
-    for(int i=0; i<clfrCondLength; i++){
+    for(int i=0; i < child2.num_cf; i++){
         child2.code_fragment[i].cf_id = cf_gid++;
     }
 
@@ -599,24 +582,18 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
     bool filter1_result = false;
     bool filter2_result = false;
     bool success = false;
-    int tries_cf = 0;
-    do{
-        tries_cf++;
-        int cf_index1 = irand(clfrCondLength);
-        int cf_index2 = irand(clfrCondLength);
-        if(drand() < 0.5){  // swap CF with 50% probability
-            std::swap(cl1.code_fragment[cf_index1], cl2.code_fragment[cf_index2]);
-            success = true;
-        }else {
-            // crossover two filters randomly
-            int tries_filter = 0;
-            do {
-                tries_filter++;
-                int filter_index_1 = irand(cl1.code_fragment[cf_index1].num_filters);
-                int filter_index_2 = irand(cl2.code_fragment[cf_index2].num_filters);
-                // just swap the filters - just as good as crossover of filters
-                std::swap(cl1.code_fragment[cf_index1].filter_id[filter_index_1], cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
-                success = true;
+    int cf_index1 = irand(cl1.num_cf);
+    int cf_index2 = irand(cl2.num_cf);
+    if(drand() < 0.5){  // swap CF with 50% probability
+        std::swap(cl1.code_fragment[cf_index1], cl2.code_fragment[cf_index2]);
+        success = true;
+    }else {
+        // crossover two filters randomly
+        int filter_index_1 = irand(cl1.code_fragment[cf_index1].num_filters);
+        int filter_index_2 = irand(cl2.code_fragment[cf_index2].num_filters);
+        // just swap the filters - just as good as crossover of filters
+        std::swap(cl1.code_fragment[cf_index1].filter_id[filter_index_1], cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
+        success = true;
 
 //                filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
 //                filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
@@ -638,9 +615,7 @@ bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
 //                        }
 //                    }
 //                }
-            } while (!success && tries_filter < cl1.code_fragment[cf_index1].num_filters);
-        }
-    }while(!success && tries_cf < clfrCondLength);
+    }
     return success;
 }
 
@@ -670,50 +645,42 @@ bool mutation(Classifier &clfr, float *state)
     if(drand() >= pM) return false;
 
     Filter filter_to_mutate;
-    bool previous_evaluation_result = false;
     bool success = false;
-    int tries_cf=0;
-    do{
-        tries_cf++;
-        // 2 level mutation (CF and filter)
-        int cf_index = irand(clfrCondLength);
-        if(drand() < 0.5){
-            if(grow_cf(clfr.code_fragment[cf_index], state)){
-                success = true;
-            }
-        } else if(drand() < 0.5){
-           if(mutate_cf(clfr.code_fragment[cf_index])) {
-               success = true;
-           }
-        }else {
-            int tries_filter = 0;
-            do {
-                tries_filter++;
-                // mutate one filter randomly
-                int filter_index = irand(clfr.code_fragment[cf_index].num_filters);
-                // if current filter is not promising and there is promising filter available in filter store
-                // then use it with probability p_ol
-                if (get_filter(clfr.code_fragment[cf_index].filter_id[filter_index]).fitness < 1 && drand() < p_ol) {
-                    int id = get_promising_filter_id();
-                    if (id != -1) {   // if promising filter found
-                        clfr.code_fragment[cf_index].filter_id[filter_index] = id;
-                    }
-                }
-                filter_to_mutate = get_filter(clfr.code_fragment[cf_index].filter_id[filter_index]);
-                previous_evaluation_result = evaluate_filter(filter_to_mutate, state);
-                for (int tries = 0; tries < 100; tries++) {
-                    apply_filter_mutation(filter_to_mutate, state);
-                    if (previous_evaluation_result == evaluate_filter(filter_to_mutate, state)) {
-                        clfr.code_fragment[cf_index].filter_id[filter_index] = add_filter(filter_to_mutate);
-                        success = true;
-                        break;
-                    } else {
-                        filter_to_mutate = get_filter(clfr.code_fragment[cf_index].filter_id[filter_index]);
-                    }
-                }
-            }while(!success && tries_filter < clfr.code_fragment[cf_index].num_filters);
+    // 2 level mutation (CF and filter)
+    int cf_index = irand(clfr.num_cf);
+    if(drand() < 0.5){
+        if(grow_cf(clfr.code_fragment[cf_index], state)){
+            success = true;
         }
-    }while(!success && tries_cf < clfrCondLength);
+    }
+    if(!success && drand() < 0.5 && clfr.num_cf < clfrCondMaxLength){
+        add_cf(clfr, state);
+    }
+    if(!success && drand() < 0.5){
+       if(mutate_cf(clfr.code_fragment[cf_index])) {
+           success = true;
+       }
+    }
+    if(!success){
+        // mutate one filter randomly
+        int filter_index = irand(clfr.code_fragment[cf_index].num_filters);
+        // if current filter is not promising and there is promising filter available in filter store
+        // then use it with probability p_ol
+        if (get_filter(clfr.code_fragment[cf_index].filter_id[filter_index]).fitness < 1 && drand() < p_ol) {
+            int id = get_promising_filter_id();
+            if (id != -1) {   // if promising filter found
+                clfr.code_fragment[cf_index].filter_id[filter_index] = id;
+            }
+        }
+        filter_to_mutate = get_filter(clfr.code_fragment[cf_index].filter_id[filter_index]);
+        apply_filter_mutation(filter_to_mutate, state);
+        clfr.code_fragment[cf_index].filter_id[filter_index] = add_filter(filter_to_mutate);
+        if (evaluateCF(clfr.code_fragment[cf_index], state) != 1) {
+            negate_cf(clfr.code_fragment[cf_index]);
+            assert(evaluateCF(clfr.code_fragment[cf_index], state) == 1);
+        }
+        success = true;
+    }
     // mutate action
     bool action_success = mutateAction(clfr);
     return success || action_success;
@@ -873,11 +840,11 @@ bool isSubsumer(Classifier &cl)
 // To subsume a CF to more general CF
 // filhal randomly selected two CFs, In future will select CFs based on their Fitness
 
-bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fragment[])
+bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
 {
-    for(int i=0; i<clfrCondLength; i++){
-        for(int j=0; j < code_fragment[i].num_filters; j++) {
-            if(filter_to_check_id == code_fragment[i].filter_id[j]){
+    for(int i=0; i < cl.num_cf; i++){
+        for(int j=0; j < cl.code_fragment[i].num_filters; j++) {
+            if(filter_to_check_id == cl.code_fragment[i].filter_id[j]){
                 return true;
             }
         }
@@ -891,9 +858,9 @@ bool is_filter_covered_by_condition(int filter_to_check_id, CodeFragment code_fr
  */
  bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
  {
-     for(int i=0; i<clfrCondLength; i++){
+     for(int i=0; i < clfr_specific.num_cf; i++){
          for(int j=0; j < clfr_specific.code_fragment[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(clfr_specific.code_fragment[i].filter_id[j], clfr_general.code_fragment)) {
+             if (!is_filter_covered_by_condition(clfr_specific.code_fragment[i].filter_id[j], clfr_general)) {
                  return false;
              }
          }
@@ -1061,7 +1028,7 @@ void save_experiment_results(ClassifierMap &pop)
 /*
 void fprintClassifier(FILE *fp, Classifier *classifier){
 	char buf[1000];
-	for(int i=0; i<clfrCondLength; i++){
+	for(int i=0; i<clfrCondMaxLength; i++){
 		outprog(classifier->code_fragment[i].reverse_polish,cfMaxLength,fp);
 		fwrite("\n",strlen("\n"),1,fp);
 	}
@@ -1164,7 +1131,7 @@ void manage_filter_list(ClassifierMap &pop){
     reset_filter_stats();
 
     for(auto& item : pop){
-        for(int i=0; i<clfrCondLength; i++){
+        for(int i=0; i < item.second.num_cf; i++){
             for(int j=0; j < item.second.code_fragment[i].num_filters; j++){
                 Filter& f = get_filter(item.second.code_fragment[i].filter_id[j]);
                 f.numerosity++;

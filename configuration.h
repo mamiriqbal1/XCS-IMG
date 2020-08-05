@@ -47,7 +47,7 @@ const char code_fragment_file_name[] = "feature_codefragments.txt";
 const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
 const char resultFile[] = "result_testing.txt";
 
-const int clfrCondLength = 2; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
+const int clfrCondMaxLength = 2; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 const int cfMaxDepth = 2;
 const int cfMinDepth = 0;
 const int cfMaxLength = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
@@ -112,6 +112,7 @@ struct Leaf
     float upperBound;
 };
 
+extern  int cf_gid;
 struct CodeFragment
 {
     opType reverse_polish[cfMaxLength];
@@ -126,18 +127,19 @@ extern CodeFragmentMap kb_cf;
 
 struct Classifier
 {
-    int id;
-    CodeFragment code_fragment[clfrCondLength];
-    int action;
-    double prediction;
-    double predictionError;
-    double accuracy;
-    double fitness;
-    int experience;
-    int numerosity;
-    double actionSetSize;
-    int timeStamp;
-    int specificness; //number of specific CFs
+    int id = -1;
+    CodeFragment code_fragment[clfrCondMaxLength];
+    int num_cf = 0;
+    int action = -1;
+    double prediction = 0;
+    double predictionError = 0;
+    double accuracy = 0;
+    double fitness = 0;
+    int experience = 0;
+    int numerosity = 0;
+    double actionSetSize = 0;
+    int timeStamp = 0;
+    int specificness = 0; //number of specific CFs
 };
 
 typedef std::unordered_map<int, Classifier> ClassifierMap;

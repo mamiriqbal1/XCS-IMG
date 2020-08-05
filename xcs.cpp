@@ -313,7 +313,7 @@ void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file) {
 
 			for(auto& item : pop){
 			  distanceArray[i].posClassifier = i;
-			  distanceArray[i].distance = computeDistance(item.second.code_fragment, testState->state);
+			  distanceArray[i].distance = computeDistance(item.second, testState->state);
 			  i++;
 			}
 			sortAll(distanceArray,popSize);

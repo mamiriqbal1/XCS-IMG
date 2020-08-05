@@ -4,7 +4,7 @@
 
 //const CodeFragment dontcareCF = {{0,0,OPNOT,OPOR,OPNOP,OPNOP,OPNOP,OPNOP},{0,0,0,0},-1}; //dontcareCF: it is just for completeness, not evaluated at all. It's output value is always 1.
 //const CodeFragment dontcareCF = {{OPUNITY,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP,OPNOP},-1}; //dontcareCF: it is just for completeness, not evaluated at all. It's output value is always 1.
-CodeFragment addLeafCF(CodeFragment &cf, float *state);
+void addLeafCF(CodeFragment &cf, float *state);
 bool equalTwoLeaf(Leaf lf1, Leaf lf2);
 
 void initializeCFPopulation(FILE *cfReadingFilePointer);//, FILE *code_fragment_file);
@@ -51,6 +51,7 @@ bool mutate_cf(CodeFragment &cf);
 bool grow_cf(CodeFragment &cf, float* state);
 bool negate_cf(CodeFragment &cf);
 int get_new_filter(float *state);
+bool add_cf(Classifier &cl, float* state);
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 Filter get_kb_filter(float* state);
 opType str_to_opt(std::string str);

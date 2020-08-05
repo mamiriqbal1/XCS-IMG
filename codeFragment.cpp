@@ -286,7 +286,7 @@ bool isDontcareCF(CodeFragment &cf)
 int numberOfNonDontcares(CodeFragment cf[])  //returns the number of specific CFs in cf
 {
     int count=0;
-    for(int i=0; i<clfrCondLength; i++)
+    for(int i=0; i < clfrCondMaxLength; i++)
     {
         if(!isDontcareCF(cf[i]))
         {
@@ -424,7 +424,7 @@ void storeCFs(ClassifierMap &pop, FILE *cfWritingFilePointer)
         {
             break;
         }
-        for(int i=0; i<clfrCondLength; i++)
+        for(int i=0; i < clfrCondMaxLength; i++)
         {
         if(!isDontcareCF(item.second.code_fragment[i]))
             {
@@ -515,7 +515,7 @@ void create_new_filter_from_input(Filter& filter, float *state)
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position
-CodeFragment addLeafCF(CodeFragment &cf, float *state){
+void addLeafCF(CodeFragment &cf, float *state){
 
     // count number of leaves
     int count = 0;
@@ -549,7 +549,6 @@ CodeFragment addLeafCF(CodeFragment &cf, float *state){
         }
     }
     assert(cf.num_filters == leafNum);
-    return cf;
 }
 
 
@@ -660,7 +659,7 @@ bool negate_cf(CodeFragment &cf){
                 assert(depth == 1 && cf.num_filters == 1);
                 cf.reverse_polish[i-1] = OPNOP;
                 success = true;
-            }else if(i < cfMaxLength-1){  // negate the top operator
+            }else if(i < cfMaxLength){  // negate the top operator
                 cf.reverse_polish[i-1] = negate_operator(cf.reverse_polish[i-1]);
                 success = true;
             }
@@ -745,6 +744,32 @@ bool add_operator(CodeFragment& cf, float* state){
 bool grow_cf(CodeFragment &cf, float* state){
     return add_operator(cf, state);
 }
+
+bool add_cf(Classifier &cl, float* state){
+    if(cl.num_cf >= clfrCondMaxLength) return false;
+
+    cl.code_fragment[cl.num_cf].cf_id = -1;
+    if(use_kb && drand() < 0.5){
+        cl.code_fragment[cl.num_cf] = get_kb_code_fragment(state);
+        // add the filters from kb to master filter list
+        transfer_kb_filter(cl.code_fragment[cl.num_cf]);
+    }
+    if(cl.code_fragment[cl.num_cf].cf_id == -1) { // if cf not received from kb
+        initializeNewCF(cf_gid, cl.code_fragment[cl.num_cf]);
+        // create a cf of depth zero to start with
+        opType *end = randomProgram(cl.code_fragment[cl.num_cf].reverse_polish, 0, 0, 0);
+        assert(validateDepth(cl.code_fragment[cl.num_cf].reverse_polish) <= cfMaxDepth); //validate depth
+        addLeafCF(cl.code_fragment[cl.num_cf], state);
+    }
+    if (evaluateCF(cl.code_fragment[cl.num_cf], state) != 1){
+        negate_cf(cl.code_fragment[cl.num_cf]);
+        assert(evaluateCF(cl.code_fragment[cl.num_cf], state) == 1);
+    }
+    cf_gid++;
+    cl.num_cf++;
+    return true;
+}
+
 
 /*
  * Mutate CF by randomly changing an operator

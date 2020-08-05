@@ -7,7 +7,7 @@ getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTi
 int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);
-void createMatchingCondition(CodeFragment code_fragment[], float state[]);
+void createMatchingCondition(Classifier &cl, float *state);
 
 void getPredictionArray(ClassifierSet &match_set);
 double getBestValue();
@@ -50,7 +50,7 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
                       std::ofstream &output_promising_filter_file);
 
 double absoluteValue(double value);
-float computeDistance(CodeFragment code_fragment[], float cond[]);
+float computeDistance(Classifier &cl, float *cond);
 
 
 void manage_filter_list(ClassifierMap &pop);
@@ -58,3 +58,4 @@ void manage_filter_list(ClassifierMap &pop);
 int get_pop_numerosity(ClassifierMap& pop);
 void get_matching_classifiers(ClassifierMap& pop, float *state, ClassifierSet &match_set, int img_id, bool train);
 bool is_promising_classifier(Classifier& cl);
+void transfer_kb_filter(CodeFragment & cf);
