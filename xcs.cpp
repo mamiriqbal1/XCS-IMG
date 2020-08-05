@@ -23,9 +23,21 @@
 
 //using namespace std;
 
+
+double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
+double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
+
+
 bool use_kb = false;
 bool Testing = true;
 int numActions = 2;
+int clfrCondMaxLength = 0; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
+int cfMaxDepth = 0;
+int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
+int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
+int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
 std::string inputTrainingFile;
 std::string inputTestFile;
 std::string kb_cf_file;
@@ -436,7 +448,22 @@ void LoadConfig(char* file)
                 inputTestFile = value;
             }else if(name == "num_actions"){
                 numActions = atoi(value.c_str());
-            }if(name == "use_kb"){
+            }else if(name == "max_depth"){
+                cfMaxDepth = atoi(value.c_str());
+                cfMaxLength = std::pow(2, cfMaxDepth+1);
+                cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1) + 2;
+                cfMaxLeaf = std::pow(2, cfMaxDepth);
+            }else if(name == "max_condition_length"){
+                clfrCondMaxLength = atoi(value.c_str());
+            }else if(name == "pX"){
+                pX = atof(value.c_str());
+            }else if(name == "pM"){
+                pM = atof(value.c_str());
+            }else if(name == "pM_allel"){
+                pM_allel = atof(value.c_str());
+            }else if(name == "p_promising_filter"){
+                p_promising_filter = atof(value.c_str());
+            }else if(name == "use_kb"){
                 if(value == "no"){
                     use_kb = false;
                 }else if(value == "yes"){
@@ -464,7 +491,7 @@ void LoadConfig(char* file)
                 }
             }else if(name == "analyze_path"){
                 analyze_path = value;
-            }if (name == "testing") {
+            }else if (name == "testing") {
                 if (value == "no") {
                     Testing = false;
                 } else if (value == "yes") {

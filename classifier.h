@@ -1,9 +1,6 @@
 void setInitialVariables(Classifier &clfr, double setSize, int time);
-double getAvgFitness(ClassifierMap &pop);
-int getNumFitterCFs(ClassifierMap &pop, double avgFitness);
 
-void
-getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id);
+void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id);
 int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);

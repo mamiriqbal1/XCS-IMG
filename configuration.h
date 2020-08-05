@@ -43,17 +43,14 @@ const char output_promising_code_fragment_file_name[] = "promising_code_fragment
 const char output_filter_file_name[] = "filter.txt";
 const char output_promising_filter_file_name[] = "promising_filter.txt";
 const char output_stats_file_name[] = "stats.txt";
-const char code_fragment_file_name[] = "feature_codefragments.txt";
-const char rule_with_code_fragment_file_name[] = "rule_with_codefragements.txt";
-const char resultFile[] = "result_testing.txt";
 
-const int clfrCondMaxLength = 2; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
-const int cfMaxDepth = 2;
+extern int clfrCondMaxLength;//2 // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
+extern int cfMaxDepth;// = 2;
 const int cfMinDepth = 0;
-const int cfMaxLength = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
+extern int cfMaxLength;// = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
-const int cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1)+2;
-const int cfMaxLeaf = 4; // 2^cfMaxDepth
+extern int cfMaxStack;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
+extern int cfMaxLeaf;// = 4; // 2^cfMaxDepth
 
 typedef int opType;
 const int opSize = sizeof(opType);
@@ -115,21 +112,28 @@ struct Leaf
 extern  int cf_gid;
 struct CodeFragment
 {
-    opType reverse_polish[cfMaxLength];
-    int num_filters = -1; // equal to number of leaves/filters to be determined at run time
-    int filter_id[cfMaxLeaf];  // leaves: ids of the filters included in this code fragment
-    int cf_id = -1;
+    std::vector<opType> reverse_polish;
+    int num_filters; // equal to number of leaves/filters to be determined at run time
+    std::vector<int> filter_id;  // leaves: ids of the filters included in this code fragment
+    int cf_id;
+    CodeFragment(){
+        reverse_polish.reserve(cfMaxLength);
+        reverse_polish.assign(cfMaxLeaf, OPNOP);
+        filter_id.reserve(cfMaxLeaf);
+        filter_id.assign(cfMaxLeaf, -1);
+        num_filters = -1;
+        cf_id = -1;
+    }
 };
 
 typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
 extern CodeFragmentMap kb_cf;
-
+typedef std::vector<CodeFragment> CodeFragmentVector;
 
 struct Classifier
 {
     int id = -1;
-    CodeFragment code_fragment[clfrCondMaxLength];
-    int num_cf = 0;
+    CodeFragmentVector cf;
     int action = -1;
     double prediction = 0;
     double predictionError = 0;
@@ -139,7 +143,6 @@ struct Classifier
     int numerosity = 0;
     double actionSetSize = 0;
     int timeStamp = 0;
-    int specificness = 0; //number of specific CFs
 };
 
 typedef std::unordered_map<int, Classifier> ClassifierMap;
