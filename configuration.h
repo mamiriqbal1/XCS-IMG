@@ -68,10 +68,12 @@ const opType OPNAND = -103;
 const opType OPNOR = -104;
 const opType OPNOT = -105;
 //const opType OPUNITY = -106;
+const opType OPXOR = -107;
+const opType OPXNOR = -108;
 
-const int totalFunctions = 4;
+const int totalFunctions = 6;
 // OPNOT must be the last operator
-const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR};
+const opType functionCodes[] = {OPAND, OPOR, OPNAND, OPNOR, OPXOR, OPXNOR};
 const int num_negative_binary_operators = 2;
 const opType negative_binary_operators[] = {OPNAND, OPNOR};
 

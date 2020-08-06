@@ -70,6 +70,8 @@ opType str_to_opt(std::string str)
     if(!str.compare("d")) return OPNAND;
     if(!str.compare("r")) return OPNOR;
     if(!str.compare("~")) return OPNOT;
+    if(!str.compare("^")) return OPXOR;
+    if(!str.compare("n")) return OPXNOR;
     std::string error("Error: wrong operator ");
     error.append(str).append(" exiting...");
     throw std::runtime_error(error);
@@ -323,6 +325,10 @@ opType negate_operator(opType op){
             return OPNOR;
         case OPNOR:
             return OPOR;
+        case OPXOR:
+            return OPXNOR;
+        case OPXNOR:
+            return OPXOR;
         default:
             assert(false);
     }// end switch
@@ -388,6 +394,64 @@ bool is_full(CodeFragment& cf){
     }
 }
 
+/*
+ * Removes an operator from the cf.
+ * Do nothing in case of depth 0 or depth 1 with NOT operator
+ */
+bool remove_operator(CodeFragment& cf, float* state){
+    int depth = validateDepth(cf.reverse_polish.data());
+    if(depth == 0) return false;
+
+    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
+        return false;
+    }
+    std::vector<int> temp_reverse_polish;
+    temp_reverse_polish.reserve(cfMaxLength);
+    temp_reverse_polish.assign(cfMaxLength, OPNOP);
+    temp_reverse_polish = cf.reverse_polish;
+    for(int i=0; i<cfMaxLength; i++){
+        if(cf.reverse_polish[i] < 0){ // its an operator
+            // remove leaf from leaves list
+            int leave_index = cf.reverse_polish[i-1];
+            cf.filter_id[leave_index] = -1;
+            for(int i=leave_index+1; i<cfMaxLeaf; i++){
+                cf.filter_id[i-1] = cf.filter_id[i];
+            }
+            cf.filter_id[cfMaxLeaf-1] = -1;
+
+            // shift left all the contents to remove the operator and one operand
+            std::copy(
+                    std::next(temp_reverse_polish.begin(),i+1),
+                    temp_reverse_polish.end(),
+                    std::next(cf.reverse_polish.begin(),i-1)
+            );
+            // now reset last two  slots
+            auto it = cf.reverse_polish.end();
+            it--;
+            *it = OPNOP;
+            it--;
+            *it = OPNOP;
+            cf.num_filters--;
+            if (evaluateCF(cf, state) != 1){
+                negate_cf(cf);
+                assert(evaluateCF(cf, state) == 1);
+            }
+            return true;
+        }
+    }
+    assert(false); // should not reach here
+}
+
+
+
+
+/*
+ * Shrink cf by removing an operator from it
+ */
+bool shrink_cf(CodeFragment &cf, float* state){
+    return remove_operator(cf, state);
+}
+
 
 /*
  * Adds a new operator to the cf from the operator list. The operator list does not include OPNOT operator.
@@ -414,7 +478,7 @@ bool add_operator(CodeFragment& cf, float* state){
             // shift right all the contents to make room for one operand and one operator
             std::copy(
                     std::next(temp_reverse_polish.begin(),i+1),
-                    std::prev(temp_reverse_polish.end(),1),
+                    std::prev(temp_reverse_polish.end(),2),
                     std::next(cf.reverse_polish.begin(),i+3)
                     );
             cf.reverse_polish[i+1] = cf.num_filters;
@@ -422,6 +486,11 @@ bool add_operator(CodeFragment& cf, float* state){
             cf.num_filters++;
             cf.reverse_polish[i+2] = selected_operator;
             if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
+                // now evaluate cf before returning
+                if (evaluateCF(cf, state) != 1){
+                    negate_cf(cf);
+                    assert(evaluateCF(cf, state) == 1);
+                }
                 return true;
             }else{  // reset and try the next operand
                 cf.reverse_polish = temp_reverse_polish;
@@ -433,6 +502,8 @@ bool add_operator(CodeFragment& cf, float* state){
     }
     assert(false); // should not reach here
 }
+
+
 
 
 /*
@@ -474,7 +545,7 @@ bool add_cf(Classifier &cl, float* state){
 /*
  * Mutate CF by randomly changing an operator
  */
-bool mutate_cf(CodeFragment &cf){
+bool mutate_cf(CodeFragment &cf, float *state) {
     int functions_index[cfMaxLength];  // collect indices of functions for possible mutation
     int functions_i = 0;
     for(int i=0; /*i<cfMaxLength*/; i++){
@@ -496,6 +567,10 @@ bool mutate_cf(CodeFragment &cf){
             break;
         }
     }while(true);
+    if (evaluateCF(cf, state) != 1){
+        negate_cf(cf);
+        assert(evaluateCF(cf, state) == 1);
+    }
     return true;
 }
 
@@ -554,6 +629,12 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 break;
             case OPNOR:
                 stack[SP++] = (sp1||sp2)?0:1;
+                break;
+            case OPXOR:
+                stack[SP++] = (sp1!=sp2)?1:0;
+                break;
+            case OPXNOR:
+                stack[SP++] = (sp1!=sp2)?0:1;
                 break;
             }//end switch
         }
@@ -621,6 +702,8 @@ inline int getNumberOfArguments(const opType code){
     case OPOR:
     case OPNAND:
     case OPNOR:
+    case OPXOR:
+    case OPXNOR:
         return 2;
     case OPNOT:
         return 1;
@@ -686,6 +769,10 @@ inline std::string op_to_str(opType code)
             return std::string("~");
         case OPNOP:
             return std::string("o");
+        case OPXOR:
+            return std::string("^");
+        case OPXNOR:
+            return std::string("n");
         default:
             return std::string("[" + std::to_string(code) + "!!]");
     }//end switch code

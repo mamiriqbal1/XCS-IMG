@@ -622,15 +622,23 @@ bool mutation(Classifier &clfr, float *state)
     // 2 level mutation (CF and filter)
     int cf_index = irand(clfr.cf.size());
     if(drand() < 0.1){
-        if(grow_cf(clfr.cf[cf_index], state)){
-            success = true;
+        if(drand() < 0.5) {
+            if (grow_cf(clfr.cf[cf_index], state)) {
+                success = true;
+            }
+        }else{ // shrink
+            if(shrink_cf(clfr.cf[cf_index], state)){
+                success = true;
+            }
+
         }
+
     }
     if(!success && drand() < 0.1 && clfr.cf.size() < clfrCondMaxLength){
         add_cf(clfr, state);
     }
     if(!success && drand() < 0.4){
-       if(mutate_cf(clfr.cf[cf_index])) {
+       if(mutate_cf(clfr.cf[cf_index], state)) {
            success = true;
        }
     }
