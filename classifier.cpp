@@ -546,48 +546,44 @@ void crossover_filter(Filter& parent1, Filter& parent2)
 }
 
 
-bool crossover(Classifier &cl1, Classifier &cl2, float situation[])
+bool crossover(Classifier &cl1, Classifier &cl2, float *state)
 {
     // crossover probability check
     if(drand() >= pX) return false;
 
     Filter filter1, filter2;
-    bool filter1_result = false;
-    bool filter2_result = false;
     bool success = false;
     int cf_index1 = irand(cl1.cf.size());
     int cf_index2 = irand(cl2.cf.size());
-    if(drand() < 0.5){  // swap CF with 50% probability
+    if(drand() < 0.5){//} && (cl1.cf.size() > 1 || cl2.cf.size() > 1)){
         std::swap(cl1.cf[cf_index1], cl2.cf[cf_index2]);
         success = true;
-    }else {
+    }else{
+    //if(!success && drand() < 0.5){//} && cl1.cf[cf_index1].num_filters > 1 || cl2.cf[cf_index2].num_filters > 1) {
         // crossover two filters randomly
         int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
         int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
         // just swap the filters - just as good as crossover of filters
         std::swap(cl1.cf[cf_index1].filter_id[filter_index_1], cl2.cf[cf_index2].filter_id[filter_index_2]);
         success = true;
-
-//                filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
-//                filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
-//                // Only do crossover if filters are of the same size or type
-//                if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-//                    filter1_result = evaluate_filter(filter1, situation);
-//                    filter2_result = evaluate_filter(filter2, situation);
-//                    for (int tries = 0; tries < 100; tries++) {
-//                        crossover_filter(filter1, filter2);
-//                        if (filter1_result == evaluate_filter(filter1, situation)
-//                            && filter2_result == evaluate_filter(filter2, situation)) {
-//                            cl1.code_fragment[cf_index1].filter_id[filter_index_1] = add_filter(filter1);
-//                            cl2.code_fragment[cf_index2].filter_id[filter_index_2] = add_filter(filter2);
-//                            success = true;
-//                            break;
-//                        } else {
-//                            filter1 = get_filter(cl1.code_fragment[cf_index1].filter_id[filter_index_1]);
-//                            filter2 = get_filter(cl2.code_fragment[cf_index2].filter_id[filter_index_2]);
-//                        }
-//                    }
-//                }
+    }
+    if(!success){
+        // crossover two filters randomly
+        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
+        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
+        filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
+        filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
+        // Only do crossover if filters are of the same size or type
+        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
+            crossover_filter(filter1, filter2);
+            if (evaluateCF(cl1.cf[cf_index1], state) != 1) {
+                negate_cf(cl1.cf[cf_index1]);
+            }
+            if (evaluateCF(cl2.cf[cf_index2], state) != 1) {
+                negate_cf(cl2.cf[cf_index2]);
+            }
+            success = true;
+        }
     }
     return success;
 }
@@ -621,7 +617,7 @@ bool mutation(Classifier &clfr, float *state)
     bool success = false;
     // 2 level mutation (CF and filter)
     int cf_index = irand(clfr.cf.size());
-    if(drand() < 0.1){
+    if(drand() < 0.25){
         if(drand() < 0.5) {
             if (grow_cf(clfr.cf[cf_index], state)) {
                 success = true;
@@ -630,14 +626,23 @@ bool mutation(Classifier &clfr, float *state)
             if(shrink_cf(clfr.cf[cf_index], state)){
                 success = true;
             }
-
         }
-
     }
-    if(!success && drand() < 0.1 && clfr.cf.size() < clfrCondMaxLength){
-        add_cf(clfr, state);
+    if(!success && drand() < 0.25){
+        if(drand() < 0.5){
+            if(add_cf(clfr, state)){
+                success = true;
+            }
+        }else{
+            if(remove_cf(clfr, state))
+            {
+                success = true;
+            }
+        }
     }
-    if(!success && drand() < 0.4){
+    // acquire cf_index again since cf list might hvae changed
+    cf_index = irand(clfr.cf.size());
+    if(!success && drand() < 0.25){
        if(mutate_cf(clfr.cf[cf_index], state)) {
            success = true;
        }
@@ -658,7 +663,6 @@ bool mutation(Classifier &clfr, float *state)
         clfr.cf[cf_index].filter_id[filter_index] = add_filter(filter_to_mutate);
         if (evaluateCF(clfr.cf[cf_index], state) != 1) {
             negate_cf(clfr.cf[cf_index]);
-            assert(evaluateCF(clfr.cf[cf_index], state) == 1);
         }
         success = true;
     }

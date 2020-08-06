@@ -22,7 +22,7 @@ void setTimeStamps(ClassifierSet &action_set, int itTime);
 void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, int &parent2, ClassifierSet &action_set,
                           double fitsum, int setsum);
 
-bool crossover(Classifier &cl1, Classifier &cl2, float situation[]);
+bool crossover(Classifier &cl1, Classifier &cl2, float *state);
 
 bool mutation(Classifier &clfr, float *state);
 

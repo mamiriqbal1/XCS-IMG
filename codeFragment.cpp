@@ -341,6 +341,7 @@ opType negate_operator(opType op){
  * If the top most operator is OPNOT then depth must be 1 so remove it
  */
 bool negate_cf(CodeFragment &cf){
+    if(cfMaxDepth == 0) return false;
     bool success = false;
     int depth = validateDepth(cf.reverse_polish.data());
     if(depth == 0){ // add a NOT operator
@@ -414,10 +415,17 @@ bool remove_operator(CodeFragment& cf, float* state){
             // remove leaf from leaves list
             int leave_index = cf.reverse_polish[i-1];
             cf.filter_id[leave_index] = -1;
-            for(int i=leave_index+1; i<cfMaxLeaf; i++){
-                cf.filter_id[i-1] = cf.filter_id[i];
+            for(int j=leave_index+1; j<cfMaxLeaf; j++){
+                cf.filter_id[j-1] = cf.filter_id[j];
             }
             cf.filter_id[cfMaxLeaf-1] = -1;
+            // now adjust indexes of all leaves which were greater than leave_index
+            for(int k=0; k<cfMaxLength; k++){
+                if(cf.reverse_polish[k] > leave_index){
+                    cf.reverse_polish[k]--;
+                    temp_reverse_polish[k]--;
+                }
+            }
 
             // shift left all the contents to remove the operator and one operand
             std::copy(
@@ -513,6 +521,14 @@ bool grow_cf(CodeFragment &cf, float* state){
     return add_operator(cf, state);
 }
 
+bool remove_cf(Classifier &cl, float* state){
+   if(cl.cf.size() <= 1) return false;
+
+   int cf_index = irand(cl.cf.size());
+   cl.cf.erase(cl.cf.begin()+cf_index);
+}
+
+
 bool add_cf(Classifier &cl, float* state){
     int num_cf = cl.cf.size();
     if(num_cf >= clfrCondMaxLength) return false;
@@ -530,12 +546,10 @@ bool add_cf(Classifier &cl, float* state){
     if(cl.cf[num_cf].cf_id == -1) { // if cf not received from kb
         // create a cf of depth zero to start with
         opType *end = randomProgram(cl.cf[num_cf].reverse_polish.data(), 0, 0, 0);
-        //assert(validateDepth(cl.cf[num_cf].reverse_polish.data()) <= cfMaxDepth); //validate depth
         addLeafCF(cl.cf[num_cf], state);
     }
     if (evaluateCF(cl.cf[num_cf], state) != 1){
         negate_cf(cl.cf[num_cf]);
-        assert(evaluateCF(cl.cf[num_cf], state) == 1);
     }
     cf_gid++;
     return true;

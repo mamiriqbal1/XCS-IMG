@@ -32,6 +32,7 @@ bool shrink_cf(CodeFragment &cf, float* state);
 bool negate_cf(CodeFragment &cf);
 int get_new_filter(float *state);
 bool add_cf(Classifier &cl, float* state);
+bool remove_cf(Classifier &cl, float* state);
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 Filter get_kb_filter(float* state);
 opType str_to_opt(std::string str);
