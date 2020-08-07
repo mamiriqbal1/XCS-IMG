@@ -429,6 +429,8 @@ int CountLines(const char* file)
 void LoadConfig(char* file)
 {
     int epochs = 0;
+    bool create_output_file = true;
+    std::ofstream output_config_file;
     // std::ifstream is RAII, i.e. no need to call close
     std::ifstream cFile (file);
     if (cFile.is_open())
@@ -498,8 +500,23 @@ void LoadConfig(char* file)
                     Testing = true;
                 }
             }
+            if(create_output_file){
+                create_output_file = false;
+                if(output_path.empty()){
+                   std::cout<<"Output path must be the first parameter in config file"<<std::endl;
+                   exit(1);
+                }
+                mkdir(output_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+                output_config_file.open(output_path + "experiment_config.txt");
+                if(!output_config_file.is_open()){
+                    std::cout << "Could not open output config file";
+                    exit(1);
+                }
+            }
             std::cout << name << " " << value << '\n';
+            output_config_file<< name << " " << value << std::endl;
         }
+        output_config_file.close();
     }
     else {
         std::string error("Error opening input file: ");
