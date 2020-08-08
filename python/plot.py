@@ -18,5 +18,4 @@ plt.title('Training Error digits 3, 8')
 plt.legend(['Training Error digits 3, 8'])
 plt.show()
 
-
 print('done')
