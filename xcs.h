@@ -11,10 +11,10 @@ double executeAction(int action, int stateAction, bool &wasCorrect);
 void header();
 void Exit(FILE *fp);
 
-void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC,
+void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int problem_count,
                       std::ofstream &output_training_file);
 
 void startXCS();
 void doOneSingleStepExperiment(ClassifierMap &pop);
 
-void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file);
+void doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file);

@@ -145,7 +145,7 @@ void initializeNewCF(int id, CodeFragment &cf)
 }
 
 // create without regard to state
-void create_new_filter_from_input_new(Filter& filter, float *state)
+void create_new_filter_from_input_random(Filter& filter, float *state)
 {
     // randomly selects a position in the image to create filter bounds
     //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size

@@ -102,9 +102,9 @@ void Exit(FILE *fp){
  *
  * @param performance The performance in the last fifty exploration trials.
  * @param sysError The system error in the last fifty exploration trials.
- * @param exploreProbC The number of exploration trials executed so far.
+ * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC,
+void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int problem_count,
                       std::ofstream &output_training_file) {
     double perf=0.0, serr=0.0;
     int setSize;
@@ -116,13 +116,13 @@ void writePerformance(ClassifierMap &pop, int *performance, double *sysError, in
     perf/=testFrequency;
     serr/=testFrequency;
     setSize = pop.size();
-    output_training_file << exploreProbC << " " << perf << " " << serr << " " << setSize << std::endl;
-    std::cout<<"Training: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
+    output_training_file << problem_count << " " << perf << " " << serr << " " << setSize << std::endl;
+    std::cout << "Training: " << problem_count << "  accuracy: " << perf << "  error: " << serr << "  set size: " << setSize << std::endl;
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int exploreProbC,
-                          std::ofstream &output_test_file) {
+void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int problem_count,
+                          std::ofstream &output_test_file, int training_problem_count) {
     double perf=0.0, serr=0.0;
 
     for(int i=0; i<testNumInstances; i++)
@@ -133,8 +133,8 @@ void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError
     perf/=testNumInstances;
     serr/=testNumInstances;
     int setSize = pop.size();
-    output_test_file << exploreProbC << " " << perf << " " << serr << " " << setSize << std::endl;
-    std::cout<<"Validation: "<<exploreProbC<<"  accuracy: "<<perf<<"  error: "<<serr<<"  set size: "<<setSize<<std::endl;
+    output_test_file << training_problem_count << " " << problem_count << " " << perf << " " << serr << " " << setSize << std::endl;
+    std::cout << "Validation: " << training_problem_count << " " << problem_count << "  accuracy: " << perf << "  error: " << serr << "  set size: " << setSize << std::endl;
 }
 
 
@@ -220,26 +220,26 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
     DataSource *state = NULL;
     //int counter = 0;
     //int index = 0;
-    for(int exploreProbC=0; exploreProbC <= maxProblems; exploreProbC++)
+    for(int problem_count=0; problem_count <= maxProblems; problem_count++)
     {
         int pop_size = pop.size();
         int pop_numerosity = get_pop_numerosity(pop);
-        //std::cout<<exploreProbC<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
+        //std::cout<<problem_count<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
         //state = &inputArray[irand(totalNumInstances)];
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
 
-        doOneSingleStepProblem(pop, state, exploreProbC, img_id, correct, sysError);
+        doOneSingleStepProblem(pop, state, problem_count, img_id, correct, sysError);
 
-       if(exploreProbC%testFrequency==0 && exploreProbC>0){
-           writePerformance(pop, correct, sysError, exploreProbC, output_training_file);
+       if(problem_count % testFrequency == 0 && problem_count > 0){
+           writePerformance(pop, correct, sysError, problem_count, output_training_file);
         }
-        if(exploreProbC%validation_frequency==0 && exploreProbC>0){
-            doOneSingleStepTest(pop, output_test_file);
+        if(problem_count % validation_frequency == 0 && problem_count > 0){
+            doOneSingleStepTest(pop, problem_count, output_test_file);
         }
-        if(exploreProbC%filter_list_management_frequency==0 && exploreProbC>0){
+        if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_list(pop);
         }
     }
@@ -289,7 +289,7 @@ std::string NumberToString(int num){
     return ss.str();
 }
 
-void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file) {
+void doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file) {
 	bool wasCorrect = false;
 	int correctCounter = 0;
 	int correct[testNumInstances];
@@ -353,7 +353,7 @@ void doOneSingleStepTest(ClassifierMap &pop, std::ofstream &output_test_file) {
                correct[t]=0;
         }
     }
-    writeTestPerformance(pop, correct, sysError, testNumInstances, output_test_file);
+    writeTestPerformance(pop, correct, sysError, testNumInstances, output_test_file, training_problem_count);
 
 //    std::cout<<"N = "<<maxPopSize<<std::endl;
 //    std::cout<<"P# = "<<P_dontcare<<std::endl;
