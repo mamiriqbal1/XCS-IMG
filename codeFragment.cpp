@@ -23,7 +23,8 @@ int startingPreviousCFID = 0;   //what is this value
 
 CodeFragment *previousCFPopulation;
 
-typedef std::unordered_map<int, bool> ImageEvaluationMap;
+// <image_id, location_where_matched> if location >= 0 then matched otherwise not matched.
+typedef std::unordered_map<int, int> ImageEvaluationMap;
 typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_id, <img_id, bool>>
 FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
@@ -43,7 +44,7 @@ void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
                       int yes = std::count_if(item.second.begin(), item.second.end(),
                               [](const ImageEvaluationMap::value_type & item2)
                               {
-                                return item2.second;
+                                return item2.second>=0;
                               });
                       total += size;
                       positive += yes;
@@ -242,8 +243,10 @@ void addLeafCF(CodeFragment &cf, float *state){
     assert(cf.num_filters == leafNum);
 }
 
-
-bool evaluate_filter_actual(const Filter& filter, float state[])
+/*
+ * Return -1 if not matched otherwise return the location of match
+ */
+int evaluate_filter_actual(const Filter& filter, float *state)
 {
     int step = filter.is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
     int effective_filter_size = filter.filter_size;
@@ -266,12 +269,13 @@ bool evaluate_filter_actual(const Filter& filter, float state[])
             }
             if(!match_failed){
                 // return the actual position where the filter matched
-                // i*image_width+j
-                return true;
+                return i*image_width+j;
+                //return true;
             }
         }
     }
-    return false;
+    return -1;
+    //return false;
 }
 
 void update_evaluation_cache(std::forward_list<int>& removed_filters){
@@ -291,18 +295,18 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
             ImageEvaluationMap& inner_map = evaluation_map[filter.id];
             if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
                 map_hits++;
-                return inner_map[img_id];
+                return inner_map[img_id]>=0;
             }
         }else {
             ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
             if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
                 map_hits++;
-                return inner_map[img_id];
+                return inner_map[img_id]>=0;
             }
         }
     }
 
-    bool evaluation = evaluate_filter_actual(filter, state);
+    int evaluation = evaluate_filter_actual(filter, state);
 
     // set hasmap entry for re-using evaluation
     if(img_id >=0) {
@@ -314,7 +318,7 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
             inner_map[img_id] = evaluation;
         }
     }
-    return evaluation;
+    return evaluation>=0;
 }
 
 /*
