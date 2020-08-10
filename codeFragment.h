@@ -37,3 +37,4 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 Filter get_kb_filter(float* state);
 opType str_to_opt(std::string str);
 CodeFragment get_kb_code_fragment(float* state);
+void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream &output_visualization_file);

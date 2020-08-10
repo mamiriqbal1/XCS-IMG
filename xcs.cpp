@@ -20,8 +20,7 @@
 #include <algorithm>
 #include <execinfo.h>
 #include <signal.h>
-
-//using namespace std;
+#include "codeFragment.h"
 
 
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
@@ -213,6 +212,12 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
         std::cout << "Could not open output test file";
         exit(1);
     }
+    std::ofstream output_visualization_file;
+    output_visualization_file.open(output_path + output_visualization_file_name);
+    if(!output_visualization_file.is_open()){
+        std::cout << "Could not open output visualization file";
+        exit(1);
+    }
 
     int correct[testFrequency];
     double sysError[testFrequency];
@@ -237,7 +242,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
            writePerformance(pop, correct, sysError, problem_count, output_training_file);
         }
         if(problem_count % validation_frequency == 0 && problem_count > 0){
-            doOneSingleStepTest(pop, problem_count, output_test_file);
+            doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, output_visualization_file);
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_list(pop);
@@ -245,6 +250,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
     }
     output_training_file.close();
     output_test_file.close();
+    output_visualization_file.close();
 }
 
 void sortAll(distanceInputClassifier arrayToBeSorted[], int size){ // Bubble Sort Function for Ascending Order
@@ -289,7 +295,9 @@ std::string NumberToString(int num){
     return ss.str();
 }
 
-void doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file) {
+void
+doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+                    std::ofstream &output_visualization_file) {
 	bool wasCorrect = false;
 	int correctCounter = 0;
 	int correct[testNumInstances];
@@ -338,10 +346,18 @@ void doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::of
 			  }
 		   	}
 		}
+
+
 		getPredictionArray(match_set);
         int actionWinner = bestActionWinner();
         double reward = executeAction(actionWinner,testState->action,wasCorrect);
         sysError[t] = absoluteValue(reward - getBestValue());
+
+        if(last_epoch) {
+            // save visualization data - start with image id, actual action and predicted action
+            output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
+            save_visualization_data(match_set, t, output_visualization_file);
+        }
 
 		if(wasCorrect)
         {

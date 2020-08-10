@@ -17,4 +17,6 @@ void writePerformance(ClassifierMap &pop, int *performance, double *sysError, in
 void startXCS();
 void doOneSingleStepExperiment(ClassifierMap &pop);
 
-void doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file);
+void
+doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+                    std::ofstream &output_visualization_file);

@@ -24,7 +24,7 @@ int startingPreviousCFID = 0;   //what is this value
 CodeFragment *previousCFPopulation;
 
 typedef std::unordered_map<int, bool> ImageEvaluationMap;
-typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;
+typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_id, <img_id, bool>>
 FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
 int map_hits = 0;
@@ -265,6 +265,8 @@ bool evaluate_filter_actual(const Filter& filter, float state[])
                 }
             }
             if(!match_failed){
+                // return the actual position where the filter matched
+                // i*image_width+j
                 return true;
             }
         }
@@ -313,6 +315,22 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
         }
     }
     return evaluation;
+}
+
+/*
+ * This function will save data that can be used to visualize classifiers and filters for an image
+ * that was predicted correctly or incorrectly
+ */
+void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream &output_visualization_file) {
+
+    for(auto & id:match_set.ids){
+        output_visualization_file<<id<<" "<<match_set.pop[id].action<<" ";
+    }
+    output_visualization_file<<std::endl;
+    for(auto & item:evaluation_validation_map){
+        output_visualization_file<<item.first<<" "<<item.second[img_id]<< " ";
+    }
+    output_visualization_file<<std::endl;
 }
 
 opType negate_operator(opType op){
