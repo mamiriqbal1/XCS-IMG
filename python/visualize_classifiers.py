@@ -1,133 +1,129 @@
 import numpy as np
-import math
 from PIL import Image, ImageDraw
 
+img_width = 28
+visualization_file_path = "../cmake-build-debug/output/2digits_2_v/visualization.txt"
+image_file_path = "../data/mnist/mnist_test_3_8.txt"
+cl_file_path = "../cmake-build-debug/output/2digits_2_v/classifier.txt"
+cf_file_path = "../cmake-build-debug/output/2digits_2_v/code_fragment.txt"
 
-# filter_size = 4  # 4x4
-# base_path = "../cmake-build-debug/output_2_6_2000_nokb_save_optimized/"
-# rules_file = open(base_path + "rule_with_codefragements.txt")
+# load classifiers is and their code fragment ids
+cl_cf = {}
+f = open(cl_file_path)
+line = f.readline()
+while line:
+    tokens = line.strip().split()
+    cl_id = int(tokens[1])
+    line = f.readline()
+    tokens = line.strip().split()
+    cf = []
+    for token in tokens:
+        cf.append(int(token))
+    cl_cf[cl_id] = cf
+    line = f.readline()
+f.close()
 
-
-def parse_condition(line):
-    values = []
-    for comma_split in line.split(','):
-        if comma_split.startswith('D0'):
-            for space_split in comma_split.split(' '):
-                if space_split != 'D0':
-                    values.append(float(space_split))
-
-    return values
-
-
-def parse_action(line):
-    value = int(line.split(" ")[1])
-    return value
-
-
-def parse_attributes(line):
-    values = []
-    tokens = line.split(' ')
-    values.append((float(tokens[1])))
-    values.append((float(tokens[3])))
-    values.append((float(tokens[5])))
-    values.append((float(tokens[7])))
-    values.append((float(tokens[9])))
-    values.append((float(tokens[11])))
-    values.append((float(tokens[13])))
-    values.append((float(tokens[15])))
-    values.append((float(tokens[17])))
-    values.append((float(tokens[19])))
-    return values
-
-
-def compare(window, filter_lower, filter_upper):
-    assert (window.shape == filter_lower.shape)
-    assert (window.shape == filter_upper.shape)
-    if np.sum(window < filter_lower) > 0 or np.sum(window > filter_upper) > 0:
-        return False
-    return True
+# load code fragments and their filter ids
+cf_filter = {}
+f = open(cf_file_path)
+line = f.readline()
+while line:
+    tokens = line.strip().split()
+    cl_id = int(tokens[0])
+    filters = []
+    for token in tokens:
+        if token.startswith("D"):
+            filters.append(int(token[1:]))
+    cf_filter[cl_id] = filters
+    line = f.readline()
+f.close()
 
 
-def does_match(img, filter):
-    i_width = 28
-    i_height = 28
-    f_size = int(math.sqrt(filter.size / 2))
-    img = img.reshape(i_width, i_height)
-    filter_lower = filter[::2].reshape(f_size, f_size)
-    filter_upper = filter[1::2].reshape(f_size, f_size)
-
-    for row in range(i_height - f_size + 1):
-        for col in range(i_width - f_size + 1):
-            if compare(img[row:row + f_size, col:col + f_size], filter_lower, filter_upper):
-                return True
-    return False
+def get_image(img_id):
+    img_file = np.loadtxt(image_file_path)
+    item = img_file[img_id]
+    img_class = int(item[-1])
+    data = item[:-1]
+    # denormalize
+    data = data * 255
+    data = data.reshape(28, 28)
+    return img_class, data
 
 
-def count_matches_for_filter(good_filters, good_actions):
-    mnist_3_8 = np.loadtxt('../data/mnist/mnist_train_3_8.txt')
-    mnist_3_8 = mnist_3_8.round(2)
-    for filter, action in zip(good_filters, good_actions):
-        match_0 = 0
-        match_1 = 0
-        matched = 0
-        for img in mnist_3_8:
-            img_action = int(img[-1])
-            img = img[:-1]
-            if does_match(img, filter):
-                matched += 1
-                if img_action == 0:
-                    match_0 += 1
-                else:
-                    match_1 += 1
-        print('filter_action: ' + str(action) + '  matched: ' + str(matched) + '  action 0: ' + str(
-            match_0) + '  action 1: ' + str(match_1))
+cl_clclass = []
+filter_position = {}
 
 
-# filters = []
-# actions = []
-# attributes = []
-# line_number = 0
-# for line in rules_file:
-#     if line_number % 3 == 0:
-#         filters.append(parse_condition(line))
-#     elif line_number % 3 == 1:
-#         actions.append(parse_action(line))
-#     else:
-#         attributes.append(parse_attributes(line))
-#     line_number += 1
-#
-# filters_np = np.array(filters)
-# actions_np = np.array(actions)
-# attributes_np = np.array(attributes)
-# fitness = attributes_np[:,3]
-# average_fitness = np.average(fitness)
-# good_index = fitness > average_fitness
-# good_filters = filters_np[good_index]
-# good_actions = actions_np[good_index]
-# good_attributes = attributes_np[good_index]
-# # np.savetxt(base_path + 'analyze/good_filters.txt', good_filters, delimiter=',')
-# # np.savetxt(base_path + 'analyze/good_actions.txt', good_actions, delimiter=',')
-# # np.savetxt(base_path + 'analyze/good_attributes.txt', good_attributes, delimiter=',')
-# # np.savetxt(base_path + 'analyze/all_filters.txt', filters_np, delimiter=',')
-# # np.savetxt(base_path + 'analyze/all_actions.txt', actions_np, delimiter=',')
-# # np.savetxt(base_path + 'analyze/all_attributes.txt', attributes_np, delimiter=',')
-# count_matches_for_filter(good_filters, good_actions)
+def visualize_image(img_id):
+    # load visualization data
+    actual_class = -1
+    predicted_class = -1
+    f = open(visualization_file_path)
+    line = f.readline()
+    while line:
+        # skip img_id lines to get to the the right image
+        for i in range(img_id):
+            line = f.readline()
+            line = f.readline()
+            line = f.readline()
+        tokens = line.strip().split()
+        read_img_id = int(tokens[0])
+        assert(read_img_id == img_id)
+        actual_class = int(tokens[1])
+        predicted_class = int(tokens[2])
+        print("actual class: " + str(actual_class) + " predicted class: " + str(predicted_class) + "\n")
+        line = f.readline()  # classifier_id predicted_class ...
+        tokens = line.strip().split()
+        i = 0
+        while i < len(tokens):
+            classifier = tokens[i]
+            i += 1
+            classifier_class = tokens[i]
+            i += 1
+            cl_clclass.append((int(classifier), int(classifier_class)))
+        line = f.readline()  # filter_id matched_position
+        tokens = line.strip().split()
+        i = 0
+        while i < len(tokens):
+            filter_id = int(tokens[i])
+            i += 1
+            position = int(tokens[i])
+            i += 1
+            filter_position[filter_id] = position
+        break
+    f.close()
+    img = get_image(img_id)
+    assert(img[0] == actual_class)
+    base_img = Image.fromarray(img[1]).convert("RGB")
+    dc = ImageDraw.Draw(base_img)  # draw context
+    # draw dots based on filter position from positive classifiers
+    for classifier in cl_clclass:
+        if classifier[1] == actual_class:  # if positive classifier
+            classifier_id = classifier[0]
+            # get classifier code fragments
+            code_fragments = cl_cf[classifier_id]
+            for cf in code_fragments:
+                # todo code_fragment cannot be -1 check c++ code why
+                if cf == -1:
+                    continue
+                filters = cf_filter[cf]  # filter
+                for filter in filters:
+                    position = filter_position[filter]
+                    if position >= 0:
+                        # top right corner
+                        y = position // img_width
+                        x = position % img_width
+                        # convert to center point
+                        # need filter size and dilated flag, write this information in the visualization file
+                        dc.point((x,y), fill="#ff0000")
+                        # shape = [(10,10), (16,16)]
+                        # dc.rectangle(shape, fill="#ff0000")
+    base_img.show()
 
-source_path = "../data/mnist/mnist_train_3_8_small_1000.txt"
-source_file = np.loadtxt(source_path)
-image_id = 0
-item = source_file[image_id]
-action = int(item[-1])
-data = item[:-1]
-# data = data.round(2)
-# denormalize
-data = data * 255
-data = data.reshape(28, 28)
-base_img = Image.fromarray(data).convert("RGB")
-superimpose = Image.new("RGBA", base_img.size, "#00000000")
-dc = ImageDraw.Draw(base_img)
-shape = [(10,10), (16,16)]
-dc.rectangle(shape, fill="#ff0000")
-# base_img.paste(superimpose)
-base_img.show()
+
+
+visualize_image(5)
+
+
+
 print('done')
