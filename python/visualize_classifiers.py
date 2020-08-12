@@ -54,7 +54,7 @@ cl_clclass = []
 filter_position = {}
 
 
-def visualize_image(img_id):
+def visualize_image(img_id, rectangle):
     # load visualization data
     actual_class = -1
     predicted_class = -1
@@ -89,40 +89,55 @@ def visualize_image(img_id):
             i += 1
             position = int(tokens[i])
             i += 1
-            filter_position[filter_id] = position
+            size = int(tokens[i])
+            i += 1
+            dilated = int(tokens[i])
+            i += 1
+            filter_position[filter_id] = (position, size, dilated)
         break
     f.close()
     img = get_image(img_id)
     assert(img[0] == actual_class)
     base_img = Image.fromarray(img[1]).convert("RGB")
     dc = ImageDraw.Draw(base_img)  # draw context
-    # draw dots based on filter position from positive classifiers
+    # draw dots/rectangles based on filter position from positive classifiers
+    filters_drawn = 0
     for classifier in cl_clclass:
         if classifier[1] == actual_class:  # if positive classifier
             classifier_id = classifier[0]
             # get classifier code fragments
             code_fragments = cl_cf[classifier_id]
             for cf in code_fragments:
-                # todo code_fragment cannot be -1 check c++ code why
-                if cf == -1:
-                    continue
                 filters = cf_filter[cf]  # filter
                 for filter in filters:
-                    position = filter_position[filter]
+                    position = filter_position[filter][0]
+                    size = filter_position[filter][1]
+                    dilated = filter_position[filter][2]
                     if position >= 0:
+                        filters_drawn += 1
+                        if dilated:
+                            size += (size-1)
                         # top right corner
                         y = position // img_width
                         x = position % img_width
-                        # convert to center point
-                        # need filter size and dilated flag, write this information in the visualization file
-                        dc.point((x,y), fill="#ff0000")
-                        # shape = [(10,10), (16,16)]
-                        # dc.rectangle(shape, fill="#ff0000")
+                        if rectangle:
+                            shape = [(x,y), (x+size,y+size)]
+                            dc.rectangle(shape, fill="#ff0000")
+                        else:
+                            # center point
+                            x += size//2
+                            y += size//2
+                            dc.point((x, y), fill="#ff0000")
+    print("filters drawn: "+str(filters_drawn))
+    base_img = base_img.resize((300, 300))
     base_img.show()
 
 
+for i in range(100):
+    visualize_image(i, False)
+    input("press any key to continue")
 
-visualize_image(5)
+
 
 
 
