@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include "xcsMacros.h"
 #include <vector>
+#include <list>
+
 
 extern bool use_kb;
 extern std::string kb_file;
@@ -92,8 +94,10 @@ struct Filter{
     int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
     int filter_size = -1;
     bool is_dilated = false; // what is the type of filter normal or dilated
-    float lower_bounds[max_filter_size*max_filter_size];
-    float upper_bounds[max_filter_size*max_filter_size];
+    std::vector<float> lower_bounds;
+    std::vector<float> upper_bounds;
+    //float lower_bounds[max_filter_size*max_filter_size];
+    //float upper_bounds[max_filter_size*max_filter_size];
 };
 
 typedef std::unordered_map<int, Filter> FilterMap;
@@ -149,12 +153,12 @@ struct Classifier
 };
 
 typedef std::unordered_map<int, Classifier> ClassifierMap;
-typedef std::vector<int> ClassifierVector;
+typedef std::list<int> ClassifierList;
 struct ClassifierSet{
-    ClassifierVector ids;
+    ClassifierList ids;
     ClassifierMap& pop;
     ClassifierSet(int size, ClassifierMap& population) : pop(population){
-        ids.reserve(size);
+        //ids.reserve(size);
     }
 };
 

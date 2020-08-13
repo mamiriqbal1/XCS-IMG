@@ -155,6 +155,10 @@ void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
         getline(filter_file, line);
         std::stringstream line2(line);
         line2 >> str;
+        f.lower_bounds.reserve(f.filter_size*f.filter_size);
+        f.lower_bounds.assign(f.filter_size*f.filter_size, -1);
+        f.upper_bounds.reserve(f.filter_size*f.filter_size);
+        f.upper_bounds.assign(f.filter_size*f.filter_size, -1);
         for(int i=0; i<f.filter_size*f.filter_size; i++){
             line2 >> f.lower_bounds[i];
         }

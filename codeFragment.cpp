@@ -155,6 +155,13 @@ void create_new_filter_from_input_random(Filter& filter, float *state)
     if(allow_dilated_filters){
         is_dilated = irand(2) != 0;
     }
+
+    filter.filter_size = new_filter_size;
+    filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
+    filter.lower_bounds.assign(filter.filter_size*filter.filter_size, -1);
+    filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
+    filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
+    filter.is_dilated = is_dilated;
     for(int i=0; i<new_filter_size*new_filter_size; i++){
         float lower = drand();
         float upper = drand();
@@ -163,8 +170,6 @@ void create_new_filter_from_input_random(Filter& filter, float *state)
         filter.lower_bounds[i] = roundRealValue(fmax(lower, 0), precisionDigits);
         filter.upper_bounds[i] = roundRealValue(fmin(upper, 1),precisionDigits);
     }
-    filter.filter_size = new_filter_size;
-    filter.is_dilated = is_dilated;
 }
 // new function for setting filter bounds
 void create_new_filter_from_input(Filter& filter, float *state)
@@ -197,13 +202,17 @@ void create_new_filter_from_input(Filter& filter, float *state)
         }
     }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
 
+    filter.filter_size = new_filter_size;
+    filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
+    filter.lower_bounds.assign(filter.filter_size*filter.filter_size, -1);
+    filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
+    filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
+    filter.is_dilated = is_dilated;
     for(int i=0; i<new_filter_size*new_filter_size; i++){
         float delta = drand();
         filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
         filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
     }
-    filter.filter_size = new_filter_size;
-    filter.is_dilated = is_dilated;
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position

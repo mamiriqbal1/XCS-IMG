@@ -406,7 +406,7 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
 void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
     double best_fitness = -1, prediction_error=0;
-    ClassifierVector winner_set;
+    ClassifierList winner_set;
 
     while(winner_set.empty()) {
         for (auto &id : set.ids) {
@@ -451,9 +451,10 @@ void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, do
     }
     /* choose one of the equally best winners at random */
     assert(!winner_set.empty());
-    int selected = winner_set[irand(winner_set.size())];
-    child = set.pop[selected];
-    parent = selected;
+    auto random_it = winner_set.begin();
+    random_it = std::next(winner_set.begin(), irand(winner_set.size()));
+    child = set.pop[*random_it];
+    parent = *random_it;
 }
 
 void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, double setsum)
@@ -467,9 +468,9 @@ void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, d
     }
     int first=-1, second=-1;
     auto it = set.ids.begin();
-    it += first_index;
+    std::next(it, first_index);
     first = *it;
-    it += second_index - first_index;
+    std::next(it, second_index - first_index);
     second = *it;
     assert(first != -1);
     assert(second != -1);
@@ -791,8 +792,7 @@ bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, Classifie
  */
 bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
 {
-    std::vector<int> subsumers;
-    subsumers.reserve(maxPopSize);
+    std::list<int> subsumers;
 
     for(auto & item : cl_set)
     {
@@ -804,8 +804,9 @@ bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
     /* if there were classifiers found to subsume, then choose randomly one and subsume */
     if(subsumers.size() > 0)
     {
-        int k = irand(subsumers.size());
-        cl_set[subsumers[k]].numerosity++;
+        auto random_it = subsumers.begin();
+        random_it = std::next(random_it, irand(subsumers.size()));
+        cl_set[*random_it].numerosity++;
         return true;
     }
     return false;
