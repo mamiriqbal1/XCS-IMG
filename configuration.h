@@ -137,6 +137,7 @@ typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
 extern CodeFragmentMap kb_cf;
 typedef std::vector<CodeFragment> CodeFragmentVector;
 
+extern int classifier_gid;
 struct Classifier
 {
     int id = -1;

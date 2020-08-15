@@ -13,6 +13,7 @@
 #include "filter_list.h"
 #include <float.h>
 #include <iomanip>
+#include <sys/stat.h>
 
 int cf_gid = 0;
 double predictionArray[max_actions]; //prediction array
@@ -133,16 +134,6 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
         }
     }
     return nr;
-}
-float computeDistance(Classifier &cl, float *cond){
-  float mid, sum = 0.0;
-  for(int i=0; i < cl.cf.size(); i++){
-            if(isDontcareCF(cl.cf[i]) || evaluateCF(cl.cf[i], cond) == 1 )
-            {
-                sum += 1;
-            }
-    }
-  return sum;
 }
 
 
@@ -919,10 +910,10 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file)
 {
     int size = pop.size();
-    std::cout<<"\n--- Population Stats ---\n";
-    std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
-    std::cout << "Population set size: " << size << std::endl;
-    std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+    //std::cout<<"\n--- Population Stats ---\n";
+    //std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
+    //std::cout << "Population set size: " << size << std::endl;
+    //std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
@@ -941,9 +932,9 @@ void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file
                       if(f_min > item.second.fitness) f_min = item.second.fitness;
                       if(f_max < item.second.fitness) f_max = item.second.fitness;
                   });
-    std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
-    std::cout<<"--- Population Stats ---\n\n";
+    //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
+    //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    //std::cout<<"--- Population Stats ---\n\n";
 
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
@@ -954,40 +945,42 @@ void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file
  * This function saves the classifier population and outputs various stats.
  * This function also saves promising code fragments and filters for reuse by the subsequent experiments
  */
-void save_experiment_results(ClassifierMap &pop)
+void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
 {
+    std::string output_full_path = output_path + path_postfix;
+    mkdir(output_full_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     std::ofstream output_classifier_file;
-    output_classifier_file.open(output_path + output_classifier_file_name);
+    output_classifier_file.open(output_full_path + output_classifier_file_name);
     if(!output_classifier_file.is_open()){
         std::cout << "Could not open output classifier file";
         exit(1);
     }
     std::ofstream output_code_fragment_file;
-    output_code_fragment_file.open(output_path + output_code_fragment_file_name);
+    output_code_fragment_file.open(output_full_path + output_code_fragment_file_name);
     if(!output_code_fragment_file.is_open()){
         std::cout << "Could not open output code fragment file";
         exit(1);
     }
     std::ofstream output_promising_code_fragment_file;
-    output_promising_code_fragment_file.open(output_path + output_promising_code_fragment_file_name);
+    output_promising_code_fragment_file.open(output_full_path + output_promising_code_fragment_file_name);
     if(!output_promising_code_fragment_file.is_open()){
         std::cout << "Could not open output promising code fragment file";
         exit(1);
     }
     std::ofstream output_filter_file;
-    output_filter_file.open(output_path + output_filter_file_name);
+    output_filter_file.open(output_full_path + output_filter_file_name);
     if(!output_filter_file.is_open()){
         std::cout << "Could not open output code filter file";
         exit(1);
     }
     std::ofstream output_promising_filter_file;
-    output_promising_filter_file.open(output_path + output_promising_filter_file_name);
+    output_promising_filter_file.open(output_full_path + output_promising_filter_file_name);
     if(!output_promising_filter_file.is_open()){
         std::cout << "Could not open output code filter file";
         exit(1);
     }
     std::ofstream output_stats_file;
-    output_stats_file.open(output_path + output_stats_file_name);
+    output_stats_file.open(output_full_path + output_stats_file_name);
     if(!output_stats_file.is_open()){
         std::cout << "Could not open output stats file";
         exit(1);
@@ -1004,7 +997,9 @@ void save_experiment_results(ClassifierMap &pop)
     //storeCFs(pop, fpCF);
     output_classifier_file.close();
     output_code_fragment_file.close();
+    output_promising_code_fragment_file.close();
     output_filter_file.close();
+    output_promising_filter_file.close();
     output_stats_file.close();
 }
 

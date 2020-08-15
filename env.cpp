@@ -11,6 +11,7 @@
 #include "configuration.h"
 #include "env.h"
 #include "codeFragment.h"
+#include "filter_list.h"
 
 
 CodeFragmentMap kb_cf;
@@ -132,13 +133,14 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
     //updateRange(inputArray,totalNumInstances);
 }
 
-void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
-
+int load_filter(std::string filter_file_name, FilterMap& filters)
+{
+    int loaded_gid = -1;
     std::string line;
-    std::ifstream filter_file(kb_filter_file_name);
+    std::ifstream filter_file(filter_file_name);
     if (!filter_file.is_open()) {
         std::string error("Error opening input file: ");
-        error.append(kb_filter_file_name).append(", could not load data!");
+        error.append(filter_file_name).append(", could not load data!");
         throw std::runtime_error(error);
     }
 
@@ -168,42 +170,116 @@ void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
         for(int i=0; i<f.filter_size*f.filter_size; i++){
             line3 >> f.upper_bounds[i];
         }
-        kb_filter[f.id] = f;
+        filters[f.id] = f;
+        if(f.id > loaded_gid){
+            loaded_gid = f.id;
+        }
     }
+    return loaded_gid;
+}
 
-    std::ifstream cf_file(kb_cf_file_name);
+int load_code_fragment(std::string cf_file_name, CodeFragmentMap& code_fragments)
+{
+    int loaded_cf_gid = -1;
+    std::string line;
+    std::ifstream cf_file(cf_file_name);
     if (!cf_file.is_open()) {
         std::string error("Error opening input file: ");
-        error.append(kb_cf_file_name).append(", could not load data!");
+        error.append(cf_file_name).append(", could not load data!");
         throw std::runtime_error(error);
     }
 
     while(getline(cf_file, line)) {
-       // load cf
-       CodeFragment cf;
-       int id=0;
-       std::stringstream line1(line);
-       line1>>id;
+        // load cf
+        CodeFragment cf;
+        int id=0;
+        std::stringstream line1(line);
+        line1>>id;
         initializeNewCF(id, cf);
-       int index = 0, leaf_index = 0;
-       while(!line1.eof()){
-           std::string token;
-           line1>>token;
-           // last token is "" that needs to be handled
-           if(token.empty()) break;
-           if(token.substr(0,1) == "D"){ // this is filter id
-               int filter_id = std::stoi(token.substr(1));
-               cf.filter_id[leaf_index] = filter_id;
-               cf.reverse_polish[index] = leaf_index;
-               leaf_index++;
-           }else{ // this is operator
-               cf.reverse_polish[index] = str_to_opt(token);
-           }
-           index++;
-       }
-       cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
-       cf.num_filters = leaf_index;
-       kb_cf[cf.cf_id] = cf;
+        int index = 0, leaf_index = 0;
+        while(!line1.eof()){
+            std::string token;
+            line1>>token;
+            // last token is "" that needs to be handled
+            if(token.empty()) break;
+            if(token.substr(0,1) == "D"){ // this is filter id
+                int filter_id = std::stoi(token.substr(1));
+                cf.filter_id[leaf_index] = filter_id;
+                cf.reverse_polish[index] = leaf_index;
+                leaf_index++;
+            }else{ // this is operator
+                cf.reverse_polish[index] = str_to_opt(token);
+            }
+            index++;
+        }
+        cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
+        cf.num_filters = leaf_index;
+        code_fragments[cf.cf_id] = cf;
+        if(cf.cf_id > loaded_cf_gid){
+            loaded_cf_gid = cf.cf_id;
+        }
     }
+    return loaded_cf_gid;
 }
 
+void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
+
+    load_filter(kb_filter_file_name, kb_filter);
+    load_code_fragment(kb_cf_file_name, kb_cf);
+}
+
+int load_classifier(std::string classifier_file_name, ClassifierMap& pop, CodeFragmentMap& code_fragments)
+{
+    int loaded_cl_gid = -1;
+    std::string line;
+    std::ifstream cl_file(classifier_file_name);
+    if (!cl_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(classifier_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cl_file, line)) {
+        // load classifier
+        Classifier cl;
+        int num_cf=-1;
+        std::string str;
+        std::stringstream line1(line);
+        line1>>str;
+        line1>>cl.id;
+        line1>>str;
+        line1>>cl.numerosity;
+        line1>>str;
+        line1>>cl.experience;
+        line1>>str;
+        line1>>num_cf;
+        line1>>str;
+        line1>>cl.fitness;
+        line1>>str;
+        line1>>cl.accuracy;
+        line1>>str;
+        line1>>cl.prediction;
+        line1>>str;
+        line1>>cl.predictionError;
+        line1>>str;
+        line1>>cl.actionSetSize;
+        line1>>str;
+        line1>>cl.timeStamp;
+        line1>>str;
+        line1>>cl.action;
+
+        getline(cl_file, line);
+        std::stringstream line2(line);
+        for(int i=0; i<num_cf; i++){
+            int cf_id = -1;
+            line2>>cf_id;
+            cl.cf.push_back(code_fragments[cf_id]);
+
+        }
+        pop[cl.id] = cl;
+        if(loaded_cl_gid < cl.id){
+            loaded_cl_gid = cl.id;
+        }
+    }
+    return loaded_cl_gid;
+}

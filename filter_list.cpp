@@ -95,17 +95,18 @@ void remove_unused_filters(std::forward_list<int>& removed_filters){
     //print_filter_stats();
 }
 
+
 /*
  * Print stats about the filter list
  */
 void print_filter_stats(std::ofstream &output_stats_file) {
-    std::cout<<"\n--- Filter Stats ---\n";
-    std::cout<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
+    //std::cout<<"\n--- Filter Stats ---\n";
+    //std::cout<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
 
     output_stats_file<<"\n--- Filter Stats ---\n";
     output_stats_file<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
     int size = master_filter_list.filters.size();
-    std::cout<<"filter list size: "<<size<<std::endl;
+    //std::cout<<"filter list size: "<<size<<std::endl;
 
     output_stats_file<<"filter list size: "<<size<<std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
@@ -127,21 +128,21 @@ void print_filter_stats(std::ofstream &output_stats_file) {
                 filter_sizes_count[filter_item.second.filter_size]++;
                 if(filter_item.second.is_dilated) num_dilated++;
             });
-    std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
-    std::cout<<"promising filters: "<<promising_filters<<std::endl;
+    //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
+    //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    //std::cout<<"promising filters: "<<promising_filters<<std::endl;
 
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     output_stats_file<<"promising filters: "<<promising_filters<<std::endl;
     for(int i=0; i<100; i++){
         if(filter_sizes_count[i] > 0){
-            std::cout<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
+            //std::cout<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
             output_stats_file<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
         }
     }
-    std::cout<<"dilated filters: "<<num_dilated<<std::endl;
-    std::cout<<"--- Filter Stats ---\n\n";
+    //std::cout<<"dilated filters: "<<num_dilated<<std::endl;
+    //std::cout<<"--- Filter Stats ---\n\n";
 
     output_stats_file<<"dilated filters: "<<num_dilated<<std::endl;
     output_stats_file<<"--- Filter Stats ---\n\n";
