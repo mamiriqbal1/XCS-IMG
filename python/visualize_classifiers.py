@@ -2,10 +2,10 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 img_width = 28
-visualization_file_path = "../cmake-build-debug/output/2digits_2_v/visualization.txt"
-image_file_path = "../data/mnist/mnist_test_3_8.txt"
-cl_file_path = "../cmake-build-debug/output/2digits_2_v/classifier.txt"
-cf_file_path = "../cmake-build-debug/output/2digits_2_v/code_fragment.txt"
+visualization_file_path = "../cmake-build-debug/remote/output/4digits_1/visualization.txt"
+image_file_path = "../data/mnist/mnist_test_3_8_5_6.txt"
+cl_file_path = "../cmake-build-debug/remote/output/4digits_1/classifier.txt"
+cf_file_path = "../cmake-build-debug/remote/output/4digits_1/code_fragment.txt"
 
 # load classifiers is and their code fragment ids
 cl_cf = {}
@@ -122,7 +122,7 @@ def visualize_image(img_id, rectangle):
                         x = position % img_width
                         if rectangle:
                             shape = [(x,y), (x+size,y+size)]
-                            dc.rectangle(shape, fill="#ff0000")
+                            dc.rectangle(shape, outline="#ff0000")
                         else:
                             # center point
                             x += size//2
@@ -134,7 +134,7 @@ def visualize_image(img_id, rectangle):
 
 
 for i in range(100):
-    visualize_image(i, False)
+    visualize_image(i, True)
     input("press any key to continue")
 
 
