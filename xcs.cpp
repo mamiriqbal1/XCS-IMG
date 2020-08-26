@@ -22,7 +22,10 @@
 #include <signal.h>
 #include "codeFragment.h"
 #include "filter_list.h"
+#include <chrono>
+#include <ctime>
 
+auto start = std::chrono::system_clock::now();
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
@@ -100,20 +103,12 @@ void Exit(FILE *fp){
  * @param sysError The system error in the last fifty exploration trials.
  * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierMap &pop, int *performance, double *sysError, int problem_count,
+void writePerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file) {
-    double perf=0.0, serr=0.0;
-    int setSize;
-    for(int i=0; i<testFrequency; i++)
-    {
-        perf+=performance[i];
-        serr+=sysError[i];
-    }
-    perf/=testFrequency;
-    serr/=testFrequency;
-    setSize = pop.size();
-    output_training_file << problem_count << " " << perf << " " << serr << " " << setSize << std::endl;
-    std::cout << "Training: " << problem_count << "  accuracy: " << perf << "  error: " << serr << "  set size: " << setSize << std::endl;
+
+    int setSize = pop.size();
+    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
+    std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
 /*******************************Write Test Performance*************************************/
@@ -136,8 +131,8 @@ void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter, int img_id, int correct[],
-                            double sysError[]) {
+void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter, int img_id, int &correct,
+                            double &sysError) {
 
     bool wasCorrect = false;
     ClassifierSet match_set(maxPopSize, pop);
@@ -176,15 +171,12 @@ void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter,
     actionWinner = bestActionWinner();
     reward = executeAction(actionWinner,object->action,wasCorrect);
 
-    if(wasCorrect)
-    {
-        correct[counter%testFrequency]=1;
+    if(wasCorrect){
+        correct=1;
+    } else {
+        correct=0;
     }
-    else
-    {
-        correct[counter%testFrequency]=0;
-    }
-    sysError[counter%testFrequency] = absoluteValue(reward - getBestValue());
+    sysError = absoluteValue(reward - getBestValue());
 }
 
 void load_state_for_resume(ClassifierMap &pop)
@@ -218,8 +210,8 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
         exit(1);
     }
 
-    int correct[testFrequency];
-    double sysError[testFrequency];
+    int correct = 0, correct_count = 0;
+    double sysError = 0, error_sum = 0;
     DataSource *state = NULL;
     int problem_count=0;
 
@@ -243,9 +235,15 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
         state = &trainingData[img_id];
 
         doOneSingleStepProblem(pop, state, problem_count, img_id, correct, sysError);
+        correct_count += correct;
+        error_sum += sysError;
 
        if(problem_count % testFrequency == 0 && problem_count > 0){
-           writePerformance(pop, correct, sysError, problem_count, output_training_file);
+           double accuracy = correct_count/(double)testFrequency;
+           double error = error_sum / testFrequency;
+           writePerformance(pop, accuracy, error, problem_count, output_training_file);
+           correct_count = 0;
+           error_sum = 0;
         }
         if(problem_count % validation_frequency == 0 && problem_count > 0){
             doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems);
@@ -338,13 +336,9 @@ void startXCS(){
 
     doOneSingleStepExperiment(pop);
 
-    // clean filter list finally before writing to file
-    manage_filter_list(pop);
-
-    //save_experiment_results(pop, "");
-    //delete []input;
     delete []testingData;
     delete []trainingData;
+
 
 }//end startXCS
 
@@ -446,15 +440,17 @@ void LoadConfig(char* file)
             if(create_output_file){
                 create_output_file = false;
                 if(output_path.empty()){
-                   std::cout<<"Output path must be the first parameter in config file"<<std::endl;
+                   std::cout<<"Output path not set"<<std::endl;
                    exit(1);
                 }
                 mkdir(output_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                output_config_file.open(output_path + "experiment_config.txt");
+                output_config_file.open(output_path + "experiment_config.txt", std::ofstream::app);
                 if(!output_config_file.is_open()){
                     std::cout << "Could not open output config file";
                     exit(1);
                 }
+                std::time_t start_time = std::chrono::system_clock::to_time_t(start);
+                output_config_file << std::endl << "Started at " << std::ctime(&start_time) << std::endl;
             }
             std::cout << name << " " << value << '\n';
             output_config_file<< name << " " << value << std::endl;
@@ -576,18 +572,46 @@ void handler(int sig) {
 int main(int argc, char **argv){
     signal(SIGSEGV, handler);   // install our handler for stack trace in case of a signal
 
-    if(argc == 1){
-        std::cout << "Please provide experiment config file" << std::endl;
+    // Time accounting
+    start = std::chrono::system_clock::now();
+
+
+    if(argc != 3){
+        std::cout << "Please provide experiment config file and output path" << std::endl;
         return -1;
     }
+    output_path = argv[2];
+    // check if the experiment has already completed
+    std::ifstream input_done_file;
+    input_done_file.open(output_path + output_done_file_name);
+    if(input_done_file.is_open()){
+        std::cout << "The experiment has already completed, exiting ...";
+        input_done_file.close();
+        exit(0);
+    }
+
     LoadConfig(argv[1]);
     if(analyze){
         analyze_rules();
         return 0;
     }
-    if(argc == 3){  // if present then experiment will be resumed
-        resume_from = argv[2];
-        resume_from = resume_from + "/";
+    // check if resume is needed by looking for validation_performance file
+    std::ifstream validation_file(output_path + output_test_file_name);
+    if(validation_file.is_open()){
+        // get the last line from the file
+        std::string line;
+        std::string last_line;
+        while(getline(validation_file, line)){
+            if(!line.empty()) {
+                last_line = line;
+            }
+        }
+        if(!last_line.empty()) {
+            std::stringstream line1(last_line);
+            int last_iteration = 0;
+            line1 >> last_iteration;
+            resume_from = std::to_string(last_iteration) + "/";
+        }
     }
 
     for(int j=0; j<run; j++)
@@ -602,6 +626,24 @@ int main(int argc, char **argv){
         }
         startXCS();
     }
+
+    // Time accounting
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+
+    // write done.txt
+    std::ofstream output_done_file;
+    output_done_file.open(output_path + output_done_file_name);
+    if(!output_done_file.is_open()){
+        std::cout << "Could not open done file";
+        exit(1);
+    }
+    output_done_file << "The experiment has completed"<<std::endl;
+    output_done_file << "Finished at " << std::ctime(&end_time) << std::endl;
+    output_done_file << "Elapsed time since last execution (e.g. if experiment was resumed): " << elapsed_seconds.count() << std::endl;
+    output_done_file.close();
 
     exit(0);
 }//end main
