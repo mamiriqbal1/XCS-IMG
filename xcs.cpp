@@ -574,7 +574,8 @@ int main(int argc, char **argv){
 
     // Time accounting
     start = std::chrono::system_clock::now();
-
+    // standardized random number generator
+    initialize_random_number_generator(true);
 
     if(argc != 3){
         std::cout << "Please provide experiment config file and output path" << std::endl;

@@ -52,5 +52,6 @@ double drand();
 
 int irand(int n); // returns a number from 0 to n-1 inclusive
 
+void initialize_random_number_generator(bool fixed_seed);
 
 #endif // XCSMACROS_H
