@@ -112,20 +112,12 @@ void writePerformance(ClassifierMap &pop, double performance, double sysError, i
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierMap &pop, int *performance, double *sysError, int problem_count,
+void writeTestPerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
                           std::ofstream &output_test_file, int training_problem_count) {
-    double perf=0.0, serr=0.0;
 
-    for(int i=0; i<testNumInstances; i++)
-    {
-        perf+=performance[i];
-        serr+=sysError[i];
-    }
-    perf/=testNumInstances;
-    serr/=testNumInstances;
     int setSize = pop.size();
-    output_test_file << training_problem_count << " " << problem_count << " " << perf << " " << serr << " " << setSize << std::endl;
-    std::cout << "Validation: " << training_problem_count << " " << problem_count << "  accuracy: " << perf << "  error: " << serr << "  set size: " << setSize << std::endl;
+    output_test_file << training_problem_count << " " << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
+    std::cout << "Validation: " << training_problem_count << " " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
 
@@ -261,9 +253,8 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
 void
 doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch) {
 	bool wasCorrect = false;
-	int correctCounter = 0;
-	int correct[testNumInstances];
-	double sysError[testNumInstances];
+    int correct_count = 0;
+    double error_sum = 0;
 	DataSource *testState = NULL;
 
     std::ofstream output_visualization_file;
@@ -288,7 +279,7 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
             getPredictionArray(match_set);
             actionWinner = bestActionWinner();
             double reward = executeAction(actionWinner, testState->action, wasCorrect);
-            sysError[t] = absoluteValue(reward - getBestValue());
+            error_sum += absoluteValue(reward - getBestValue());
         }else{
             std::cout<<"Error: empty match set for test instance";
             exit(1);
@@ -302,16 +293,15 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
         }
 
 		if(wasCorrect){
-                correct[t]=1;
-                correctCounter++;
-        }else{
-               correct[t]=0;
+		    correct_count += 1;
         }
     }
 	if(last_epoch){
 	    output_visualization_file.close();
 	}
-    writeTestPerformance(pop, correct, sysError, testNumInstances, output_test_file, training_problem_count);
+    double accuracy = correct_count/(double)testFrequency;
+    double error = error_sum / testFrequency;
+    writeTestPerformance(pop, accuracy, error, testNumInstances, output_test_file, training_problem_count);
 }
 
 
@@ -613,6 +603,7 @@ int main(int argc, char **argv){
             line1 >> last_iteration;
             resume_from = std::to_string(last_iteration) + "/";
         }
+        validation_file.close();
     }
 
     for(int j=0; j<run; j++)
