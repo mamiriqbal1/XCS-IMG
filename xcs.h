@@ -5,8 +5,6 @@ long seeds[30] = {114665,134296,176806,247157,262025,311756,336922,337104,344465
 DataSource *trainingData = NULL, *testingData = NULL;
 double executeAction(int action, int stateAction, bool &wasCorrect);
 
-void header();
-void Exit(FILE *fp);
 
 void writePerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file);

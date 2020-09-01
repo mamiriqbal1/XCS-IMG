@@ -12,7 +12,6 @@
 #include <cstring>
 #include <vector>
 #include "xcsMacros.h"
-#include "xtime.h"
 #include "configuration.h"
 #include "classifier.h"
 #include "env.h"
@@ -75,23 +74,6 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
     }
     return (double)ret;
 }
-
-void header(){
-    time_t t;
-    char hostName[] = "act-PC"; //[MAXHOSTNAMELEN];
-    time(&t);
-    //gethostname(hostName,sizeof(hostName));
-    printf("%s\n Seed: %ld %s",hostName,getSeed(),ctime(&t));
-}//end header
-
-void Exit(FILE *fp){
-    printf("\nShutting down...\n");
-    elapsedTime();
-    header();
-    printf("Elapsed Time: ");
-    elapsed(fp);
-    printf(" Secs\n");
-}//end exit
 
 /*##########---- Output ----##########*/
 /**
@@ -307,7 +289,6 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 
 
 void startXCS(){
-    startTimer();
     ClassifierMap pop;
     printf("\nLoading Input! Please wait ....\n");
 

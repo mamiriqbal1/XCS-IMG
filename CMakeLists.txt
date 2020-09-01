@@ -14,8 +14,6 @@ add_executable(RCFC_kb
         configuration.h
         env.cpp
         env.h
-        xtime.cpp
-        xtime.h
         xcs.cpp
         xcs.h
         xcsMacros.cpp
