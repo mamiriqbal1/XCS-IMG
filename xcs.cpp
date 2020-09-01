@@ -31,7 +31,7 @@ double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and 
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 
-
+bool fixed_seed = true;
 bool use_kb = false;
 bool Testing = true;
 int numActions = 2;
@@ -398,6 +398,12 @@ void LoadConfig(char* file)
                 }else if(value == "yes"){
                     use_kb = true;
                 }
+            }else if(name == "fixed_seed"){
+                if(value == "no"){
+                    fixed_seed = false;
+                }else if(value == "yes"){
+                    fixed_seed = true;
+                }
             }else if(name == "kb_cf_file"){
                 kb_cf_file = value;
             }else if(name == "kb_filter_file"){
@@ -564,8 +570,6 @@ int main(int argc, char **argv){
 
     // Time accounting
     start = std::chrono::system_clock::now();
-    // standardized random number generator
-    initialize_random_number_generator(true);
 
     if(argc != 3){
         std::cout << "Please provide experiment config file and output path" << std::endl;
@@ -582,6 +586,10 @@ int main(int argc, char **argv){
     }
 
     LoadConfig(argv[1]);
+
+    // standardized random number generator
+    initialize_random_number_generator(true);
+
     if(analyze){
         analyze_rules();
         return 0;
