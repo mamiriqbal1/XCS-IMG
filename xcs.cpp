@@ -580,7 +580,7 @@ int main(int argc, char **argv){
     LoadConfig(argv[1]);
 
     // standardized random number generator
-    initialize_random_number_generator(true);
+    initialize_random_number_generator(fixed_seed);
 
     if(analyze){
         analyze_rules();
