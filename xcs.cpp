@@ -282,7 +282,6 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
             // save visualization data - start with image id, actual action and predicted action
             output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
             save_visualization_data(match_set, t, output_visualization_file);
-            output_visualization_file.close();
         }
 
 		if(wasCorrect){

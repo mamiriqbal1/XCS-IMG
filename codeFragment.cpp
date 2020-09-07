@@ -263,15 +263,13 @@ int evaluate_filter_actual(const Filter& filter, float *state)
         effective_filter_size = filter.filter_size + filter.filter_size -1;
     }
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
-    int k = 0;
-    int l = 0;
     for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
         for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
             match_failed = false;
-            for(k=0; k<filter.filter_size && !match_failed; k+=step){  // k is filter y coordinate
-                for(l=0; l<filter.filter_size && !match_failed; l+=step){  // l is filter x coordinate
-                    if(state[i*image_width+j + k*image_width+l] < filter.lower_bounds[k*filter.filter_size+l]
-                    || state[i*image_width+j + k*image_width+l] > filter.upper_bounds[k*filter.filter_size+l]){
+            for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
+                for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
+                    if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
+                    || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
                         match_failed = true;
                     }
                 }
