@@ -257,9 +257,10 @@ void addLeafCF(CodeFragment &cf, float *state){
  */
 int evaluate_filter_actual(const Filter& filter, float *state)
 {
-    int step = filter.is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
+    int step = 1; // this will be used to map normal coordinates to dilated coordinates
     int effective_filter_size = filter.filter_size;
     if(filter.is_dilated){
+        step = 2;
         effective_filter_size = filter.filter_size + filter.filter_size -1;
     }
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match

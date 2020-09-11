@@ -85,18 +85,44 @@ def load_filter(id, size):
 # update lower and upper bounds from filter
 def update_bounds(id, start_x, start_y, size, dilated):
     lb, ub = load_filter(id, size)
+    step = 1
     if dilated:
         step = 2
-    fx = 0
-    fy = 0
-    for y in range(start_y, start_y+size, step):
-        for x in range(start_x, start_x+size, step):
-            if img_l[y,x] > lb[fy*size + fx]:
-                img_l[y, x] = lb[fy*size + fx]
-            if img_u[y,x] < ub[fy*size + fx]:
-                img_u[y, x] = ub[fy*size + fx]
+        effective_size = size + size - 1
+
+    for y in range(size):
+        for x in range(size):
+            if img_l[(start_y+y*step), start_x+x*step] > lb[y*size + x]:
+                img_l[(start_y+y*step), start_x+x*step] = lb[y*size + x]
+            if img_u[(start_y+y*step), start_x+x*step] < ub[y*size + x]:
+                img_u[(start_y+y*step), start_x+x*step] = ub[y*size + x]
 
 
+def get_pixel_color(x,y):
+    color = (255, 0, 0)
+    if img_l[x, y] == 1:  # if the pixel interval has not be initialized then its don't care
+        return color
+    if img_l[x, y] < 0.25 and img_u[x, y] > 0.75:  # wide interval means don't care
+        return color
+
+    mid = (img_l[x,y] + img_u[x,y]) / 2
+    # real to 255 scale
+    c = int(mid*255)
+    color = (c, c, c)
+
+    # color = "ff0000"
+    # if mid < 0.25:
+    #     color = "000000"  # black
+    # elif mid < 0.5:
+    #     color = "D3D3D3"  # light grey
+
+    return color
+
+
+def visualize_intervals(dc):
+    for y in range(img_l.shape[0]):
+        for x in range(img_l.shape[0]):
+            dc.point((x, y), get_pixel_color(x,y))
 
 
 cl_clclass = []
@@ -145,9 +171,6 @@ def visualize_image(img_id, rectangle):
             filter_position[filter_id] = (position, size, dilated)
         break
     f.close()
-    base_img = Image.fromarray(img).convert("RGB")
-    dc = ImageDraw.Draw(base_img)  # draw context
-    # draw dots/rectangles based on filter position from positive classifiers
     filters_drawn = 0
     for classifier in cl_clclass:
         if classifier[1] == actual_class:  # if positive classifier
@@ -166,14 +189,12 @@ def visualize_image(img_id, rectangle):
                         y = position // img_width
                         x = position % img_width
                         update_bounds(filter, x, y, size, dilated)
-                        if rectangle:
-                            shape = [(x,y), (x+size,y+size)]
-                            dc.rectangle(shape, outline="#ff0000")
-                        else:
-                            # center point
-                            x += size//2
-                            y += size//2
-                            dc.point((x, y), fill="#ff0000")
+
+    # visualize now
+    base_img = Image.fromarray(img).convert("RGB")
+    dc = ImageDraw.Draw(base_img)  # draw context
+    visualize_intervals(dc)
+
     print("filters drawn: "+str(filters_drawn))
     base_img = base_img.resize((300, 300))
     base_img.show()
