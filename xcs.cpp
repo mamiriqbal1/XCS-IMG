@@ -139,10 +139,7 @@ void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter,
 
     updateActionSet(action_set, 0.0, reward);
 
-    // apply GA only with exploration step
-    if(explore) {
-        discoveryComponent(action_set, pop, counter, object->state);
-    }
+    discoveryComponent(action_set, pop, counter, object->state);
 
     // get best action for statistics
     actionWinner = bestActionWinner();
