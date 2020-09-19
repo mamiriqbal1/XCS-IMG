@@ -225,8 +225,8 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
 
             double epoch_accuracy = epoch_correct_count/(double)validation_frequency;
             double epoch_error = epoch_error_sum/validation_frequency;
-            doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, epoch_accuracy, epoch_error);
             save_experiment_results(pop, std::to_string(problem_count) + "/"); // save experiment results after every epoch
+            doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
         }
