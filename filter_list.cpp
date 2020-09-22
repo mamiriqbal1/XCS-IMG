@@ -195,6 +195,12 @@ void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
     output_filter_file << "id ";
     output_filter_file.width(5);
     output_filter_file << filter.id;
+    output_filter_file << " x ";
+    output_filter_file.width(5);
+    output_filter_file << filter.x;
+    output_filter_file << " y ";
+    output_filter_file.width(5);
+    output_filter_file << filter.y;
     output_filter_file << " size ";
     output_filter_file << filter.filter_size;
     output_filter_file << " dilated ";

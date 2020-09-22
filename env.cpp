@@ -151,9 +151,17 @@ int load_filter(std::string filter_file_name, FilterMap& filters)
         line1 >> str;
         line1 >> f.id;
         line1 >> str;
+        line1 >> f.x;
+        line1 >> str;
+        line1 >> f.y;
+        line1 >> str;
         line1 >> f.filter_size;
         line1 >> str;
         line1 >> f.is_dilated;
+        line1 >> str;
+        line1 >> f.fitness;
+        line1 >> str;
+        line1 >> f.numerosity;
         getline(filter_file, line);
         std::stringstream line2(line);
         line2 >> str;
