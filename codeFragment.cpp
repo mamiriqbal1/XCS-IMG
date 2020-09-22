@@ -328,36 +328,36 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
 
 bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id, bool train)
 {
-    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
-    if(img_id >=0){
-        // return prior result if it is found
-        if(train){
-            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
-            if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
-                map_hits++;
-                return inner_map[img_id]>=0;
-            }
-        }else {
-            ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
-            if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
-                map_hits++;
-                return inner_map[img_id]>=0;
-            }
-        }
-    }
+//    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
+//    if(img_id >=0){
+//        // return prior result if it is found
+//        if(train){
+//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
+//            if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
+//                map_hits++;
+//                return inner_map[img_id]>=0;
+//            }
+//        }else {
+//            ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
+//            if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
+//                map_hits++;
+//                return inner_map[img_id]>=0;
+//            }
+//        }
+//    }
 
     int evaluation = evaluate_filter_actual(filter, state);
 
-    // set hasmap entry for re-using evaluation
-    if(img_id >=0) {
-        if(train){
-            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
-            inner_map[img_id] = evaluation;
-        }else{
-            ImageEvaluationMap& inner_map = evaluation_validation_map[filter.id];
-            inner_map[img_id] = evaluation;
-        }
-    }
+//    // set hasmap entry for re-using evaluation
+//    if(img_id >=0) {
+//        if(train){
+//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
+//            inner_map[img_id] = evaluation;
+//        }else{
+//            ImageEvaluationMap& inner_map = evaluation_validation_map[filter.id];
+//            inner_map[img_id] = evaluation;
+//        }
+//    }
     return evaluation>=0;
 }
 
