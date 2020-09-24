@@ -829,11 +829,52 @@ bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
     return false;
 }
 
+
+bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
+{
+   if(cf1.num_filters != cf2.num_filters ||
+   cf1.reverse_polish != cf2.reverse_polish ||
+   cf1.filter_id != cf2.filter_id) {
+       return false;
+   }else {
+       return true;
+   }
+}
+
+
+bool is_cf_covered(CodeFragment& cf, Classifier& cl)
+{
+    bool covered = false;
+    for(int i=0; i<cl.cf.size(); i++){
+        if(is_cf_equal(cf, cl.cf[i])){
+            covered = true;
+            break;
+        }
+    }
+    return covered;
+}
+
 /*
  * This function checks that all the filters of one classifier are present in the second.
  * todo: At this time it does not check the result of the evaluation of the code fragment. It only compares filters.
  */
- bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
+
+// changed it to compare cfs for equality
+bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
+{
+    bool more_general = true;
+    for(int i=0; i < clfr_specific.cf.size(); i++){
+        if(!is_cf_covered(clfr_specific.cf[i], clfr_general)){
+            more_general = false;
+            break;
+        }
+    }
+    return more_general;
+}
+
+
+
+bool isMoreGeneral_old(Classifier &clfr_general, Classifier &clfr_specific)
  {
      for(int i=0; i < clfr_specific.cf.size(); i++){
          for(int j=0; j < clfr_specific.cf[i].num_filters; j++) {
