@@ -371,12 +371,12 @@ void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream
         output_visualization_file<<id<<" "<<match_set.pop[id].action<<" ";
     }
     output_visualization_file<<std::endl;
-    for(auto & item:evaluation_validation_map){
-        // save filterid, location, size, isdilated
-        output_visualization_file<<item.first<<" "<<item.second[img_id]<< " "
-        <<get_filter(item.first).filter_size<<" "<<get_filter(item.first).is_dilated<<" ";
-    }
-    output_visualization_file<<std::endl;
+//    for(auto & item:evaluation_validation_map){
+//        // save filterid, location, size, isdilated
+//        output_visualization_file<<item.first<<" "<<item.second[img_id]<< " "
+//        <<get_filter(item.first).filter_size<<" "<<get_filter(item.first).is_dilated<<" ";
+//    }
+//    output_visualization_file<<std::endl;
 }
 
 opType negate_operator(opType op){
