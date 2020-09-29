@@ -291,6 +291,7 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
     double accuracy = correct_count/(double)testNumInstances;
     double error = error_sum / testNumInstances;
     writeTestPerformance(pop, accuracy, error, testNumInstances, output_test_file, training_problem_count, training_performance, training_error);
+    output_test_file.flush();
 }
 
 
