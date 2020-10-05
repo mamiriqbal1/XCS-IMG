@@ -28,7 +28,7 @@ typedef std::unordered_map<int, int> ImageEvaluationMap;
 typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_id, <img_id, bool>>
 FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
-int map_hits = 0;
+unsigned long map_hits = 0;
 
 
 void print_filter_evaluation_stats(std::ofstream &output_stats_file) {

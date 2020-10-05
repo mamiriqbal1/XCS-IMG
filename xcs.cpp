@@ -634,8 +634,8 @@ int main(int argc, char **argv){
     }
     output_done_file << "The experiment has completed"<<std::endl;
     output_done_file << "Finished at " << std::ctime(&end_time) << std::endl;
-    output_done_file << "Elapsed time since last execution (e.g. if experiment was resumed): " << elapsed_seconds.count() << std::endl;
+    output_done_file << "Elapsed time since last execution (e.g. if experiment was resumed): " << elapsed_seconds.count()/3600 << " hours" << std::endl;
     output_done_file.close();
-
+    std::cout << "Done!" << std::endl;
     exit(0);
 }//end main

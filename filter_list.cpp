@@ -104,7 +104,7 @@ void print_filter_stats(std::ofstream &output_stats_file) {
     //std::cout<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
 
     output_stats_file<<"\n--- Filter Stats ---\n";
-    output_stats_file<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
+    output_stats_file<<"filter_gid: "<<master_filter_list.gid<<std::endl;
     int size = master_filter_list.filters.size();
     //std::cout<<"filter list size: "<<size<<std::endl;
 
