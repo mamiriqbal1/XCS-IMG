@@ -76,13 +76,13 @@ void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int
 
     representedActions = nrActionsInSet(match_set,coveredActions);
 
-    // TEMP: insert filters every time
-    if(population_numerosity < maxPopSize / 2) {
-        representedActions = 0;
-        for(int i=0; i<numActions; i++){
-            coveredActions[i] = false;
-        }
-    }
+//    // TEMP: insert filters every time
+//    if(population_numerosity < maxPopSize / 2) {
+//        representedActions = 0;
+//        for(int i=0; i<numActions; i++){
+//            coveredActions[i] = false;
+//        }
+//    }
 
     while(representedActions < numActions){  // create covering classifiers, if not all actions are covered
         for(int i=0; i<numActions; i++){
@@ -512,6 +512,21 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
 
 // ########################## crossover and mutation ########################################
 
+void union_filter(Filter& parent1, Filter& parent2)
+{
+    assert(parent1.filter_size == parent2.filter_size);
+    assert((parent1.is_dilated == parent2.is_dilated));
+    Filter temp = parent1;
+
+    for(int i=0; i<parent1.filter_size; i++){
+        temp.lower_bounds[i] = parent1.lower_bounds[i] < parent2.lower_bounds[i] ? parent1.lower_bounds[i] : parent2.lower_bounds[i];
+        temp.upper_bounds[i] = parent1.upper_bounds[i] > parent2.upper_bounds[i] ? parent1.upper_bounds[i] : parent2.upper_bounds[i];
+    }
+
+    parent1.lower_bounds = parent2.lower_bounds = temp.lower_bounds;
+    parent1.upper_bounds = parent2.upper_bounds = temp.upper_bounds;
+}
+
 void crossover_filter(Filter& parent1, Filter& parent2)
 {
     assert(parent1.filter_size == parent2.filter_size);
@@ -542,7 +557,6 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state)
     // crossover probability check
     if(drand() >= pX) return false;
 
-    Filter filter1, filter2;
     bool success = false;
     int cf_index1 = irand(cl1.cf.size());
     int cf_index2 = irand(cl2.cf.size());
@@ -565,24 +579,32 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state)
             success = true;
         }
     }
-//    if(!success){
-//        // crossover two filters randomly
-//        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
-//        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
-//        filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
-//        filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
-//        // Only do crossover if filters are of the same size or type
-//        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-//            crossover_filter(filter1, filter2);
-//            if (evaluateCF(cl1.cf[cf_index1], state) != 1) {
-//                negate_cf(cl1.cf[cf_index1]);
-//            }
-//            if (evaluateCF(cl2.cf[cf_index2], state) != 1) {
-//                negate_cf(cl2.cf[cf_index2]);
-//            }
-//            success = true;
-//        }
-//    }
+    if(!success){
+        cf1 = cl1.cf[cf_index1];
+        cf2 = cl2.cf[cf_index2];
+        // crossover two filters randomly
+        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
+        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
+        Filter filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
+        Filter filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
+        // Only do crossover if filters are of the same size or type
+        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
+            union_filter(filter1, filter2);
+            cf1.filter_id[filter_index_1] = add_filter(filter1);
+            cf2.filter_id[filter_index_2] = add_filter(filter2);
+            if (evaluateCF(cf1, state) != 1) {
+                negate_cf(cf1);
+            }
+            if (evaluateCF(cf2, state) != 1) {
+                negate_cf(cf2);
+            }
+            if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
+                cl1.cf[cf_index1] = cf1;
+                cl2.cf[cf_index2] = cf2;
+                success = true;
+            }
+        }
+    }
     return success;
 }
 
