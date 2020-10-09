@@ -352,20 +352,19 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
     selectTwoClassifiers(child[0], child[1] , parent[0], parent[1], action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
     // Prediction, prediction error and fitness is only updated if crossover is done instead of always
     // (this is reverted because of slightly decreased performance)
-    if(crossover(child[0], child[1], situation) || true){
-        child[0].prediction   = (child[0].prediction + child[1].prediction) / 2.0;
-        child[0].predictionError = predictionErrorReduction * ((child[0].predictionError + child[1].predictionError) / 2.0 );
-        child[0].fitness = fitnessReduction * ((child[0].fitness + child[1].fitness) / 2.0 );
-
-        child[1].prediction = child[0].prediction;
-        child[1].predictionError = child[0].predictionError;
-        child[1].fitness = child[0].fitness;
-    }
+    crossover(child[0], child[1], situation);
     for(i=0; i<2; i++)  // do mutation
     {
         mutation(child[i], situation);
     }
 
+    child[0].prediction   = (child[0].prediction + child[1].prediction) / 2.0;
+    child[0].predictionError = predictionErrorReduction * ((child[0].predictionError + child[1].predictionError) / 2.0 );
+    child[0].fitness = fitnessReduction * ((child[0].fitness + child[1].fitness) / 2.0 );
+
+    child[1].prediction = child[0].prediction;
+    child[1].predictionError = child[0].predictionError;
+    child[1].fitness = child[0].fitness;
 
     // get the length of the population to check if clasifiers have to be deleted
     len = get_pop_numerosity(pop);
@@ -547,36 +546,43 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state)
     bool success = false;
     int cf_index1 = irand(cl1.cf.size());
     int cf_index2 = irand(cl2.cf.size());
-    if(drand() < 0.5){//} && (cl1.cf.size() > 1 || cl2.cf.size() > 1)){
+    CodeFragment cf1 = cl1.cf[cf_index1];
+    CodeFragment cf2 = cl2.cf[cf_index2];
+    // swap code fragments if they do not introduce duplication
+    if(!is_cf_covered(cf1, cl2) && !is_cf_covered(cf2, cl1)){
         std::swap(cl1.cf[cf_index1], cl2.cf[cf_index2]);
         success = true;
-    }else{
-    //if(!success && drand() < 0.5){//} && cl1.cf[cf_index1].num_filters > 1 || cl2.cf[cf_index2].num_filters > 1) {
-        // crossover two filters randomly
-        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
-        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
-        // just swap the filters - just as good as crossover of filters
-        std::swap(cl1.cf[cf_index1].filter_id[filter_index_1], cl2.cf[cf_index2].filter_id[filter_index_2]);
-        success = true;
     }
+    // swap filters within code fragments if they do not introduce duplication of cf
     if(!success){
-        // crossover two filters randomly
-        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
-        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
-        filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
-        filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
-        // Only do crossover if filters are of the same size or type
-        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-            crossover_filter(filter1, filter2);
-            if (evaluateCF(cl1.cf[cf_index1], state) != 1) {
-                negate_cf(cl1.cf[cf_index1]);
-            }
-            if (evaluateCF(cl2.cf[cf_index2], state) != 1) {
-                negate_cf(cl2.cf[cf_index2]);
-            }
+        int filter_index_1 = irand(cf1.num_filters);
+        int filter_index_2 = irand(cf2.num_filters);
+        // just swap the filters - just as good as crossover of filters
+        std::swap(cf1.filter_id[filter_index_1], cf2.filter_id[filter_index_2]);
+        if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
+            cl1.cf[cf_index1] = cf1;
+            cl2.cf[cf_index2] = cf2;
             success = true;
         }
     }
+//    if(!success){
+//        // crossover two filters randomly
+//        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
+//        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
+//        filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
+//        filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
+//        // Only do crossover if filters are of the same size or type
+//        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
+//            crossover_filter(filter1, filter2);
+//            if (evaluateCF(cl1.cf[cf_index1], state) != 1) {
+//                negate_cf(cl1.cf[cf_index1]);
+//            }
+//            if (evaluateCF(cl2.cf[cf_index2], state) != 1) {
+//                negate_cf(cl2.cf[cf_index2]);
+//            }
+//            success = true;
+//        }
+//    }
     return success;
 }
 
@@ -609,57 +615,56 @@ bool mutation(Classifier &clfr, float *state)
     bool success = false;
     // 2 level mutation (CF and filter)
     int cf_index = irand(clfr.cf.size());
+    CodeFragment cf = clfr.cf[cf_index];
     if(drand() < 0.25){
-        if(drand() < 0.5) {
-            if (grow_cf(clfr.cf[cf_index], state)) {
-                success = true;
-            }
-        }else{ // shrink
-            if(shrink_cf(clfr.cf[cf_index], state)){
+        bool modified = grow_cf(cf, state);
+        if(!modified){
+            modified = shrink_cf(cf, state);
+        }
+        if(modified){
+            if(!is_cf_covered(cf,clfr)) {
+                clfr.cf[cf_index] = cf;
                 success = true;
             }
         }
     }
     if(!success && drand() < 0.25){
-        if(drand() < 0.5){
-            if(add_cf(clfr, state)){
-                success = true;
-            }
-        }else{
-            if(remove_cf(clfr, state))
-            {
+        bool modified = add_cf(clfr, state);
+        if(!modified){
+            modified = remove_cf(clfr, state);
+        }
+        if(modified){
+            success = true;
+        }
+    }
+    if(!success && drand() < 0.25){
+        // acquire cf_index again since cf list might have changed
+        cf_index = irand(clfr.cf.size());
+        cf = clfr.cf[cf_index];
+        if(mutate_cf(cf, state)) {
+            if(!is_cf_covered(cf, clfr)){
+                clfr.cf[cf_index] = cf;
                 success = true;
             }
         }
-    }
-    // acquire cf_index again since cf list might hvae changed
-    cf_index = irand(clfr.cf.size());
-    if(!success && drand() < 0.25){
-       if(mutate_cf(clfr.cf[cf_index], state)) {
-           success = true;
-       }
     }
     if(!success){
         // mutate one filter randomly
-        int filter_index = irand(clfr.cf[cf_index].num_filters);
-//        // if current filter is not promising and there is promising filter available in filter store
-//        // then use it with probability p_promising_filter
-//        if (get_filter(clfr.cf[cf_index].filter_id[filter_index]).fitness < 1 && drand() < p_promising_filter) {
-//            int id = get_promising_filter_id();
-//            if (id != -1) {   // if promising filter found
-//                clfr.cf[cf_index].filter_id[filter_index] = id;
-//            }
-//        }
-        filter_to_mutate = get_filter(clfr.cf[cf_index].filter_id[filter_index]);
+        int filter_index = irand(cf.num_filters);
+        cf = clfr.cf[cf_index];
+        filter_to_mutate = get_filter(cf.filter_id[filter_index]);
         apply_filter_mutation(filter_to_mutate, state);
-        clfr.cf[cf_index].filter_id[filter_index] = add_filter(filter_to_mutate);
-        if (evaluateCF(clfr.cf[cf_index], state) != 1) {
-            negate_cf(clfr.cf[cf_index]);
+        cf.filter_id[filter_index] = add_filter(filter_to_mutate);
+        if (evaluateCF(cf, state) != 1) {
+            negate_cf(cf);
         }
-        success = true;
+        if(!is_cf_covered(cf, clfr)){
+            clfr.cf[cf_index] = cf;
+            success = true;
+        }
     }
     // mutate action
-    bool action_success = mutateAction(clfr);
+    bool action_success = false; // mutateAction(clfr);
     return success || action_success;
 }
 
