@@ -637,9 +637,9 @@ bool mutation(Classifier &clfr, float *state)
             success = true;
         }
     }
+    // acquire cf_index again since cf list might have changed
+    cf_index = irand(clfr.cf.size());
     if(!success && drand() < 0.25){
-        // acquire cf_index again since cf list might have changed
-        cf_index = irand(clfr.cf.size());
         cf = clfr.cf[cf_index];
         if(mutate_cf(cf, state)) {
             if(!is_cf_covered(cf, clfr)){
@@ -649,9 +649,9 @@ bool mutation(Classifier &clfr, float *state)
         }
     }
     if(!success){
+        cf = clfr.cf[cf_index];
         // mutate one filter randomly
         int filter_index = irand(cf.num_filters);
-        cf = clfr.cf[cf_index];
         filter_to_mutate = get_filter(cf.filter_id[filter_index]);
         apply_filter_mutation(filter_to_mutate, state);
         cf.filter_id[filter_index] = add_filter(filter_to_mutate);

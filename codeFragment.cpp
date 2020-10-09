@@ -558,6 +558,7 @@ bool remove_cf(Classifier &cl, float* state){
 
    int cf_index = irand(cl.cf.size());
    cl.cf.erase(cl.cf.begin()+cf_index);
+   return true;
 }
 
 
