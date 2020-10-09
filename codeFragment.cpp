@@ -567,27 +567,31 @@ bool add_cf(Classifier &cl, float* state){
 
     // add new cf to the classifier
     CodeFragment temp;
-    initializeNewCF(cf_gid, temp);
+    do {
+        initializeNewCF(cf_gid, temp);
+        temp.cf_id = -1;
+        if (use_kb && drand() < 0.5) {
+            CodeFragment received_cf = get_kb_code_fragment(state);;
+            if (received_cf.cf_id != -1) {
+                received_cf.cf_id = cf_gid;
+                temp = received_cf;
+                // add the filters from kb to master filter list
+                transfer_kb_filter(temp);
+            }
+        }
+        if (temp.cf_id == -1) { // if cf not received from kb
+            temp.cf_id = cf_gid;
+            // create a cf of depth zero to start with
+            opType *end = randomProgram(temp.reverse_polish.data(), 0, 0, 0);
+            addLeafCF(temp, state);
+        }
+        if (evaluateCF(temp, state) != 1) {
+            negate_cf(temp);
+        }
+    }while();
+
     cl.cf.push_back(temp);
     cl.cf[num_cf].cf_id = -1;
-    if(use_kb && drand() < 0.5){
-        CodeFragment received_cf = get_kb_code_fragment(state);;
-        if(received_cf.cf_id != -1) {
-            received_cf.cf_id = cf_gid;
-            cl.cf[num_cf] = received_cf;
-            // add the filters from kb to master filter list
-            transfer_kb_filter(cl.cf[num_cf]);
-        }
-    }
-    if(cl.cf[num_cf].cf_id == -1) { // if cf not received from kb
-        cl.cf[num_cf].cf_id = cf_gid;
-        // create a cf of depth zero to start with
-        opType *end = randomProgram(cl.cf[num_cf].reverse_polish.data(), 0, 0, 0);
-        addLeafCF(cl.cf[num_cf], state);
-    }
-    if (evaluateCF(cl.cf[num_cf], state) != 1){
-        negate_cf(cl.cf[num_cf]);
-    }
     cf_gid++;
     return true;
 }
