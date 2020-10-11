@@ -633,58 +633,74 @@ bool mutation(Classifier &clfr, float *state)
     // mutation probability check
     if(drand() >= pM) return false;
 
-    Filter filter_to_mutate;
+    // There are 4 alternatives we must try all before returning false
+    int alternative = irand(4);
     bool success = false;
-    // 2 level mutation (CF and filter)
-    int cf_index = irand(clfr.cf.size());
-    CodeFragment cf = clfr.cf[cf_index];
-    if(drand() < 0.25){
-        bool modified = grow_cf(cf, state);
-        if(!modified){
-            modified = shrink_cf(cf, state);
+
+    for(int count=0; !success && count < 4 ; count++){
+        // first alternative
+        if((alternative + count) % 4 == 0){
+            // acquire cf_index again since cf list might have changed
+            int cf_index = irand(clfr.cf.size());
+            CodeFragment cf = clfr.cf[cf_index];
+            bool modified = grow_cf(cf, state);
+            if(!modified){
+                modified = shrink_cf(cf, state);
+            }
+            if(modified){
+                if(!is_cf_covered(cf,clfr)) {
+                    clfr.cf[cf_index] = cf;
+                    success = true;
+                }
+            }
         }
-        if(modified){
-            if(!is_cf_covered(cf,clfr)) {
-                clfr.cf[cf_index] = cf;
+        // second alternative
+        if(!success && (alternative + count) % 4 == 1){
+            // acquire cf_index again since cf list might have changed
+            int cf_index = irand(clfr.cf.size());
+            CodeFragment cf = clfr.cf[cf_index];
+            bool modified = add_cf(clfr, state);
+            if(!modified){
+                modified = remove_cf(clfr, state);
+            }
+            if(modified){
                 success = true;
             }
         }
-    }
-    if(!success && drand() < 0.25){
-        bool modified = add_cf(clfr, state);
-        if(!modified){
-            modified = remove_cf(clfr, state);
+        // third alternative
+        if(!success && (alternative + count) % 4 == 2){
+            // acquire cf_index again since cf list might have changed
+            int cf_index = irand(clfr.cf.size());
+            CodeFragment cf = clfr.cf[cf_index];
+            cf = clfr.cf[cf_index];
+            if(mutate_cf(cf, state)) {
+                if(!is_cf_covered(cf, clfr)){
+                    clfr.cf[cf_index] = cf;
+                    success = true;
+                }
+            }
         }
-        if(modified){
-            success = true;
-        }
-    }
-    // acquire cf_index again since cf list might have changed
-    cf_index = irand(clfr.cf.size());
-    if(!success && drand() < 0.25){
-        cf = clfr.cf[cf_index];
-        if(mutate_cf(cf, state)) {
+        // fourth alternative
+        if(!success && (alternative + count) % 4 == 3){
+            // acquire cf_index again since cf list might have changed
+            int cf_index = irand(clfr.cf.size());
+            CodeFragment cf = clfr.cf[cf_index];
+            Filter filter_to_mutate;
+            // mutate one filter randomly
+            int filter_index = irand(cf.num_filters);
+            filter_to_mutate = get_filter(cf.filter_id[filter_index]);
+            apply_filter_mutation(filter_to_mutate, state);
+            cf.filter_id[filter_index] = add_filter(filter_to_mutate);
+            if (evaluateCF(cf, state) != 1) {
+                negate_cf(cf);
+            }
             if(!is_cf_covered(cf, clfr)){
                 clfr.cf[cf_index] = cf;
                 success = true;
             }
         }
     }
-    if(!success){
-        cf = clfr.cf[cf_index];
-        // mutate one filter randomly
-        int filter_index = irand(cf.num_filters);
-        filter_to_mutate = get_filter(cf.filter_id[filter_index]);
-        apply_filter_mutation(filter_to_mutate, state);
-        cf.filter_id[filter_index] = add_filter(filter_to_mutate);
-        if (evaluateCF(cf, state) != 1) {
-            negate_cf(cf);
-        }
-        if(!is_cf_covered(cf, clfr)){
-            clfr.cf[cf_index] = cf;
-            success = true;
-        }
-    }
+
     // mutate action
     bool action_success = false; // mutateAction(clfr);
     return success || action_success;
