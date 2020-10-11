@@ -26,9 +26,11 @@ int add_filter(Filter filter_to_add){
             [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
             {
                 if(filter_item.second.fitness < 1) return false; // only a promising filter can subsume;
-                // only filter of same size and type can subsume
+                // only filter of same size and type and position can subsume
                 if(filter_item.second.filter_size != filter_to_add.filter_size ||
-                   filter_item.second.is_dilated != filter_to_add.is_dilated) return false;
+                        filter_item.second.is_dilated != filter_to_add.is_dilated ||
+                        filter_item.second.x != filter_to_add.x ||
+                        filter_item.second.y != filter_to_add.y) return false;
                 for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
                     if(filter_item.second.lower_bounds[i] > filter_to_add.lower_bounds[i]
                        || filter_item.second.upper_bounds[i] < filter_to_add.upper_bounds[i]){

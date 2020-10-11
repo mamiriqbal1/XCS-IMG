@@ -89,6 +89,8 @@ const bool allow_dilated_filters = true;
 
 struct Filter{
     int id=-1; // uninitialized value
+    int x = -1; // x position of the filter on the image from top right corner
+    int y = -1; // y position of the filter on the image from top right corner
     int numerosity = 1; // initial numerosity when a filter is created
     // Fitness of a filter is the appearance of the filter in "promising classifiers"
     // a promising classifier is one whose error < 10 and experience > 10

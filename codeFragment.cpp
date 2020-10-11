@@ -188,11 +188,13 @@ void create_new_filter_from_input(Filter& filter, float *state)
     int step = is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
     float pixel_values[new_filter_size*new_filter_size];
     float sum = 0;
+    int x_position = -1;
+    int y_position = -1;
     do{
         sum = 0;
         int index = 0;
-        int x_position = irand(image_width-effective_filter_size);
-        int y_position = irand(image_height-effective_filter_size);
+        x_position = irand(image_width-effective_filter_size);
+        y_position = irand(image_height-effective_filter_size);
         for(int y=y_position; y<y_position+effective_filter_size; y+=step){
             for(int x=x_position; x<x_position+effective_filter_size; x+=step){
                 pixel_values[index] = state[y*image_width+x];
@@ -200,7 +202,9 @@ void create_new_filter_from_input(Filter& filter, float *state)
                 index++;
             }
         }
-    }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
+    }while(false && sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
+    filter.x = x_position;
+    filter.y = y_position;
 
     filter.filter_size = new_filter_size;
     filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
@@ -256,6 +260,34 @@ void addLeafCF(CodeFragment &cf, float *state){
  * Return -1 if not matched otherwise return the location of match
  */
 int evaluate_filter_actual(const Filter& filter, float *state)
+{
+    int step = 1; // this will be used to map normal coordinates to dilated coordinates
+    int effective_filter_size = filter.filter_size;
+    if(filter.is_dilated){
+        step = 2;
+        effective_filter_size = filter.filter_size + filter.filter_size -1;
+    }
+    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
+    int i = filter.y;
+    int j = filter.x;
+    for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
+        for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
+            if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
+               || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
+                match_failed = true;
+            }
+        }
+    }
+    if(!match_failed){
+        // return the actual position where the filter matched
+        return i*image_width+j;
+        //return true;
+    }
+    return -1;
+    //return false;
+}
+
+int evaluate_filter_actual_old(const Filter& filter, float *state)
 {
     int step = 1; // this will be used to map normal coordinates to dilated coordinates
     int effective_filter_size = filter.filter_size;
