@@ -614,7 +614,7 @@ bool add_cf(Classifier &cl, float* state){
     if (temp.cf_id == -1) { // if cf not received from kb
         temp.cf_id = cf_gid;
         // create a cf of depth zero to start with
-        opType *end = randomProgram(temp.reverse_polish.data(), 0, 0, 0);
+        opType *end = randomProgram(temp.reverse_polish.data(), 0, cfMaxDepth, 0);
         addLeafCF(temp, state);
     }
     if (evaluateCF(temp, state) != 1) {
