@@ -563,19 +563,24 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     if (drand() >= pX) return false;
 
     int size = cl1.cf.size() < cl2.cf.size() ? cl1.cf.size() : cl2.cf.size();
-    int p = irand(size);
-
+    if(size<=1) return false;
+    int p = 0;
+    do {
+        p = irand(size);
+    }while(p==0);
     CodeFragmentVector cfv1 = cl1.cf;
     CodeFragmentVector cfv2 = cl2.cf;
     CodeFragmentVector new_cfv1, new_cfv2;
-    auto it1p = std::next(cfv1.begin(), p);
-    auto it2p = std::next(cfv2.begin(), p);
-
-    auto it1 = std::copy(cfv1.begin(), it1p, new_cfv1.begin());
-    auto it2 = std::copy(cfv2.begin(), it2p, new_cfv2.begin());
-    std::copy(it2p, cfv2.end(), it1);
-    std::copy(it1p, cfv1.end(), it2);
-
+    for(int i=0; i<p; i++){
+        new_cfv1.push_back(cfv1[i]);
+        new_cfv2.push_back(cfv2[i]);
+    }
+    for(int i=p; i<cfv2.size(); i++){
+        new_cfv1.push_back(cfv2[i]);
+    }
+    for(int i=p; i<cfv1.size(); i++){
+        new_cfv2.push_back(cfv1[i]);
+    }
 }
 
 bool crossover_old(Classifier &cl1, Classifier &cl2, float *state)
