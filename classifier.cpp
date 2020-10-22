@@ -581,6 +581,8 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     for(int i=p; i<cfv1.size(); i++){
         new_cfv2.push_back(cfv1[i]);
     }
+    cl1.cf = new_cfv1;
+    cl2.cf = new_cfv2;
 }
 
 bool crossover_old(Classifier &cl1, Classifier &cl2, float *state)
