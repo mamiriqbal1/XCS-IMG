@@ -671,7 +671,7 @@ bool mutation(Classifier &clfr, float *state)
     bool success = false;
 
     for(int count=0; !success && count < 4 ; count++){
-        // first alternative
+        // first alternative - grow / shrink cf
         if((alternative + count) % 4 == 0){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
@@ -687,7 +687,7 @@ bool mutation(Classifier &clfr, float *state)
                 }
             }
         }
-        // second alternative
+        // second alternative - add / remove cf
         if(!success && (alternative + count) % 4 == 1){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
@@ -700,7 +700,7 @@ bool mutation(Classifier &clfr, float *state)
                 success = true;
             }
         }
-        // third alternative
+        // third alternative - mutate cf operator
         if(!success && (alternative + count) % 4 == 2){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
@@ -713,17 +713,13 @@ bool mutation(Classifier &clfr, float *state)
                 }
             }
         }
-        // fourth alternative
+        // fourth alternative - add new filter
         if(!success && (alternative + count) % 4 == 3){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
             CodeFragment cf = clfr.cf[cf_index];
-            Filter filter_to_mutate;
-            // mutate one filter randomly
             int filter_index = irand(cf.num_filters);
-            filter_to_mutate = get_filter(cf.filter_id[filter_index]);
-            apply_filter_mutation(filter_to_mutate, state);
-            cf.filter_id[filter_index] = add_filter(filter_to_mutate);
+            cf.filter_id[filter_index] = get_new_filter(state);
             if (evaluateCF(cf, state) != 1) {
                 negate_cf(cf);
             }
