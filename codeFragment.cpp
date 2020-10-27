@@ -663,6 +663,35 @@ bool mutate_cf(CodeFragment &cf, float *state) {
     return true;
 }
 
+bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
+{
+    if(cf1.num_filters != cf2.num_filters ||
+       cf1.reverse_polish != cf2.reverse_polish ||
+       cf1.filter_id != cf2.filter_id) {
+        return false;
+    }else {
+        return true;
+    }
+}
+
+
+bool is_cf_covered(CodeFragment& cf, CodeFragmentVector & cfv)
+{
+    bool covered = false;
+    for(int i=0; i<cfv.size(); i++){
+        if(is_cf_equal(cf, cfv[i])){
+            covered = true;
+            break;
+        }
+    }
+    return covered;
+}
+
+bool is_cf_covered(CodeFragment& cf, Classifier& cl)
+{
+    return is_cf_covered(cf, cl.cf);
+
+}
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){
     int stack[cfMaxStack];

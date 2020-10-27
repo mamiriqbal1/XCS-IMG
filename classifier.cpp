@@ -576,10 +576,14 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
         new_cfv2.push_back(cfv2[i]);
     }
     for(int i=p; i<cfv2.size(); i++){
-        new_cfv1.push_back(cfv2[i]);
+        if(!is_cf_covered(cfv2[i], new_cfv1)) {  // ensure that duplicate cf is not inserted
+            new_cfv1.push_back(cfv2[i]);
+        }
     }
     for(int i=p; i<cfv1.size(); i++){
-        new_cfv2.push_back(cfv1[i]);
+        if(!is_cf_covered(cfv1[i], new_cfv2)) { // ensure that duplicate cf is not inserted
+            new_cfv2.push_back(cfv1[i]);
+        }
     }
     cl1.cf = new_cfv1;
     cl2.cf = new_cfv2;
@@ -667,41 +671,13 @@ bool mutation(Classifier &clfr, float *state)
     if(drand() >= pM) return false;
 
     // There are 4 alternatives we must try all before returning false
-    int alternative = irand(4);
+    int alternative = irand(2);
     bool success = false;
 
-    for(int count=0; !success && count < 4 ; count++){
-        // first alternative - grow / shrink cf
-        if((alternative + count) % 4 == 0){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            bool modified = grow_cf(cf, state);
-            if(!modified){
-                modified = shrink_cf(cf, state);
-            }
-            if(modified){
-                if(!is_cf_covered(cf,clfr)) {
-                    clfr.cf[cf_index] = cf;
-                    success = true;
-                }
-            }
-        }
-        // second alternative - add / remove cf
-        if(!success && (alternative + count) % 4 == 1){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            bool modified = add_cf(clfr, state);
-            if(!modified){
-                modified = remove_cf(clfr, state);
-            }
-            if(modified){
-                success = true;
-            }
-        }
-        // third alternative - mutate cf operator
-        if(!success && (alternative + count) % 4 == 2){
+    for(int count=0; !success && count < 2 ; count++){
+
+        // alternative - mutate cf operator
+        if(!success && (alternative + count) % 2 == 0){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
             CodeFragment cf = clfr.cf[cf_index];
@@ -713,8 +689,8 @@ bool mutation(Classifier &clfr, float *state)
                 }
             }
         }
-        // fourth alternative - add new filter
-        if(!success && (alternative + count) % 4 == 3){
+        // alternative - add new filter
+        if(!success && (alternative + count) % 2 == 1){
             // acquire cf_index again since cf list might have changed
             int cf_index = irand(clfr.cf.size());
             CodeFragment cf = clfr.cf[cf_index];
@@ -902,29 +878,6 @@ bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
 }
 
 
-bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
-{
-   if(cf1.num_filters != cf2.num_filters ||
-   cf1.reverse_polish != cf2.reverse_polish ||
-   cf1.filter_id != cf2.filter_id) {
-       return false;
-   }else {
-       return true;
-   }
-}
-
-
-bool is_cf_covered(CodeFragment& cf, Classifier& cl)
-{
-    bool covered = false;
-    for(int i=0; i<cl.cf.size(); i++){
-        if(is_cf_equal(cf, cl.cf[i])){
-            covered = true;
-            break;
-        }
-    }
-    return covered;
-}
 
 /*
  * This function checks that all the filters of one classifier are present in the second.
