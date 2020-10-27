@@ -212,8 +212,8 @@ void create_new_filter_from_input(Filter& filter, float *state)
     filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
     filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
     filter.is_dilated = is_dilated;
+    float delta = drand();
     for(int i=0; i<new_filter_size*new_filter_size; i++){
-        float delta = drand();
         filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
         filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
     }
