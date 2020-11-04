@@ -555,7 +555,7 @@ void crossover_filter(Filter& parent1, Filter& parent2)
 }
 
 /*
- * implement one point crossover
+ * implement two point crossover
  */
 
 bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
@@ -563,26 +563,34 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     if (drand() >= pX) return false;
 
     int size = cl1.cf.size() < cl2.cf.size() ? cl1.cf.size() : cl2.cf.size();
-    if(size<=1) return false;
-    int p = 0;
-    do {
-        p = irand(size);
-    }while(p==0);
+    int p1 = irand(size);
+    int p2 = irand(size);
+    if(p1 > p2){
+        std::swap(p1,p2);
+    }
     CodeFragmentVector cfv1 = cl1.cf;
     CodeFragmentVector cfv2 = cl2.cf;
     CodeFragmentVector new_cfv1, new_cfv2;
-    for(int i=0; i<p; i++){
+    for(int i=0; i<p1; i++){
         new_cfv1.push_back(cfv1[i]);
         new_cfv2.push_back(cfv2[i]);
     }
-    for(int i=p; i<cfv2.size(); i++){
+    for(int i=p1; i<p2; i++){
         if(!is_cf_covered(cfv2[i], new_cfv1)) {  // ensure that duplicate cf is not inserted
             new_cfv1.push_back(cfv2[i]);
         }
-    }
-    for(int i=p; i<cfv1.size(); i++){
         if(!is_cf_covered(cfv1[i], new_cfv2)) { // ensure that duplicate cf is not inserted
             new_cfv2.push_back(cfv1[i]);
+        }
+    }
+    for(int i=p2; i<cfv1.size(); i++){
+        if(!is_cf_covered(cfv1[i], new_cfv1)) {  // ensure that duplicate cf is not inserted
+            new_cfv1.push_back(cfv1[i]);
+        }
+    }
+    for(int i=p2; i<cfv2.size(); i++){
+        if(!is_cf_covered(cfv2[i], new_cfv2)) { // ensure that duplicate cf is not inserted
+            new_cfv2.push_back(cfv2[i]);
         }
     }
     cl1.cf = new_cfv1;
@@ -665,12 +673,28 @@ void apply_filter_mutation(Filter& filter, float state[])
     }
 }
 
+/*
+ * Sync with original code. Toggle one code fragment
+ * Mutation probability is not being used.
+ * Only one cf is being mutated that means 1/cfMaxLength% mutation probability
+ * Maxlength = 100 means 1%, Maxlength = 50 means 2% per cf
+ */
 bool mutation(Classifier &clfr, float *state)
+{
+    int a = irand(clfrCondMaxLength);
+    if (a < clfr.cf.size()) {
+        remove_cf(clfr, state);
+    } else {
+        add_cf(clfr, state);
+    }
+}
+
+bool mutation_old(Classifier &clfr, float *state)
 {
     // mutation probability check
     if(drand() >= pM) return false;
 
-    // There are 4 alternatives we must try all before returning false
+    // There are 2 alternatives we must try all before returning false
     int alternative = irand(2);
     bool success = false;
 
