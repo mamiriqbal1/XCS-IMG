@@ -568,33 +568,10 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     if(p1 > p2){
         std::swap(p1,p2);
     }
-    CodeFragmentVector cfv1 = cl1.cf;
-    CodeFragmentVector cfv2 = cl2.cf;
-    CodeFragmentVector new_cfv1, new_cfv2;
-    for(int i=0; i<p1; i++){
-        new_cfv1.push_back(cfv1[i]);
-        new_cfv2.push_back(cfv2[i]);
-    }
+
     for(int i=p1; i<p2; i++){
-        if(!is_cf_covered(cfv2[i], new_cfv1)) {  // ensure that duplicate cf is not inserted
-            new_cfv1.push_back(cfv2[i]);
-        }
-        if(!is_cf_covered(cfv1[i], new_cfv2)) { // ensure that duplicate cf is not inserted
-            new_cfv2.push_back(cfv1[i]);
-        }
+        std::swap(cl1.cf[i], cl2.cf[i]);
     }
-    for(int i=p2; i<cfv1.size(); i++){
-        if(!is_cf_covered(cfv1[i], new_cfv1)) {  // ensure that duplicate cf is not inserted
-            new_cfv1.push_back(cfv1[i]);
-        }
-    }
-    for(int i=p2; i<cfv2.size(); i++){
-        if(!is_cf_covered(cfv2[i], new_cfv2)) { // ensure that duplicate cf is not inserted
-            new_cfv2.push_back(cfv2[i]);
-        }
-    }
-    cl1.cf = new_cfv1;
-    cl2.cf = new_cfv2;
 }
 
 bool crossover_old(Classifier &cl1, Classifier &cl2, float *state)

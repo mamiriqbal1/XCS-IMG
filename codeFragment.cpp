@@ -621,10 +621,6 @@ bool add_cf(Classifier &cl, float* state){
         negate_cf(temp);
     }
 
-    if(is_cf_covered(temp, cl)){
-        return false;
-    }
-
     cl.cf.push_back(temp);
     cf_gid++;
     return true;
