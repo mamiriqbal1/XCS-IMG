@@ -373,7 +373,7 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
     len = get_pop_numerosity(pop);
 
     // insert the new two classifiers and delete two if necessary
-    insertDiscoveredClassifier(child, parent, pop, len);
+    insertDiscoveredClassifier(child, parent, action_set, len);
 }
 void getDiscoversSums(ClassifierSet &action_set, double *fitsum, int *setsum, int *gaitsum)  // Calculate all necessary sums in the set for the discovery component.
 {
@@ -735,36 +735,28 @@ bool mutateAction(Classifier& clfr)  //Mutates the action of the classifier.
 /**
  * Insert a discovered classifier into the population and respects the population size.
  */
-void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &pop, int len)
+void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierSet &action_set, int len)
 {
     len+=2;
     if(doGASubsumption)
     {
-        if(!subsumeClassifier(child[0], pop[parent[0]], pop[parent[1]], pop)){
-            pop[child[0].id] = child[0];
+        if(!subsumeClassifier(child[0], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            action_set.pop[child[0].id] = child[0];
         }
-        if(!subsumeClassifier(child[1], pop[parent[0]], pop[parent[1]], pop)){
-            pop[child[1].id] = child[1];
+        if(!subsumeClassifier(child[1], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            action_set.pop[child[1].id] = child[1];
         }
     }
     else
     {
-        pop[child[0].id] = child[0];
-        pop[child[1].id] = child[1];
+        action_set.pop[child[0].id] = child[0];
+        action_set.pop[child[1].id] = child[1];
     }
 
     while(len > maxPopSize)
     {
         len--;
-        int cl_id = deleteStochClassifier(pop);
-
-        /* record the deleted classifier to update other sets */
-//        if(killedp!=NULL)
-//        {
-//            addClassifierToPointerSet(killedp,killset);
-//            /* update the set */
-//            updateSet(action_set, *killset);
-//        }
+        int cl_id = deleteStochClassifier(action_set.pop);
     }
 }
 
@@ -805,7 +797,7 @@ void doActionSetSubsumption(ClassifierSet &action_set)
 /**
  * Tries to subsume the parents.
  */
-bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierMap &pop)
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierSet &action_set)
 {
     int i;
     if(subsumes(p1, cl))
@@ -819,8 +811,33 @@ bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, Classifie
         return true;
     }
     // as per algorithm child submsumption in population is not done
-    // changed from action set subsumption to population subsumption
-    if(subsumeClassifierToPop(cl, pop)){
+    if(subsumeClassifierToSet(cl, action_set)){
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Try to subsume in the set.
+ */
+bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
+{
+    std::list<int> subsumers;
+
+    for(auto & id : cl_set.ids)
+    {
+        if(subsumes(cl_set.pop[id], cl))
+        {
+            subsumers.push_back(id);
+        }
+    }
+    /* if there were classifiers found to subsume, then choose randomly one and subsume */
+    if(subsumers.size() > 0)
+    {
+        auto random_it = subsumers.begin();
+        random_it = std::next(random_it, irand(subsumers.size()));
+        cl_set.pop[*random_it].numerosity++;
         return true;
     }
     return false;

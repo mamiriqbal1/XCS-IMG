@@ -28,11 +28,12 @@ bool mutation(Classifier &clfr, float *state);
 
 bool mutateAction(Classifier& clfr);
 
-void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierMap &pop, int len);
+void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierSet &action_set, int len);
 
 void doActionSetSubsumption(ClassifierSet &action_set);
-bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierMap &pop);
+bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, ClassifierSet &action_set);
 bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set);
+bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set);
 bool subsumes(Classifier &cl1, Classifier & cl2);
 bool isSubsumer(Classifier &cl);
 bool isMoreGeneral(Classifier &clfr1, Classifier &clfr2);
