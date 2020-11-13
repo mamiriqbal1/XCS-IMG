@@ -7,7 +7,7 @@
 #include "xcsMacros.h"
 #include <vector>
 #include <list>
-
+#include "flat_hash_map/unordered_map.hpp"
 
 extern bool use_kb;
 extern std::string kb_file;
@@ -103,7 +103,8 @@ struct Filter{
     //float upper_bounds[max_filter_size*max_filter_size];
 };
 
-typedef std::unordered_map<int, Filter> FilterMap;
+typedef ska::unordered_map<int, Filter> FilterMap;
+//typedef std::unordered_map<int, Filter> FilterMap;
 extern FilterMap kb_filter;
 
 struct FilterList{
@@ -156,7 +157,8 @@ struct Classifier
     int timeStamp = 0;
 };
 
-typedef std::unordered_map<int, Classifier> ClassifierMap;
+typedef ska::unordered_map<int, Classifier> ClassifierMap;
+//typedef std::unordered_map<int, Classifier> ClassifierMap;
 typedef std::list<int> ClassifierList;
 struct ClassifierSet{
     ClassifierList ids;

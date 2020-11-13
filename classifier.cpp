@@ -143,7 +143,7 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
     {
         //std::cout<<"iscond\n";
         //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].reverse_polish,state)==0 )
-        if(!isDontcareCF(cl.cf[i]) && evaluateCF(cl.cf[i], state, cl.id, img_id, train) == 0 )
+        if(evaluateCF(cl.cf[i], state, cl.id, img_id, train) == 0 )
         {
             return false;
         }

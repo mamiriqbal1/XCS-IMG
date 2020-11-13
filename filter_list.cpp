@@ -58,15 +58,7 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    if(master_filter_list.filters.count(filter_id)){
-        return master_filter_list.filters.at(filter_id);
-    }else{
-        std::cout<<std::endl<<filter_id<<std::endl;
-        //print_filter_stats(<#initializer#>);
-        // print stack trace by causing a segmentation fault that will be handled by our handler
-        int *foo = (int *) -1; // make a bad pointer
-        printf("%d\n", *foo);       // causes segfault
-    }
+    return master_filter_list.filters.at(filter_id);
 }
 
 
