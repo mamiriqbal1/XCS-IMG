@@ -278,11 +278,11 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
         double reward = executeAction(actionWinner, testState->action, wasCorrect);
         error_sum += absoluteValue(reward - getBestValue());
 
-        if(last_epoch) {
+//        if(last_epoch) {
             // save visualization data - start with image id, actual action and predicted action
-            output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
-            save_visualization_data(match_set, t, output_visualization_file);
-        }
+//            output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
+//            save_visualization_data(match_set, t, output_visualization_file);
+//        }
 
 		if(wasCorrect){
 		    correct_count += 1;
