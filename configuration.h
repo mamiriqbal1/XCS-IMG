@@ -7,7 +7,9 @@
 #include "xcsMacros.h"
 #include <vector>
 #include <list>
-#include "flat_hash_map/unordered_map.hpp"
+//#include "flat_hash_map/unordered_map.hpp"
+#include "flat_hash_map/bytell_hash_map.hpp"
+//#include "HashMap/include/rigtorp/HashMap.h"
 
 extern bool use_kb;
 extern std::string kb_file;
@@ -103,14 +105,21 @@ struct Filter{
     //float upper_bounds[max_filter_size*max_filter_size];
 };
 
-typedef ska::unordered_map<int, Filter> FilterMap;
+struct Hash {
+    size_t operator()(int v) const { return v; }
+};
+
+//typedef rigtorp::HashMap<int, Filter, Hash> FilterMap;
+typedef ska::bytell_hash_map<int, Filter, Hash> FilterMap;
 //typedef std::unordered_map<int, Filter> FilterMap;
 extern FilterMap kb_filter;
 
 struct FilterList{
     FilterMap filters;
-    int gid = 0;
+    int gid = 1;
     int max_size_limit = N_filter_ol;
+//    FilterList(int bucket_count, int empty_key) : filters(bucket_count, empty_key){
+//    }
 };
 
 struct Leaf
@@ -155,13 +164,17 @@ struct Classifier
     int numerosity = 0;
     double actionSetSize = 0;
     int timeStamp = 0;
+    Classifier() : cf(clfrCondMaxLength){
+    }
 };
 
-typedef ska::unordered_map<int, Classifier> ClassifierMap;
+
+//typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierMap;
+typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierMap;
 //typedef std::unordered_map<int, Classifier> ClassifierMap;
-typedef std::list<int> ClassifierList;
+typedef std::list<int> ClassifierIDList;
 struct ClassifierSet{
-    ClassifierList ids;
+    ClassifierIDList ids;
     ClassifierMap& pop;
     ClassifierSet(int size, ClassifierMap& population) : pop(population){
         //ids.reserve(size);

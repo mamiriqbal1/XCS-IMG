@@ -15,6 +15,7 @@
 
 
 CodeFragmentMap kb_cf;
+//FilterMap kb_filter(1024, 0);
 FilterMap kb_filter;
 //DataSource allData[1];
 float lowerLimit[condLength];

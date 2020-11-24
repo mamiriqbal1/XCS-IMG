@@ -576,29 +576,7 @@ bool add_operator(CodeFragment& cf, float* state){
 }
 
 
-
-
-/*
- * Grow cf by adding a new operator to it respecting the maximum depth
- */
-bool grow_cf(CodeFragment &cf, float* state){
-    return add_operator(cf, state);
-}
-
-bool remove_cf(Classifier &cl, float* state){
-   if(cl.cf.size() <= 1) return false;
-
-   int cf_index = irand(cl.cf.size());
-   cl.cf.erase(cl.cf.begin()+cf_index);
-   return true;
-}
-
-
-bool add_cf(Classifier &cl, float* state){
-    int num_cf = cl.cf.size();
-    if(num_cf >= clfrCondMaxLength) return false;
-
-    // add new cf to the classifier
+bool add_cf(CodeFragment &cf, float* state){
     CodeFragment temp;
     initializeNewCF(cf_gid, temp);
     temp.cf_id = -1;
@@ -621,7 +599,7 @@ bool add_cf(Classifier &cl, float* state){
         negate_cf(temp);
     }
 
-    cl.cf.push_back(temp);
+    cf = temp;
     cf_gid++;
     return true;
 }
@@ -673,6 +651,8 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 
 bool is_cf_covered(CodeFragment& cf, CodeFragmentVector & cfv)
 {
+    if(cf.cf_id == -1) return true;
+
     bool covered = false;
     for(int i=0; i<cfv.size(); i++){
         if(is_cf_equal(cf, cfv[i])){

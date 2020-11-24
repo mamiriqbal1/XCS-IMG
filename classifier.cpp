@@ -14,14 +14,30 @@
 #include <float.h>
 #include <iomanip>
 #include <sys/stat.h>
+#include <stack>
 
-int cf_gid = 0;
+int cf_gid = 1;
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
-int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
+int classifier_gid=1; // global incremental id to  uniquely identify the classifiers for evaluation reuse
+
+std::vector<int> cl_gid_vector;
+std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
+//std::stack<int, std::vector<int>> classifier_gid_stack;
+
+int get_next_cl_gid()
+{
+    if(classifier_gid_stack.size()>0){
+        int val = classifier_gid_stack.top();
+        classifier_gid_stack.pop();
+        return val;
+    }else{
+        return classifier_gid++;
+    }
+}
 
 void setInitialVariables(Classifier &clfr, double setSize, int time){
-    clfr.id = classifier_gid++;
+//    clfr.id = get_next_cl_gid();  // it will be set just before adding to population
     clfr.prediction = predictionIni;
     clfr.predictionError = predictionErrorIni;
     clfr.accuracy = 0.0;
@@ -96,6 +112,7 @@ void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int
                                                             itTime);
                     // before inserting the new classifier into the population check for subsumption by a generic one
                     if(!subsumeClassifierToPop(coverClfr, pop)) {
+                        coverClfr.id = get_next_cl_gid();
                         pop[coverClfr.id] = coverClfr;
                         match_set.ids.push_back(coverClfr.id);
                     }
@@ -141,9 +158,7 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
     for(int i=0; i < cl.cf.size(); i++)
     {
-        //std::cout<<"iscond\n";
-        //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].reverse_polish,state)==0 )
-        if(evaluateCF(cl.cf[i], state, cl.id, img_id, train) == 0 )
+        if(cl.cf[i].cf_id != -1 && evaluateCF(cl.cf[i], state, cl.id, img_id, train) == 0 )
         {
             return false;
         }
@@ -167,14 +182,16 @@ void transfer_kb_filter(CodeFragment & cf)
     }
 }
 
-
+/*
+ * Default cf has id == -1 that represent don't care
+ */
 void createMatchingCondition(Classifier &cl, float *state)
 {
-    int count = irand(clfrCondMaxLength);
-    for(int i=0; i<=count; i++) {
-        add_cf(cl, state);
+    for(int i=0; i<cl.cf.size(); i++){
+        if(drand() >= P_dontcare){
+            add_cf(cl.cf[i], state);
+        }
     }
-
 }
 
 // ######################### prediction array operations ############################################
@@ -399,7 +416,7 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
 void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
     double best_fitness = -1, prediction_error=0;
-    ClassifierList winner_set;
+    ClassifierIDList winner_set;
 
     while(winner_set.empty()) {
         for (auto &id : set.ids) {
@@ -495,21 +512,21 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     tournament_selection(child1, parent1, action_set, setsum);
     tournament_selection(child2, parent2, action_set, setsum);
 
-    child1.id = classifier_gid++;
+//    child1.id = get_next_cl_gid();
     child1.numerosity = 1;
     child1.experience = 0;
     child1.fitness = child1.fitness / child1.numerosity;
-    child2.id = classifier_gid++;
+//    child2.id = get_next_cl_gid();
     child2.numerosity = 1;
     child2.experience = 0;
     child2.fitness = child2.fitness / child2.numerosity;
 
-    for(int i=0; i < child1.cf.size(); i++){
-        child1.cf[i].cf_id = cf_gid++;
-    }
-    for(int i=0; i < child2.cf.size(); i++){
-        child2.cf[i].cf_id = cf_gid++;
-    }
+//    for(int i=0; i < child1.cf.size(); i++){
+//        child1.cf[i].cf_id = cf_gid++;
+//    }
+//    for(int i=0; i < child2.cf.size(); i++){
+//        child2.cf[i].cf_id = cf_gid++;
+//    }
 
 }
 
@@ -572,62 +589,8 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     for(int i=p1; i<p2; i++){
         std::swap(cl1.cf[i], cl2.cf[i]);
     }
-}
 
-bool crossover_old(Classifier &cl1, Classifier &cl2, float *state)
-{
-    // crossover probability check
-    if(drand() >= pX) return false;
-
-    bool success = false;
-    int cf_index1 = irand(cl1.cf.size());
-    int cf_index2 = irand(cl2.cf.size());
-    CodeFragment cf1 = cl1.cf[cf_index1];
-    CodeFragment cf2 = cl2.cf[cf_index2];
-    // swap code fragments if they do not introduce duplication
-    if(!is_cf_covered(cf1, cl2) && !is_cf_covered(cf2, cl1)){
-        std::swap(cl1.cf[cf_index1], cl2.cf[cf_index2]);
-        success = true;
-    }
-    // swap filters within code fragments if they do not introduce duplication of cf
-    if(!success){
-        int filter_index_1 = irand(cf1.num_filters);
-        int filter_index_2 = irand(cf2.num_filters);
-        // just swap the filters - just as good as crossover of filters
-        std::swap(cf1.filter_id[filter_index_1], cf2.filter_id[filter_index_2]);
-        if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
-            cl1.cf[cf_index1] = cf1;
-            cl2.cf[cf_index2] = cf2;
-            success = true;
-        }
-    }
-    if(!success){
-        cf1 = cl1.cf[cf_index1];
-        cf2 = cl2.cf[cf_index2];
-        // crossover two filters randomly
-        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
-        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
-        Filter filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
-        Filter filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
-        // Only do crossover if filters are of the same size or type
-        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-            union_filter(filter1, filter2);
-            cf1.filter_id[filter_index_1] = add_filter(filter1);
-            cf2.filter_id[filter_index_2] = add_filter(filter2);
-            if (evaluateCF(cf1, state) != 1) {
-                negate_cf(cf1);
-            }
-            if (evaluateCF(cf2, state) != 1) {
-                negate_cf(cf2);
-            }
-            if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
-                cl1.cf[cf_index1] = cf1;
-                cl2.cf[cf_index2] = cf2;
-                success = true;
-            }
-        }
-    }
-    return success;
+    return true;
 }
 
 
@@ -658,58 +621,19 @@ void apply_filter_mutation(Filter& filter, float state[])
  */
 bool mutation(Classifier &clfr, float *state)
 {
-    int a = irand(clfrCondMaxLength);
-    if (a < clfr.cf.size()) {
-        remove_cf(clfr, state);
-    } else {
-        add_cf(clfr, state);
-    }
-}
-
-bool mutation_old(Classifier &clfr, float *state)
-{
-    // mutation probability check
-    if(drand() >= pM) return false;
-
-    // There are 2 alternatives we must try all before returning false
-    int alternative = irand(2);
-    bool success = false;
-
-    for(int count=0; !success && count < 2 ; count++){
-
-        // alternative - mutate cf operator
-        if(!success && (alternative + count) % 2 == 0){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            cf = clfr.cf[cf_index];
-            if(mutate_cf(cf, state)) {
-                if(!is_cf_covered(cf, clfr)){
-                    clfr.cf[cf_index] = cf;
-                    success = true;
-                }
-            }
-        }
-        // alternative - add new filter
-        if(!success && (alternative + count) % 2 == 1){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            int filter_index = irand(cf.num_filters);
-            cf.filter_id[filter_index] = get_new_filter(state);
-            if (evaluateCF(cf, state) != 1) {
-                negate_cf(cf);
-            }
-            if(!is_cf_covered(cf, clfr)){
-                clfr.cf[cf_index] = cf;
-                success = true;
+    bool changed = false;
+    for(int i=0; i<clfr.cf.size(); i++){
+        if(drand() < pM){
+            changed = true;
+            if(clfr.cf[i].cf_id != -1){
+                clfr.cf[i].cf_id = -1; // set as don't care
+            }else{
+                add_cf(clfr.cf[i], state);
             }
         }
     }
 
-    // mutate action
-    bool action_success = false; // mutateAction(clfr);
-    return success || action_success;
+    return changed;
 }
 
 
@@ -741,14 +665,18 @@ void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierSet &a
     if(doGASubsumption)
     {
         if(!subsumeClassifier(child[0], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            child[0].id = get_next_cl_gid();
             action_set.pop[child[0].id] = child[0];
         }
         if(!subsumeClassifier(child[1], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            child[1].id = get_next_cl_gid();
             action_set.pop[child[1].id] = child[1];
         }
     }
     else
     {
+        child[0].id = get_next_cl_gid();
+        child[1].id = get_next_cl_gid();
         action_set.pop[child[0].id] = child[0];
         action_set.pop[child[1].id] = child[1];
     }
@@ -879,23 +807,6 @@ bool isSubsumer(Classifier &cl)
     return cl.experience > theta_sub && cl.predictionError <= epsilon_0;
 }
 
-// function added by me in new code
-// To subsume a CF to more general CF
-// filhal randomly selected two CFs, In future will select CFs based on their Fitness
-
-bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
-{
-    for(int i=0; i < cl.cf.size(); i++){
-        for(int j=0; j < cl.cf[i].num_filters; j++) {
-            if(filter_to_check_id == cl.cf[i].filter_id[j]){
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
 
 /*
  * This function checks that all the filters of one classifier are present in the second.
@@ -907,7 +818,7 @@ bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
 {
     bool more_general = true;
     for(int i=0; i < clfr_specific.cf.size(); i++){
-        if(!is_cf_covered(clfr_specific.cf[i], clfr_general)){
+        if(clfr_specific.cf[i].cf_id != -1 && !is_cf_covered(clfr_specific.cf[i], clfr_general)){
             more_general = false;
             break;
         }
@@ -916,18 +827,6 @@ bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
 }
 
 
-
-bool isMoreGeneral_old(Classifier &clfr_general, Classifier &clfr_specific)
- {
-     for(int i=0; i < clfr_specific.cf.size(); i++){
-         for(int j=0; j < clfr_specific.cf[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(clfr_specific.cf[i].filter_id[j], clfr_general)) {
-                 return false;
-             }
-         }
-     }
-    return true;
- }
 
 // ###################### adding classifiers to a set ###################################
 
@@ -968,6 +867,7 @@ int deleteStochClassifier(ClassifierMap &pop)
             }else{
                 pop.erase(item.second.id);
             }
+            classifier_gid_stack.push(removed_id);
             return removed_id;
         }
     }
@@ -1147,11 +1047,13 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
 
     for(auto & cf : classifier.cf)
     {
-        output_classifier_file << cf.cf_id << " ";
-        output_code_fragment_to_file(cf, output_code_fragment_file);
-        // output promising code fragments separately
-        if(is_promising_classifier(classifier)){
-            output_code_fragment_to_file(cf, output_promising_code_fragment_file);
+        if(cf.cf_id != -1) {
+            output_classifier_file << cf.cf_id << " ";
+            output_code_fragment_to_file(cf, output_code_fragment_file);
+            // output promising code fragments separately
+            if (is_promising_classifier(classifier)) {
+                output_code_fragment_to_file(cf, output_promising_code_fragment_file);
+            }
         }
     }
     output_classifier_file << std::endl;
@@ -1197,15 +1099,17 @@ void manage_filter_list(ClassifierMap &pop){
 
     for(auto& item : pop){
         for(int i=0; i < item.second.cf.size(); i++){
-            for(int j=0; j < item.second.cf[i].num_filters; j++){
-                Filter& f = get_filter(item.second.cf[i].filter_id[j]);
-                f.numerosity++;
-                // if classifier is "promising" then increase the fitness of the filter
-                // a promising classifier is one whose error < 10 and experience > 10
-                if(is_promising_classifier(item.second)){
-                    f.fitness++;
-                }
+            if(item.second.cf[i].cf_id != -1) {
+                for (int j = 0; j < item.second.cf[i].num_filters; j++) {
+                    Filter &f = get_filter(item.second.cf[i].filter_id[j]);
+                    f.numerosity++;
+                    // if classifier is "promising" then increase the fitness of the filter
+                    // a promising classifier is one whose error < 10 and experience > 10
+                    if (is_promising_classifier(item.second)) {
+                        f.fitness++;
+                    }
 
+                }
             }
         }
     }

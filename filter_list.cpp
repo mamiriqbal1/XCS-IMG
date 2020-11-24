@@ -9,8 +9,24 @@
 #include <numeric>
 #include <vector>
 #include <float.h>
+#include <stack>
 
+//FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
 FilterList master_filter_list; // The main filter list that is maintained
+
+std::vector<int> filter_gid_vector;
+std::stack<int, std::vector<int>> filter_gid_stack(filter_gid_vector);
+
+int get_next_filter_gid()
+{
+    if(filter_gid_stack.size()>0){
+        int val = filter_gid_stack.top();
+        filter_gid_stack.pop();
+        return val;
+    }else{
+        return master_filter_list.gid++;
+    }
+}
 
 
 /*
@@ -40,7 +56,7 @@ int add_filter(Filter filter_to_add){
                 return true;
             });
     if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
-        filter_to_add.id = master_filter_list.gid++;
+        filter_to_add.id = get_next_filter_gid();
         filter_to_add.numerosity = 1;
         master_filter_list.filters[filter_to_add.id] = filter_to_add;
         return filter_to_add.id;
@@ -78,9 +94,10 @@ void reset_filter_stats(){
  * This function removes any unused filters
  */
 void remove_unused_filters(std::forward_list<int>& removed_filters){
-    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
         if(it->second.numerosity == 0){
             removed_filters.push_front(it->second.id);
+            filter_gid_stack.push(it->second.id);
         }
     }
     for(auto it=removed_filters.begin(); it!=removed_filters.end();it++){
@@ -150,7 +167,7 @@ void print_filter_stats(std::ofstream &output_stats_file) {
 int get_promising_filter_id(){
     // create a vector of promising filters
     std::vector<int> promising_filters;
-    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
         if(it->second.fitness > 0){
             promising_filters.push_back(it->second.id);
         }

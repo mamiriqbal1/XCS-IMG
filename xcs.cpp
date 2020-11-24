@@ -298,8 +298,8 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 }
 
 
-
 void startXCS(){
+//    ClassifierMap pop(maxPopSize * 2, 0);
     ClassifierMap pop;
     printf("\nLoading Input! Please wait ....\n");
 
