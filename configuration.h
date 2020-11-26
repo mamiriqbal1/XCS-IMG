@@ -169,14 +169,14 @@ struct Classifier
 };
 
 
-//typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierMap;
-typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierMap;
-//typedef std::unordered_map<int, Classifier> ClassifierMap;
+//typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierVector;
+//typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierVector;
+typedef std::vector<Classifier> ClassifierVector;
 typedef std::list<int> ClassifierIDList;
 struct ClassifierSet{
     ClassifierIDList ids;
-    ClassifierMap& pop;
-    ClassifierSet(int size, ClassifierMap& population) : pop(population){
+    ClassifierVector& pop;
+    ClassifierSet(int size, ClassifierVector& population) : pop(population){
         //ids.reserve(size);
     }
 };

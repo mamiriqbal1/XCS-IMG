@@ -237,7 +237,7 @@ void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
     load_code_fragment(kb_cf_file_name, kb_cf);
 }
 
-int load_classifier(std::string classifier_file_name, ClassifierMap& pop, CodeFragmentMap& code_fragments)
+int load_classifier(std::string classifier_file_name, ClassifierVector& pop, CodeFragmentMap& code_fragments)
 {
     int loaded_cl_gid = -1;
     std::string line;

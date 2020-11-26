@@ -6,12 +6,12 @@ DataSource *trainingData = NULL, *testingData = NULL;
 double executeAction(int action, int stateAction, bool &wasCorrect);
 
 
-void writePerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
+void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file);
 
 void startXCS();
-void doOneSingleStepExperiment(ClassifierMap &pop);
+void doOneSingleStepExperiment(ClassifierVector &pop);
 
 void
-doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
                     double training_performance, double training_error);

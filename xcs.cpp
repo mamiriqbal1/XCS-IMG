@@ -85,7 +85,7 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
  * @param sysError The system error in the last fifty exploration trials.
  * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
+void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file) {
 
     int setSize = pop.size();
@@ -94,7 +94,7 @@ void writePerformance(ClassifierMap &pop, double performance, double sysError, i
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
+void writeTestPerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                           std::ofstream &output_test_file, int training_problem_count, double training_accuracy,
                           double training_error) {
 
@@ -108,7 +108,7 @@ void writeTestPerformance(ClassifierMap &pop, double performance, double sysErro
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter, int img_id, int &correct,
+void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int counter, int img_id, int &correct,
                             double &sysError) {
 
     bool wasCorrect = false;
@@ -156,7 +156,7 @@ void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter,
     sysError = absoluteValue(reward - getBestValue());
 }
 
-void load_state_for_resume(ClassifierMap &pop)
+void load_state_for_resume(ClassifierVector &pop)
 {
     int filter_gid = 1 + load_filter(output_path + resume_from + output_filter_file_name, master_filter_list.filters);
     master_filter_list.gid = filter_gid;
@@ -172,7 +172,7 @@ void load_state_for_resume(ClassifierMap &pop)
  * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
  * modified to calculate training and validation accuracies after every epoch.
  */
-void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step experiment monitoring the performance.
+void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-step experiment monitoring the performance.
 
     std::ofstream output_training_file;
     output_training_file.open(output_path + output_training_file_name, std::ofstream::app);
@@ -202,8 +202,8 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
     }
     for( ; problem_count <= maxProblems; problem_count++)
     {
-        int pop_size = pop.size();
-        int pop_numerosity = get_pop_numerosity(pop);
+        int pop_size = get_pop_size(pop, false);
+        int pop_numerosity = get_pop_size(pop, true);
         //std::cout<<problem_count<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
@@ -243,7 +243,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
 
 
 void
-doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
                     double training_performance, double training_error) {
 	bool wasCorrect = false;
     int correct_count = 0;
@@ -299,8 +299,8 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 
 
 void startXCS(){
-//    ClassifierMap pop(maxPopSize * 2, 0);
-    ClassifierMap pop;
+//    ClassifierVector pop(maxPopSize * 2, 0);
+    ClassifierVector pop(maxPopSize + 10);
     printf("\nLoading Input! Please wait ....\n");
 
     trainingData = new DataSource[trainNumInstances];

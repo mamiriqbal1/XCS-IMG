@@ -16,10 +16,10 @@
 #include <sys/stat.h>
 #include <stack>
 
-int cf_gid = 1;
+int cf_gid = 0;
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
-int classifier_gid=1; // global incremental id to  uniquely identify the classifiers for evaluation reuse
+int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 
 std::vector<int> cl_gid_vector;
 std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
@@ -82,11 +82,11 @@ int get_set_numerosity(ClassifierSet &set)
   * Code review
   * Overall flow is as per algorithm
   */
-void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
+void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
     int population_numerosity=0, match_set_numerosity=0, representedActions;
 
     bool coveredActions[numActions];
-    population_numerosity = get_pop_numerosity(pop);
+    population_numerosity = get_pop_size(pop, true);
     get_matching_classifiers(pop, state, match_set, img_id, true);
     match_set_numerosity = get_set_numerosity(match_set);
 
@@ -351,7 +351,7 @@ void updateFitness(ClassifierSet &action_set)
  * The discovery conmponent with the genetic algorithm
  * note: some classifiers in set could be deleted !
  */
-void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTime, float *situation)
+void discoveryComponent(ClassifierSet &action_set, ClassifierVector &pop, int itTime, float *situation)
 {
     Classifier child[2];
     int parent[2];
@@ -387,7 +387,7 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
     child[1].fitness = child[0].fitness;
 
     // get the length of the population to check if clasifiers have to be deleted
-    len = get_pop_numerosity(pop);
+    len = get_pop_size(pop, true);
 
     // insert the new two classifiers and delete two if necessary
     insertDiscoveredClassifier(child, parent, action_set, len);
@@ -716,7 +716,7 @@ void doActionSetSubsumption(ClassifierSet &action_set)
             if(isMoreGeneral(action_set.pop[subsumer], action_set.pop[id]))
                 action_set.pop[subsumer].numerosity += action_set.pop[id].numerosity;
                 remove_classifier(action_set, id);
-                action_set.pop.erase(id);
+                action_set.pop[id].id = -1;
         }
 
     }
@@ -775,15 +775,16 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
 /**
  * Try to subsume in the population.
  */
-bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
+bool subsumeClassifierToPop(Classifier &cl, ClassifierVector &cl_set)
 {
     std::list<int> subsumers;
 
     for(auto & item : cl_set)
     {
-        if(subsumes(item.second, cl))
+        if(item.id == -1) continue; // skip empty slots in the array
+        if(subsumes(item, cl))
         {
-            subsumers.push_back(item.second.id);
+            subsumers.push_back(item.id);
         }
     }
     /* if there were classifiers found to subsume, then choose randomly one and subsume */
@@ -837,20 +838,22 @@ bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
  * The classifier that will be deleted is chosen by roulette wheel selection
  * considering the deletion vote. Returns position of the macro-classifier which got decreased by one micro-classifier.
  **/
-int deleteStochClassifier(ClassifierMap &pop)
+int deleteStochClassifier(ClassifierVector &pop)
 {
     double vote_sum=0.0, choicep, meanf=0.0;
     int size=0;
 
     for(auto& item : pop){
-        meanf += item.second.fitness;
-        size += item.second.numerosity;
+        if(item.id == -1) continue; // skip empty slots in the array
+        meanf += item.fitness;
+        size += item.numerosity;
     }
     meanf/=(double)size;
 
     /* get the delete proportion, which depends on the average fitness */
     for(auto& item : pop){
-        vote_sum += getDelProp(item.second, meanf);
+        if(item.id == -1) continue; // skip empty slots in the array
+        vote_sum += getDelProp(item, meanf);
     }
 
     /* choose the classifier that will be deleted */
@@ -859,13 +862,14 @@ int deleteStochClassifier(ClassifierMap &pop)
     vote_sum = 0;
     int removed_id = -1;
     for(auto& item : pop){
-        vote_sum += getDelProp(item.second, meanf);
+        if(item.id == -1) continue; // skip empty slots in the array
+        vote_sum += getDelProp(item, meanf);
         if(vote_sum > choicep){
-            removed_id = item.second.id;
-            if(item.second.numerosity > 1){
-                item.second.numerosity--;
+            removed_id = item.id;
+            if(item.numerosity > 1){
+                item.numerosity--;
             }else{
-                pop.erase(item.second.id);
+                pop[item.id].id = -1;
             }
             classifier_gid_stack.push(removed_id);
             return removed_id;
@@ -891,30 +895,31 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 // ############################### output operations ####################################
 
 
-void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file)
+void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_file)
 {
     int size = pop.size();
     //std::cout<<"\n--- Population Stats ---\n";
     //std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
     //std::cout << "Population set size: " << size << std::endl;
-    //std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+    //std::cout << "Population numerosity size: " << get_pop_size(pop) << std::endl;
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
     output_stats_file<< "Population set size: " << size << std::endl;
-    output_stats_file<< "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+    output_stats_file << "Population numerosity size: " << get_pop_size(pop, true) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
     std::for_each(pop.begin(), pop.end(),
                   [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
-                          (const ClassifierMap::value_type & item)
+                          (const ClassifierVector::value_type & item)
                   {
-                      n_total+= item.second.numerosity;
-                      if(n_min > item.second.numerosity) n_min = item.second.numerosity;
-                      if(n_max < item.second.numerosity) n_max = item.second.numerosity;
-                      f_total+= item.second.fitness;
-                      if(f_min > item.second.fitness) f_min = item.second.fitness;
-                      if(f_max < item.second.fitness) f_max = item.second.fitness;
+                      if(item.id == -1) return; // skip empty slots in the array
+                      n_total+= item.numerosity;
+                      if(n_min > item.numerosity) n_min = item.numerosity;
+                      if(n_max < item.numerosity) n_max = item.numerosity;
+                      f_total+= item.fitness;
+                      if(f_min > item.fitness) f_min = item.fitness;
+                      if(f_max < item.fitness) f_max = item.fitness;
                   });
     //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
@@ -929,7 +934,7 @@ void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file
  * This function saves the classifier population and outputs various stats.
  * This function also saves promising code fragments and filters for reuse by the subsequent experiments
  */
-void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
+void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
 {
     std::string output_full_path = output_path + path_postfix;
     mkdir(output_full_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -974,7 +979,8 @@ void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
     print_filter_evaluation_stats(output_stats_file);
     for(auto& item : pop)
     {
-        fprintClassifier(item.second, output_classifier_file, output_code_fragment_file,
+        if(item.id == -1) continue; // skip empty slots in the array
+        fprintClassifier(item, output_classifier_file, output_code_fragment_file,
                 output_promising_code_fragment_file, output_promising_filter_file);
     }
     output_filters(output_filter_file, output_promising_filter_file);
@@ -1093,19 +1099,20 @@ inline bool is_promising_classifier(Classifier& cl)
  * A promising classifier is one whose error < 10 and experience > 10
  */
 
-void manage_filter_list(ClassifierMap &pop){
+void manage_filter_list(ClassifierVector &pop){
     // reset statistics of all filters before updating
     reset_filter_stats();
 
     for(auto& item : pop){
-        for(int i=0; i < item.second.cf.size(); i++){
-            if(item.second.cf[i].cf_id != -1) {
-                for (int j = 0; j < item.second.cf[i].num_filters; j++) {
-                    Filter &f = get_filter(item.second.cf[i].filter_id[j]);
+        if(item.id == -1) continue; // skip empty slots in the array
+        for(int i=0; i < item.cf.size(); i++){
+            if(item.cf[i].cf_id != -1) {
+                for (int j = 0; j < item.cf[i].num_filters; j++) {
+                    Filter &f = get_filter(item.cf[i].filter_id[j]);
                     f.numerosity++;
                     // if classifier is "promising" then increase the fitness of the filter
                     // a promising classifier is one whose error < 10 and experience > 10
-                    if (is_promising_classifier(item.second)) {
+                    if (is_promising_classifier(item)) {
                         f.fitness++;
                     }
 
@@ -1119,22 +1126,27 @@ void manage_filter_list(ClassifierMap &pop){
     update_evaluation_cache(removed_filters);
 }
 
-int get_pop_numerosity(ClassifierMap &pop) {
+int get_pop_size(ClassifierVector &pop, bool numerosity) {
     int pop_numerosity = 0;
+    int pop_size = 0;
     std::for_each(pop.begin(), pop.end(),
-                  [&pop_numerosity](ClassifierMap::value_type& item)
+                  [&pop_numerosity, &pop_size](ClassifierVector::value_type& item)
                   {
-                      pop_numerosity+= item.second.numerosity;
+                      if(item.id == -1) return; // skip empty slots in the array
+                      pop_numerosity+= item.numerosity;
+                      pop_size += 1;
                   });
-    return pop_numerosity;
+    if(numerosity) return pop_numerosity;
+    else return pop_size;
 }
 
-void get_matching_classifiers(ClassifierMap &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
+void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
 
-    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierMap::value_type& item)
+    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierVector::value_type& item)
     {
-        if(isConditionMatched(item.second, state, img_id, train)){
-            match_set.ids.push_back(item.first);
+        if(item.id == -1) return; // skip empty slots in the array
+        if(isConditionMatched(item, state, img_id, train)){
+            match_set.ids.push_back(item.id);
         }
     });
 }
