@@ -16,7 +16,7 @@
 
 CodeFragmentMap kb_cf;
 //FilterMap kb_filter(1024, 0);
-FilterMap kb_filter;
+FilterMap2 kb_filter;
 //DataSource allData[1];
 float lowerLimit[condLength];
 float upperLimit[condLength];
@@ -233,7 +233,7 @@ int load_code_fragment(std::string cf_file_name, CodeFragmentMap& code_fragments
 
 void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
 
-    load_filter(kb_filter_file_name, kb_filter);
+    //load_filter(kb_filter_file_name, kb_filter);
     load_code_fragment(kb_cf_file_name, kb_cf);
 }
 

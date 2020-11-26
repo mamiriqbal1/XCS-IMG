@@ -110,16 +110,16 @@ struct Hash {
 };
 
 //typedef rigtorp::HashMap<int, Filter, Hash> FilterMap;
-typedef ska::bytell_hash_map<int, Filter, Hash> FilterMap;
-//typedef std::unordered_map<int, Filter> FilterMap;
-extern FilterMap kb_filter;
+typedef ska::bytell_hash_map<int, Filter, Hash> FilterMap2;
+typedef std::vector<Filter> FilterMap;
+extern FilterMap2 kb_filter;
 
 struct FilterList{
     FilterMap filters;
     int gid = 1;
     int max_size_limit = N_filter_ol;
-//    FilterList(int bucket_count, int empty_key) : filters(bucket_count, empty_key){
-//    }
+    FilterList(int array_size) : filters(array_size){
+    }
 };
 
 struct Leaf
