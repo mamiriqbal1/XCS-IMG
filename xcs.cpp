@@ -583,6 +583,7 @@ int main(int argc, char **argv){
     // standardized random number generator
     initialize_random_number_generator(fixed_seed);
     initialize_cf_list(maxPopSize*clfrCondMaxLength);
+    initialize_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf/2);
 
     if(analyze){
         analyze_rules();

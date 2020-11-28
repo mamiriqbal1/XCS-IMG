@@ -114,11 +114,8 @@ extern FilterMap2 kb_filter;
 
 struct FilterList{
     FilterMap filters;
-    int gid = 1;
+    int gid = 0;
     int max_size_limit = N_filter_ol;
-    FilterList(int array_size){
-        filters.reserve(array_size);
-    }
 };
 
 struct CodeFragment

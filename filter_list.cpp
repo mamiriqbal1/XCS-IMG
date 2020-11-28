@@ -12,7 +12,7 @@
 #include <stack>
 
 //FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
-FilterList master_filter_list(30000); // The main filter list that is maintained
+FilterList master_filter_list; // The main filter list that is maintained
 
 std::vector<int> filter_gid_vector;
 std::stack<int, std::vector<int>> filter_gid_stack(filter_gid_vector);
@@ -29,6 +29,12 @@ int get_next_filter_gid()
         return master_filter_list.gid++;
     }
 }
+
+void initialize_filter_list(int size)
+{
+    master_filter_list.filters.reserve(size);
+}
+
 
 
 /*
