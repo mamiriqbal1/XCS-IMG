@@ -5,8 +5,10 @@
 #include <assert.h>
 #include "cf_list.h"
 #include "configuration.h"
+#include "codeFragment.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 
 int cf_gid = 0;
@@ -93,4 +95,78 @@ void print_code_fragment_stats(std::ofstream &output_stats_file) {
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg num filters: "<<f_total/(float)size<<" , max num filters: "<<f_max<<" , min num filters: "<<f_min<<std::endl;
     output_stats_file<<"--- Code Fragment Stats ---\n\n";
+}
+
+
+void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file) {
+    for(CodeFragment & item : main_cf_list){
+        if(item.cf_id == -1) continue; // skip empty slots in the array
+        output_code_fragment_to_file(item, output_code_fragment_file);
+        //output promising code fragments separately
+//        if (is_promising_classifier(classifier)) {
+//            output_code_fragment_to_file(id, output_promising_code_fragment_file);
+//        }
+
+    }
+}
+
+void load_code_fragment(std::string cf_file_name)
+{
+    int loaded_cf_gid = -1;
+    std::string line;
+    std::ifstream cf_file(cf_file_name);
+    if (!cf_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(cf_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cf_file, line)) {
+        // load cf
+        CodeFragment cf;
+        int id=0;
+        std::stringstream line1(line);
+        line1>>id;
+        initializeNewCF(id, cf);
+        int index = 0, leaf_index = 0;
+        while(!line1.eof()){
+            std::string token;
+            line1>>token;
+            // last token is "" that needs to be handled
+            if(token.empty()) break;
+            if(token.substr(0,1) == "D"){ // this is filter id
+                int filter_id = std::stoi(token.substr(1));
+                cf.filter_ids[leaf_index] = filter_id;
+                cf.reverse_polish[index] = leaf_index;
+                leaf_index++;
+            }else{ // this is operator
+                cf.reverse_polish[index] = str_to_opt(token);
+            }
+            index++;
+        }
+        cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
+        cf.num_filters = leaf_index;
+        main_cf_list.resize(cf.cf_id+1);
+        main_cf_list[cf.cf_id] = cf;
+        if(cf.cf_id > loaded_cf_gid){
+            loaded_cf_gid = cf.cf_id;
+        }
+    }
+    cf_gid = 1 + loaded_cf_gid;
+    // populate stack with available slots
+    for(int i=0; i<main_cf_list.size(); i++){
+        if(main_cf_list[i].cf_id == -1) cf_gid_stack.push(i);
+    }
+}
+
+
+void update_cf_list_parameters(ClassifierVector pop)
+{
+    for(Classifier& cl: pop){
+        if(cl.id == -1) continue; // skip empty slot
+        for(int cf_id : cl.cf_ids){
+            if(cf_id == -1) continue; // skip empty slot
+            main_cf_list[cf_id].numerosity++;
+        }
+    }
 }

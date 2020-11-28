@@ -775,6 +775,15 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
     return false;
 }
 
+int count_classifier_cfs(const Classifier &cl)
+{
+    int count = 0;
+    for(int id : cl.cf_ids){
+        if(id != -1) count++;
+    }
+    return count;
+}
+
 void add_classifier_cfs_to_list(Classifier &cl)
 {
     for(int cf_id : cl.cf_ids){
@@ -920,23 +929,20 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 
 void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_file)
 {
-    int size = get_pop_size(pop, false);
-    //std::cout<<"\n--- Population Stats ---\n";
-    //std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
-    //std::cout << "Population set size: " << size << std::endl;
-    //std::cout << "Population numerosity size: " << get_pop_size(pop) << std::endl;
+    int size = 0; //get_pop_size(pop, false);
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
-    output_stats_file<< "Population set size: " << size << std::endl;
-    output_stats_file << "Population numerosity size: " << get_pop_size(pop, true) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
+    int cf_count = 0;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
     std::for_each(pop.begin(), pop.end(),
-                  [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
+                  [&size, &cf_count, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
                           (const ClassifierVector::value_type & item)
                   {
                       if(item.id == -1) return; // skip empty slots in the array
+                      size++;
+                      cf_count += count_classifier_cfs(item);
                       n_total+= item.numerosity;
                       if(n_min > item.numerosity) n_min = item.numerosity;
                       if(n_max < item.numerosity) n_max = item.numerosity;
@@ -944,10 +950,10 @@ void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_f
                       if(f_min > item.fitness) f_min = item.fitness;
                       if(f_max < item.fitness) f_max = item.fitness;
                   });
-    //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
-    //std::cout<<"--- Population Stats ---\n\n";
 
+    output_stats_file<< "Population set size: " << size << std::endl;
+    output_stats_file << "Population numerosity size: " << n_total << std::endl;
+    output_stats_file<< "Avg cf count: " << cf_count/(float)size << std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     output_stats_file<<"--- Population Stats ---\n\n";
@@ -1004,10 +1010,10 @@ void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
     for(auto& item : pop)
     {
         if(item.id == -1) continue; // skip empty slots in the array
-        fprintClassifier(item, output_classifier_file, output_code_fragment_file,
-                output_promising_code_fragment_file, output_promising_filter_file);
+        fprintClassifier(item, output_classifier_file);
     }
     output_filters(output_filter_file, output_promising_filter_file);
+    output_cf_list(output_code_fragment_file, output_promising_code_fragment_file);
     //storeCFs(pop, fpCF);
     output_classifier_file.close();
     output_code_fragment_file.close();
@@ -1040,9 +1046,7 @@ void fprintClassifier(FILE *fp, Classifier *classifier){
 
 
 
-void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
-                      std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file,
-                      std::ofstream &output_promising_filter_file)
+void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file)
 {
     output_classifier_file << "id ";
     output_classifier_file.width(5);
@@ -1053,7 +1057,8 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file.width(5);
     output_classifier_file << classifier.experience;
     output_classifier_file << " num_cf ";
-    output_classifier_file << classifier.cf_ids.size();
+    output_classifier_file.width(5);
+    output_classifier_file << count_classifier_cfs(classifier);
     output_classifier_file << " fitness ";
     output_classifier_file.width(11);
     output_classifier_file << classifier.fitness;
@@ -1075,17 +1080,11 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file << " action ";
     output_classifier_file << classifier.action << std::endl;
 
-//    for(auto & cf : classifier.cf)
-//    {
-//        if(cf.cf_id != -1) {
-//            output_classifier_file << cf.cf_id << " ";
-//            output_code_fragment_to_file(cf, output_code_fragment_file);
-//            // output promising code fragments separately
-//            if (is_promising_classifier(classifier)) {
-//                output_code_fragment_to_file(cf, output_promising_code_fragment_file);
-//            }
-//        }
-//    }
+    for(auto & id : classifier.cf_ids)
+    {
+        output_classifier_file << id << " ";
+
+    }
     output_classifier_file << std::endl;
 }
 
@@ -1174,4 +1173,63 @@ void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet
             match_set.ids.push_back(item.id);
         }
     });
+}
+
+
+void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
+{
+    int loaded_cl_gid = -1;
+    std::string line;
+    std::ifstream cl_file(classifier_file_name);
+    if (!cl_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(classifier_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cl_file, line)) {
+        // load classifier
+        Classifier cl;
+        int num_cf=-1;
+        std::string str;
+        std::stringstream line1(line);
+        line1>>str;
+        line1>>cl.id;
+        line1>>str;
+        line1>>cl.numerosity;
+        line1>>str;
+        line1>>cl.experience;
+        line1>>str;
+        line1>>num_cf;
+        line1>>str;
+        line1>>cl.fitness;
+        line1>>str;
+        line1>>cl.accuracy;
+        line1>>str;
+        line1>>cl.prediction;
+        line1>>str;
+        line1>>cl.predictionError;
+        line1>>str;
+        line1>>cl.actionSetSize;
+        line1>>str;
+        line1>>cl.timeStamp;
+        line1>>str;
+        line1>>cl.action;
+
+        getline(cl_file, line);
+        std::stringstream line2(line);
+        for(int i=0; i<clfrCondMaxLength; i++){
+            line2>>cl.cf_ids[i];
+        }
+        pop.resize(cl.id + 1);
+        pop[cl.id] = cl;
+        if(loaded_cl_gid < cl.id){
+            loaded_cl_gid = cl.id;
+        }
+    }
+    classifier_gid = 1 + loaded_cl_gid;
+    // populate stack with available slots
+    for(int i=0; i<pop.size(); i++){
+        if(pop[i].id == -1) classifier_gid_stack.push(i);
+    }
 }

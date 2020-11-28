@@ -13,5 +13,7 @@ CodeFragment& get_cf(int id);
 void add_cf_to_list(CodeFragment & cf);
 void remove_cf_from_list(int id);
 void print_code_fragment_stats(std::ofstream &output_stats_file);
+void load_code_fragment(std::string cf_file_name);
+void update_cf_list_parameters(ClassifierVector pop);
 
 #endif //RCFC_KB_CF_LIST_H

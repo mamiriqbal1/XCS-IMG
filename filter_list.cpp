@@ -10,6 +10,7 @@
 #include <vector>
 #include <float.h>
 #include <stack>
+#include <sstream>
 
 //FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
 FilterList master_filter_list; // The main filter list that is maintained
@@ -231,5 +232,64 @@ void output_filters(std::ofstream &output_filter_file, std::ofstream &output_pro
         if(item.fitness > 0) {
             output_filter_to_file(item, output_promising_filter_file);
         }
+    }
+}
+
+
+void load_filter(std::string filter_file_name)
+{
+    int loaded_gid = -1;
+    std::string line;
+    std::ifstream filter_file(filter_file_name);
+    if (!filter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(filter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(filter_file, line)){
+        Filter f;
+        std::string str;
+        std::stringstream line1(line);
+        line1 >> str;
+        line1 >> f.id;
+        line1 >> str;
+        line1 >> f.x;
+        line1 >> str;
+        line1 >> f.y;
+        line1 >> str;
+        line1 >> f.filter_size;
+        line1 >> str;
+        line1 >> f.is_dilated;
+        line1 >> str;
+        line1 >> f.fitness;
+        line1 >> str;
+        line1 >> f.numerosity;
+        getline(filter_file, line);
+        std::stringstream line2(line);
+        line2 >> str;
+        f.lower_bounds.reserve(f.filter_size*f.filter_size);
+        f.lower_bounds.assign(f.filter_size*f.filter_size, -1);
+        f.upper_bounds.reserve(f.filter_size*f.filter_size);
+        f.upper_bounds.assign(f.filter_size*f.filter_size, -1);
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line2 >> f.lower_bounds[i];
+        }
+        getline(filter_file, line);
+        std::stringstream line3(line);
+        line3 >> str;
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line3 >> f.upper_bounds[i];
+        }
+        master_filter_list.filters.resize(f.id + 1);
+        master_filter_list.filters[f.id] = f;
+        if(f.id > loaded_gid){
+            loaded_gid = f.id;
+        }
+    }
+    master_filter_list.gid = 1 + loaded_gid;
+    // populate stack with available slots
+    for(int i=0; i<master_filter_list.filters.size(); i++){
+        if(master_filter_list.filters[i].id == -1) filter_gid_stack.push(i);
     }
 }

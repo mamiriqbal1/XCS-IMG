@@ -159,11 +159,9 @@ void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int count
 
 void load_state_for_resume(ClassifierVector &pop)
 {
-    int filter_gid = 1 + load_filter(output_path + resume_from + output_filter_file_name, master_filter_list.filters);
-    master_filter_list.gid = filter_gid;
-    CodeFragmentMap temp_cf;
-    /*cf_gid = */1 + load_code_fragment(output_path + resume_from + output_code_fragment_file_name, temp_cf);
-    classifier_gid = 1 + load_classifier(output_path + resume_from + output_classifier_file_name, pop, temp_cf);
+    load_filter(output_path + resume_from + output_filter_file_name);
+    load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
+    load_classifier(output_path + resume_from + output_classifier_file_name, pop);
 }
 
 /*
@@ -199,6 +197,8 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         output_training_file<<std::endl;
         output_test_file<<std::endl;
         load_state_for_resume(pop);
+        update_cf_list_parameters(pop);
+        manage_filter_list(pop); // update filter parameters etc
         problem_count = 1 + std::atoi(resume_from.c_str());
     }
     for( ; problem_count <= maxProblems; problem_count++)
