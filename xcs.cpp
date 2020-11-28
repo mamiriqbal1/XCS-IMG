@@ -21,6 +21,7 @@
 #include <signal.h>
 #include "codeFragment.h"
 #include "filter_list.h"
+#include "cf_list.h"
 #include <chrono>
 #include <ctime>
 
@@ -581,6 +582,7 @@ int main(int argc, char **argv){
 
     // standardized random number generator
     initialize_random_number_generator(fixed_seed);
+    initialize_cf_list(maxPopSize*clfrCondMaxLength);
 
     if(analyze){
         analyze_rules();

@@ -54,3 +54,5 @@ int get_pop_size(ClassifierVector &pop, bool numerosity);
 void get_matching_classifiers(ClassifierVector& pop, float *state, ClassifierSet &match_set, int img_id, bool train);
 bool is_promising_classifier(Classifier& cl);
 void transfer_kb_filter(CodeFragment & cf);
+void remove_classifier_cfs_from_list(Classifier &cl);
+void add_classifier_cfs_to_list(Classifier &cl);

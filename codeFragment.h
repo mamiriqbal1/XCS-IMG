@@ -31,7 +31,7 @@ bool mutate_cf(CodeFragment &cf, float *state);
 bool shrink_cf(CodeFragment &cf, float* state);
 bool negate_cf(CodeFragment &cf);
 int get_new_filter(float *state);
-bool add_cf(CodeFragment &cf, float* state);
+bool create_new_cf(CodeFragment &cf, float* state);
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 Filter get_kb_filter(float* state);
@@ -39,4 +39,3 @@ opType str_to_opt(std::string str);
 CodeFragment get_kb_code_fragment(float* state);
 void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream &output_visualization_file);
 bool is_cf_covered(CodeFragment& cf, Classifier& cl);
-bool is_cf_covered(CodeFragment& cf, CodeFragmentVector & cfv);

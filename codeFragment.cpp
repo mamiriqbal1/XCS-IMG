@@ -11,6 +11,7 @@
 #include "codeFragment.h"
 #include "env.h"
 #include "filter_list.h"
+#include "cf_list.h"
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
@@ -576,21 +577,21 @@ bool add_operator(CodeFragment& cf, float* state){
 }
 
 
-bool add_cf(CodeFragment &cf, float* state){
+bool create_new_cf(CodeFragment &cf, float* state){
     CodeFragment temp;
     initializeNewCF(cf_gid, temp);
     temp.cf_id = -1;
     if (use_kb && drand() < 0.5) {
         CodeFragment received_cf = get_kb_code_fragment(state);;
         if (received_cf.cf_id != -1) {
-            received_cf.cf_id = cf_gid;
-            temp = received_cf;
+//            received_cf.cf_id = cf_gid;
+//            temp = received_cf;
             // add the filters from kb to master filter list
             transfer_kb_filter(temp);
         }
     }
     if (temp.cf_id == -1) { // if cf not received from kb
-        temp.cf_id = cf_gid;
+//        temp.cf_id = cf_gid;
         // create a cf of depth zero to start with
         opType *end = randomProgram(temp.reverse_polish.data(), 0, cfMaxDepth, 0);
         addLeafCF(temp, state);
@@ -599,8 +600,9 @@ bool add_cf(CodeFragment &cf, float* state){
         negate_cf(temp);
     }
 
+    temp.cf_id = get_next_cf_gid();
+    add_cf_to_list(temp);
     cf = temp;
-    cf_gid++;
     return true;
 }
 
@@ -649,24 +651,20 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 }
 
 
-bool is_cf_covered(CodeFragment& cf, CodeFragmentVector & cfv)
+bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 {
     if(cf.cf_id == -1) return true;
 
     bool covered = false;
-    for(int i=0; i<cfv.size(); i++){
-        if(is_cf_equal(cf, cfv[i])){
-            covered = true;
-            break;
+    for(int i=0; i<clfrCondMaxLength; i++){
+        if(cl.cf_ids[i] != -1) {
+            if (is_cf_equal(cf, get_cf(cl.cf_ids[i]))) {
+                covered = true;
+                break;
+            }
         }
     }
     return covered;
-}
-
-bool is_cf_covered(CodeFragment& cf, Classifier& cl)
-{
-    return is_cf_covered(cf, cl.cf);
-
 }
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){

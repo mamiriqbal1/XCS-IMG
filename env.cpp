@@ -282,7 +282,7 @@ int load_classifier(std::string classifier_file_name, ClassifierVector& pop, Cod
         for(int i=0; i<num_cf; i++){
             int cf_id = -1;
             line2>>cf_id;
-            cl.cf.push_back(code_fragments[cf_id]);
+            cl.cf_ids[i] = cf_id;
 
         }
         pop[cl.id] = cl;
