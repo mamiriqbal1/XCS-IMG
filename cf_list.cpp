@@ -22,6 +22,8 @@ int get_next_cf_gid()
         cf_gid_stack.pop();
         return val;
     }else{
+        // only grow the vector when a new element is needed
+        main_cf_list.resize(cf_gid + 1);
         return cf_gid++;
     }
 }
@@ -30,8 +32,8 @@ int get_next_cf_gid()
 void initialize_cf_list(int size)
 {
     main_cf_list.reserve(size);
-    CodeFragment temp;
-    main_cf_list.assign(size, temp);
+//    CodeFragment temp;
+//    main_cf_list.assign(size, temp);
 }
 
 CodeFragment& get_cf(int id)

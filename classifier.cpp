@@ -920,7 +920,7 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 
 void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_file)
 {
-    int size = pop.size();
+    int size = get_pop_size(pop, false);
     //std::cout<<"\n--- Population Stats ---\n";
     //std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
     //std::cout << "Population set size: " << size << std::endl;
@@ -928,7 +928,6 @@ void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_f
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
-    output_stats_file << "Global CodeFragment ID: " << get_next_cf_gid() << std::endl;
     output_stats_file<< "Population set size: " << size << std::endl;
     output_stats_file << "Population numerosity size: " << get_pop_size(pop, true) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;

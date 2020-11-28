@@ -116,7 +116,8 @@ struct FilterList{
     FilterMap filters;
     int gid = 1;
     int max_size_limit = N_filter_ol;
-    FilterList(int array_size) : filters(array_size){
+    FilterList(int array_size){
+        filters.reserve(array_size);
     }
 };
 

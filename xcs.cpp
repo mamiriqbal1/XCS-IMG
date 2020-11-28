@@ -89,7 +89,7 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
 void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file) {
 
-    int setSize = pop.size();
+    int setSize = get_pop_size(pop, false);
     output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
@@ -99,7 +99,7 @@ void writeTestPerformance(ClassifierVector &pop, double performance, double sysE
                           std::ofstream &output_test_file, int training_problem_count, double training_accuracy,
                           double training_error) {
 
-    int setSize = pop.size();
+    int setSize = get_pop_size(pop, false);
     output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
     << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Validation: " << training_problem_count << " " << problem_count <<
