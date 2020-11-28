@@ -26,7 +26,7 @@ CodeFragment *previousCFPopulation;
 
 // <image_id, location_where_matched> if location >= 0 then matched otherwise not matched.
 typedef std::unordered_map<int, int> ImageEvaluationMap;
-typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_id, <img_id, bool>>
+typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_ids, <img_id, bool>>
 FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
 unsigned long map_hits = 0;
@@ -141,7 +141,7 @@ void initializeNewCF(int id, CodeFragment &cf)
         cf.reverse_polish[i] = OPNOP;
     }
     for(int i=0; i < cfMaxLeaf; i++){
-        cf.filter_id[i] = -1;
+        cf.filter_ids[i] = -1;
     }
     cf.cf_id = id;
 }
@@ -250,7 +250,7 @@ void addLeafCF(CodeFragment &cf, float *state){
         if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             cf.reverse_polish[i] = leafNum;
-            cf.filter_id[leafNum] = get_new_filter(state);
+            cf.filter_ids[leafNum] = get_new_filter(state);
             leafNum++;
         }
     }
@@ -479,11 +479,11 @@ bool remove_operator(CodeFragment& cf, float* state){
         if(cf.reverse_polish[i] < 0){ // its an operator
             // remove leaf from leaves list
             int leave_index = cf.reverse_polish[i-1];
-            cf.filter_id[leave_index] = -1;
+            cf.filter_ids[leave_index] = -1;
             for(int j=leave_index+1; j<cfMaxLeaf; j++){
-                cf.filter_id[j-1] = cf.filter_id[j];
+                cf.filter_ids[j - 1] = cf.filter_ids[j];
             }
-            cf.filter_id[cfMaxLeaf-1] = -1;
+            cf.filter_ids[cfMaxLeaf - 1] = -1;
             // now adjust indexes of all leaves which were greater than leave_index
             for(int k=0; k<cfMaxLength; k++){
                 if(cf.reverse_polish[k] > leave_index){
@@ -555,7 +555,7 @@ bool add_operator(CodeFragment& cf, float* state){
                     std::next(cf.reverse_polish.begin(),i+3)
                     );
             cf.reverse_polish[i+1] = cf.num_filters;
-            cf.filter_id[cf.num_filters] = new_filter_id;
+            cf.filter_ids[cf.num_filters] = new_filter_id;
             cf.num_filters++;
             cf.reverse_polish[i+2] = selected_operator;
             if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
@@ -569,7 +569,7 @@ bool add_operator(CodeFragment& cf, float* state){
                 cf.reverse_polish = temp_reverse_polish;
                 //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
                 cf.num_filters--;
-                cf.filter_id[cf.num_filters] = -1;
+                cf.filter_ids[cf.num_filters] = -1;
             }
         }
     }
@@ -642,7 +642,7 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
     if(cf1.num_filters != cf2.num_filters ||
        cf1.reverse_polish != cf2.reverse_polish ||
-       cf1.filter_id != cf2.filter_id) {
+       cf1.filter_ids != cf2.filter_ids) {
         return false;
     }else {
         return true;
@@ -688,7 +688,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state, cl_id, img_id, train))
+            if(evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train))
             {
                 stack[SP++] = 1;   //changed
             }
@@ -879,8 +879,8 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
         code = cf.reverse_polish[i];
         if(code == OPNOP){
             break;
-        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_id index
-            output_code_fragment_file << "D" << cf.filter_id[code] << " "; // print filter id
+        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_ids index
+            output_code_fragment_file << "D" << cf.filter_ids[code] << " "; // print filter id
         }else if (code>=condLength && isPreviousLevelsCode(code)){
             // output previous when implemented
         }else{

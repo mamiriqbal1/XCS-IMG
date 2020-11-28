@@ -213,7 +213,7 @@ int load_code_fragment(std::string cf_file_name, CodeFragmentMap& code_fragments
             if(token.empty()) break;
             if(token.substr(0,1) == "D"){ // this is filter id
                 int filter_id = std::stoi(token.substr(1));
-                cf.filter_id[leaf_index] = filter_id;
+                cf.filter_ids[leaf_index] = filter_id;
                 cf.reverse_polish[index] = leaf_index;
                 leaf_index++;
             }else{ // this is operator

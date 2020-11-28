@@ -101,8 +101,6 @@ struct Filter{
     bool is_dilated = false; // what is the type of filter normal or dilated
     std::vector<float> lower_bounds;
     std::vector<float> upper_bounds;
-    //float lower_bounds[max_filter_size*max_filter_size];
-    //float upper_bounds[max_filter_size*max_filter_size];
 };
 
 struct Hash {
@@ -122,25 +120,18 @@ struct FilterList{
     }
 };
 
-struct Leaf
-{
-    opType featureNumber;
-    float lowerBound;
-    float upperBound;
-};
-
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;
     int num_filters; // equal to number of leaves/filters to be determined at run time
-    std::vector<int> filter_id;  // leaves: ids of the filters included in this code fragment
+    std::vector<int> filter_ids;  // leaves: ids of the filters included in this code fragment
     int cf_id;
     int numerosity = 0;
     CodeFragment(){
         reverse_polish.reserve(cfMaxLength);
         reverse_polish.assign(cfMaxLength, OPNOP);
-        filter_id.reserve(cfMaxLeaf);
-        filter_id.assign(cfMaxLeaf, -1);
+        filter_ids.reserve(cfMaxLeaf);
+        filter_ids.assign(cfMaxLeaf, -1);
         num_filters = -1;
         cf_id = -1;
     }
@@ -173,12 +164,12 @@ struct Classifier
 //typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierVector;
 //typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierVector;
 typedef std::vector<Classifier> ClassifierVector;
-typedef std::list<int> ClassifierIDList;
+typedef std::vector<int> ClassifierIDVector;
 struct ClassifierSet{
-    ClassifierIDList ids;
+    ClassifierIDVector ids;
     ClassifierVector& pop;
     ClassifierSet(int size, ClassifierVector& population) : pop(population){
-        //ids.reserve(size);
+        ids.reserve(size);
     }
 };
 

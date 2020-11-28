@@ -178,7 +178,7 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
 void transfer_kb_filter(CodeFragment & cf)
 {
     for(int i=0; i<cf.num_filters; i++){
-        cf.filter_id[i] = add_filter(kb_filter[cf.filter_id[i]]);
+        cf.filter_ids[i] = add_filter(kb_filter[cf.filter_ids[i]]);
     }
 }
 
@@ -420,7 +420,7 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
 void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
     double best_fitness = -1, prediction_error=0;
-    ClassifierIDList winner_set;
+    ClassifierIDVector winner_set;
 
     while(winner_set.empty()) {
         for (auto &id : set.ids) {
@@ -1134,7 +1134,7 @@ void manage_filter_list(ClassifierVector &pop){
             if(item.cf_ids[i] != -1) {
                 CodeFragment & cf = get_cf(item.cf_ids[i]);
                 for (int j = 0; j < cf.num_filters; j++) {
-                    Filter &f = get_filter(cf.filter_id[j]);
+                    Filter &f = get_filter(cf.filter_ids[j]);
                     f.numerosity++;
                     // if classifier is "promising" then increase the fitness of the filter
                     // a promising classifier is one whose error < 10 and experience > 10
