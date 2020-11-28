@@ -1111,7 +1111,7 @@ double absoluteValue(double value)
 
 inline bool is_promising_classifier(Classifier& cl)
 {
-    cl.predictionError < epsilon_0 && cl.experience > theta_promising;
+    return cl.predictionError < epsilon_0 && cl.experience > theta_promising;
 
 }
 
