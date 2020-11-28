@@ -928,6 +928,7 @@ void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_f
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
+    output_stats_file << "Global CodeFragment ID: " << get_next_cf_gid() << std::endl;
     output_stats_file<< "Population set size: " << size << std::endl;
     output_stats_file << "Population numerosity size: " << get_pop_size(pop, true) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
@@ -998,6 +999,7 @@ void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
         exit(1);
     }
     print_population_stats(pop, output_stats_file);
+    print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
     print_filter_evaluation_stats(output_stats_file);
     for(auto& item : pop)

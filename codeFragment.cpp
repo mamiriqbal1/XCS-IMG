@@ -579,8 +579,7 @@ bool add_operator(CodeFragment& cf, float* state){
 
 bool create_new_cf(CodeFragment &cf, float* state){
     CodeFragment temp;
-    initializeNewCF(cf_gid, temp);
-    temp.cf_id = -1;
+    initializeNewCF(-1, temp);
     if (use_kb && drand() < 0.5) {
         CodeFragment received_cf = get_kb_code_fragment(state);;
         if (received_cf.cf_id != -1) {

@@ -129,7 +129,6 @@ struct Leaf
     float upperBound;
 };
 
-extern  int cf_gid;
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;

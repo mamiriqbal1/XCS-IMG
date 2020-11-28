@@ -162,7 +162,7 @@ void load_state_for_resume(ClassifierVector &pop)
     int filter_gid = 1 + load_filter(output_path + resume_from + output_filter_file_name, master_filter_list.filters);
     master_filter_list.gid = filter_gid;
     CodeFragmentMap temp_cf;
-    cf_gid = 1 + load_code_fragment(output_path + resume_from + output_code_fragment_file_name, temp_cf);
+    /*cf_gid = */1 + load_code_fragment(output_path + resume_from + output_code_fragment_file_name, temp_cf);
     classifier_gid = 1 + load_classifier(output_path + resume_from + output_classifier_file_name, pop, temp_cf);
 }
 
