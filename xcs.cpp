@@ -225,8 +225,6 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
            writePerformance(pop, accuracy, error, problem_count, output_training_file);
            correct_count = 0;
            error_sum = 0;
-           // parameter control: change parameters after every epoch
-           pM += pM_step;
         }
         if(problem_count % validation_frequency == 0 && problem_count > 0){
 
@@ -236,6 +234,8 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
+            // parameter control: change parameters after every epoch
+            pM += pM_step;
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_list(pop);
