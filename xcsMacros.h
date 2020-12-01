@@ -17,6 +17,7 @@ const int theta_del = 20; //Specified the threshold over which the fitness of a 
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 extern double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 extern double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+extern double pM_step;
 extern double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 extern double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 const int mutationType = 0; // 0 niche, and 1 general mutation.

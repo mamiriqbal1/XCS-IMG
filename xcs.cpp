@@ -28,6 +28,7 @@
 auto start = std::chrono::system_clock::now();
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+double pM_step = 0; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 
@@ -224,6 +225,8 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
            writePerformance(pop, accuracy, error, problem_count, output_training_file);
            correct_count = 0;
            error_sum = 0;
+           // parameter control: change parameters after every epoch
+           pM += pM_step;
         }
         if(problem_count % validation_frequency == 0 && problem_count > 0){
 
@@ -381,6 +384,8 @@ void LoadConfig(char* file)
                 pX = atof(value.c_str());
             }else if(name == "pM"){
                 pM = atof(value.c_str());
+            }else if(name == "pM_step"){
+                pM_step = atof(value.c_str());
             }else if(name == "pM_allel"){
                 pM_allel = atof(value.c_str());
             }else if(name == "p_promising_filter"){
