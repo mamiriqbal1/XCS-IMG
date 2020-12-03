@@ -203,7 +203,7 @@ void create_new_filter_from_input(Filter& filter, float *state)
                 index++;
             }
         }
-    }while(false && sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
+    }while(sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
     filter.x = x_position;
     filter.y = y_position;
 
