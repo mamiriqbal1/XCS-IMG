@@ -13,5 +13,5 @@ void startXCS();
 void doOneSingleStepExperiment(ClassifierVector &pop);
 
 void
-doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool visualization,
                     double training_performance, double training_error);

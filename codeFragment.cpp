@@ -366,10 +366,10 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
  * This function will save data that can be used to visualize classifiers and filters for an image
  * that was predicted correctly or incorrectly
  */
-void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream &output_visualization_file) {
+void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file) {
 
-    for(auto & id:match_set.ids){
-        output_visualization_file<<id<<" "<<match_set.pop[id].action<<" ";
+    for(auto & id:action_set.ids){
+        output_visualization_file << id << " ";
     }
     output_visualization_file<<std::endl;
 //    for(auto & item:evaluation_validation_map){

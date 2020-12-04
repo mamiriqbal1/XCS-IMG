@@ -32,6 +32,7 @@ double pM_step = 0; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 
+bool visualization = false;
 bool fixed_seed = true;
 bool use_kb = false;
 bool Testing = true;
@@ -202,6 +203,10 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         manage_filter_list(pop); // update filter parameters etc
         problem_count = 1 + std::atoi(resume_from.c_str());
     }
+    if(visualization){
+        std::cout<<"Saving visualization data..."<<std::endl;
+        doOneSingleStepTest(pop, problem_count, output_test_file, true, 0, 0);
+    }
     for( ; problem_count <= maxProblems; problem_count++)
     {
         int pop_size = get_pop_size(pop, false);
@@ -231,7 +236,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             double epoch_accuracy = epoch_correct_count/(double)validation_frequency;
             double epoch_error = epoch_error_sum/validation_frequency;
             save_experiment_results(pop, std::to_string(problem_count) + "/"); // save experiment results after every epoch
-            doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, epoch_accuracy, epoch_error);
+            doOneSingleStepTest(pop, problem_count, output_test_file, false, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
             // parameter control: change parameters after every epoch
@@ -247,7 +252,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
 
 
 void
-doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool visualization,
                     double training_performance, double training_error) {
 	bool wasCorrect = false;
     int correct_count = 0;
@@ -255,7 +260,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 	DataSource *testState = NULL;
 
     std::ofstream output_visualization_file;
-    if(last_epoch) {
+    if(visualization) {
         output_visualization_file.open(output_path + output_visualization_file_name);
         if (!output_visualization_file.is_open()) {
             std::cout << "Could not open output visualization file";
@@ -265,6 +270,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 
 	for(int t=0; t<testNumInstances; t++){
         ClassifierSet match_set(maxPopSize, pop);
+        ClassifierSet action_set(maxPopSize, pop);
         //std::cout<<t<<"/"<<testNumInstances<<"\r";
 		bool isMatched = false;
 		testState = &testingData[t];
@@ -275,6 +281,14 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
         if(isMatched) {
             getPredictionArray(match_set);
             actionWinner = bestActionWinner();
+            // save visualization data
+            if(visualization){
+                getActionSet(actionWinner, match_set, action_set);
+                // save visualization data - start with image id, actual action and predicted action
+                output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
+                save_visualization_data(action_set, t, output_visualization_file);
+
+            }
         }else{
             // if match set is empty then select an action randomly
             actionWinner = irand(numActions);
@@ -292,7 +306,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 		    correct_count += 1;
         }
     }
-	if(last_epoch){
+	if(visualization){
 	    output_visualization_file.close();
 	}
     double accuracy = correct_count/(double)testNumInstances;
@@ -401,6 +415,12 @@ void LoadConfig(char* file)
                     fixed_seed = false;
                 }else if(value == "yes"){
                     fixed_seed = true;
+                }
+            }else if(name == "visualization"){
+                if(value == "no"){
+                    visualization = false;
+                }else if(value == "yes"){
+                    visualization = true;
                 }
             }else if(name == "kb_cf_file"){
                 kb_cf_file = value;

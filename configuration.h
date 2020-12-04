@@ -50,6 +50,7 @@ const char output_stats_file_name[] = "stats.txt";
 const char output_visualization_file_name[] = "visualization.txt";
 const char output_done_file_name[] = "done.txt";  // file indicating completion of experiment
 
+extern bool visualization;
 extern int clfrCondMaxLength;//2 // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 extern int cfMaxDepth;// = 2;
 const int cfMinDepth = 0;
