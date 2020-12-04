@@ -159,8 +159,27 @@ void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int count
     sysError = absoluteValue(reward - getBestValue());
 }
 
+
+void load_parameter(std::string parameter_file_name)
+{
+    std::string line;
+    std::ifstream parameter_file(parameter_file_name);
+    if (!parameter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(parameter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+    getline(parameter_file, line);
+    std::string str;
+    std::stringstream line1(line);
+    line1>>str;
+    line1>>pM;
+}
+
+
 void load_state_for_resume(ClassifierVector &pop)
 {
+    load_parameter(output_path + resume_from + output_filter_file_name);
     load_filter(output_path + resume_from + output_filter_file_name);
     load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name, pop);

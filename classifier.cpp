@@ -1003,6 +1003,13 @@ void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
         std::cout << "Could not open output stats file";
         exit(1);
     }
+    std::ofstream output_parameter_file;
+    output_parameter_file.open(output_full_path + output_parameter_file_name);
+    if(!output_parameter_file.is_open()){
+        std::cout << "Could not open output parameter file";
+        exit(1);
+    }
+    output_parameter_file<<"pM "<<pM<<std::endl;
     print_population_stats(pop, output_stats_file);
     print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
@@ -1021,6 +1028,7 @@ void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
     output_filter_file.close();
     output_promising_filter_file.close();
     output_stats_file.close();
+    output_parameter_file.close();
 }
 
 /**
