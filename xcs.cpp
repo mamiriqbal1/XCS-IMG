@@ -28,6 +28,7 @@
 auto start = std::chrono::system_clock::now();
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+double pM_initial;
 double pM_step = 0; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
@@ -179,7 +180,7 @@ void load_parameter(std::string parameter_file_name)
 
 void load_state_for_resume(ClassifierVector &pop)
 {
-    load_parameter(output_path + resume_from + output_filter_file_name);
+//    load_parameter(output_path + resume_from + output_filter_file_name);
     load_filter(output_path + resume_from + output_filter_file_name);
     load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name, pop);
@@ -220,7 +221,12 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         load_state_for_resume(pop);
         update_cf_list_parameters(pop);
         manage_filter_list(pop); // update filter parameters etc
-        problem_count = 1 + std::atoi(resume_from.c_str());
+        problem_count = std::atoi(resume_from.c_str());
+        // reset pM
+        pM = pM_initial + pM_step * (problem_count / validation_frequency);
+        pM = fmax(pM, 0);
+        pM = fmin(pM, 1);
+        problem_count++;  // resume from next problem
     }
     if(visualization){
         std::cout<<"Saving visualization data..."<<std::endl;
@@ -259,7 +265,9 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             epoch_correct_count = 0;
             epoch_error_sum = 0;
             // parameter control: change parameters after every epoch
-            pM += pM_step;
+            pM = pM_initial + pM_step * (problem_count / validation_frequency);
+            pM = fmax(pM, 0);
+            pM = fmin(pM, 1);
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_list(pop);
@@ -417,6 +425,7 @@ void LoadConfig(char* file)
                 pX = atof(value.c_str());
             }else if(name == "pM"){
                 pM = atof(value.c_str());
+                pM_initial = pM;
             }else if(name == "pM_step"){
                 pM_step = atof(value.c_str());
             }else if(name == "pM_allel"){
