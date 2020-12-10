@@ -9,8 +9,33 @@
 #include <numeric>
 #include <vector>
 #include <float.h>
+#include <stack>
+#include <sstream>
 
+//FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
 FilterList master_filter_list; // The main filter list that is maintained
+
+std::vector<int> filter_gid_vector;
+std::stack<int, std::vector<int>> filter_gid_stack(filter_gid_vector);
+
+int get_next_filter_gid()
+{
+    if(filter_gid_stack.size()>0){
+        int val = filter_gid_stack.top();
+        filter_gid_stack.pop();
+        return val;
+    }else{
+        // only grow the vector when a new element is needed
+        master_filter_list.filters.resize(master_filter_list.gid+1);
+        return master_filter_list.gid++;
+    }
+}
+
+void initialize_filter_list(int size)
+{
+    master_filter_list.filters.reserve(size);
+}
+
 
 
 /*
@@ -25,28 +50,28 @@ int add_filter(Filter filter_to_add){
     auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
             {
-                if(filter_item.second.fitness < 1) return false; // only a promising filter can subsume;
+                if(filter_item.id == -1) return false; // skip empty slots in the array
+                if(filter_item.fitness < 1) return false; // only a promising filter can subsume;
                 // only filter of same size and type and position can subsume
-                if(filter_item.second.filter_size != filter_to_add.filter_size ||
-                        filter_item.second.is_dilated != filter_to_add.is_dilated ||
-                        filter_item.second.x != filter_to_add.x ||
-                        filter_item.second.y != filter_to_add.y) return false;
+                if(filter_item.x != filter_to_add.x || filter_item.y != filter_to_add.y ||
+                   filter_item.filter_size != filter_to_add.filter_size ||
+                   filter_item.is_dilated != filter_to_add.is_dilated) return false;
                 for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
-                    if(filter_item.second.lower_bounds[i] > filter_to_add.lower_bounds[i]
-                       || filter_item.second.upper_bounds[i] < filter_to_add.upper_bounds[i]){
+                    if(filter_item.lower_bounds[i] > filter_to_add.lower_bounds[i]
+                       || filter_item.upper_bounds[i] < filter_to_add.upper_bounds[i]){
                         return false;
                     }
                 }
                 return true;
             });
     if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
-        filter_to_add.id = master_filter_list.gid++;
+        filter_to_add.id = get_next_filter_gid();
         filter_to_add.numerosity = 1;
         master_filter_list.filters[filter_to_add.id] = filter_to_add;
         return filter_to_add.id;
     }else{
-        general_filter_iterator->second.numerosity++;
-        return general_filter_iterator->second.id;
+        general_filter_iterator->numerosity++;
+        return general_filter_iterator->id;
     }
 }
 
@@ -69,8 +94,8 @@ void reset_filter_stats(){
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
                             [](FilterMap::value_type & filter_item)
                             {
-                                filter_item.second.numerosity=0;
-                                filter_item.second.fitness=0;
+                                filter_item.numerosity=0;
+                                filter_item.fitness=0;
                             });
 }
 
@@ -78,15 +103,14 @@ void reset_filter_stats(){
  * This function removes any unused filters
  */
 void remove_unused_filters(std::forward_list<int>& removed_filters){
-    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
-        if(it->second.numerosity == 0){
-            removed_filters.push_front(it->second.id);
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
+        if(it->id == -1) continue; // skip empty slots in the array
+        if(it->numerosity == 0){
+            removed_filters.push_front(it->id);
+            filter_gid_stack.push(it->id);
+            master_filter_list.filters[it->id].id = -1;  // remove unused filter by making it empty slot
         }
     }
-    for(auto it=removed_filters.begin(); it!=removed_filters.end();it++){
-        master_filter_list.filters.erase(*it);
-    }
-    //print_filter_stats();
 }
 
 
@@ -94,38 +118,32 @@ void remove_unused_filters(std::forward_list<int>& removed_filters){
  * Print stats about the filter list
  */
 void print_filter_stats(std::ofstream &output_stats_file) {
-    //std::cout<<"\n--- Filter Stats ---\n";
-    //std::cout<<"classifier_gid: "<<master_filter_list.gid<<std::endl;
-
     output_stats_file<<"\n--- Filter Stats ---\n";
     output_stats_file<<"filter_gid: "<<master_filter_list.gid<<std::endl;
-    int size = master_filter_list.filters.size();
-    //std::cout<<"filter list size: "<<size<<std::endl;
-
-    output_stats_file<<"filter list size: "<<size<<std::endl;
+    int size = 0;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
     int promising_filters = 0;
     int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
     int num_dilated = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters, &filter_sizes_count, &num_dilated]
+            [&size, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters, &filter_sizes_count, &num_dilated]
             (const FilterMap::value_type & filter_item)
             {
-                n_total+= filter_item.second.numerosity;
-                if(n_min > filter_item.second.numerosity) n_min = filter_item.second.numerosity;
-                if(n_max < filter_item.second.numerosity) n_max = filter_item.second.numerosity;
-                f_total+= filter_item.second.fitness;
-                if(f_min > filter_item.second.fitness) f_min = filter_item.second.fitness;
-                if(f_max < filter_item.second.fitness) f_max = filter_item.second.fitness;
-                if(filter_item.second.fitness>0) promising_filters++;
-                filter_sizes_count[filter_item.second.filter_size]++;
-                if(filter_item.second.is_dilated) num_dilated++;
+                if(filter_item.id == -1) return; // skip empty slots in the array
+                size++;
+                n_total+= filter_item.numerosity;
+                if(n_min > filter_item.numerosity) n_min = filter_item.numerosity;
+                if(n_max < filter_item.numerosity) n_max = filter_item.numerosity;
+                f_total+= filter_item.fitness;
+                if(f_min > filter_item.fitness) f_min = filter_item.fitness;
+                if(f_max < filter_item.fitness) f_max = filter_item.fitness;
+                if(filter_item.fitness>0) promising_filters++;
+                filter_sizes_count[filter_item.filter_size]++;
+                if(filter_item.is_dilated) num_dilated++;
             });
-    //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
-    //std::cout<<"promising filters: "<<promising_filters<<std::endl;
 
+    output_stats_file<<"filter list size: "<<size<<std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     output_stats_file<<"promising filters: "<<promising_filters<<std::endl;
@@ -150,9 +168,10 @@ void print_filter_stats(std::ofstream &output_stats_file) {
 int get_promising_filter_id(){
     // create a vector of promising filters
     std::vector<int> promising_filters;
-    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();it++){
-        if(it->second.fitness > 0){
-            promising_filters.push_back(it->second.id);
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
+        if(it->id == -1) continue; // skip empty slots in the array
+        if(it->fitness > 0){
+            promising_filters.push_back(it->id);
         }
     }
     // select two filters for tournament
@@ -208,9 +227,69 @@ void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
 
 void output_filters(std::ofstream &output_filter_file, std::ofstream &output_promising_filter_file) {
     for(auto & item : master_filter_list.filters){
-        output_filter_to_file(item.second, output_filter_file);
-        if(item.second.fitness > 0) {
-            output_filter_to_file(item.second, output_promising_filter_file);
+        if(item.id == -1) continue; // skip empty slots in the array
+        output_filter_to_file(item, output_filter_file);
+        if(item.fitness > 0) {
+            output_filter_to_file(item, output_promising_filter_file);
         }
+    }
+}
+
+
+void load_filter(std::string filter_file_name)
+{
+    int loaded_gid = -1;
+    std::string line;
+    std::ifstream filter_file(filter_file_name);
+    if (!filter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(filter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(filter_file, line)){
+        Filter f;
+        std::string str;
+        std::stringstream line1(line);
+        line1 >> str;
+        line1 >> f.id;
+        line1 >> str;
+        line1 >> f.x;
+        line1 >> str;
+        line1 >> f.y;
+        line1 >> str;
+        line1 >> f.filter_size;
+        line1 >> str;
+        line1 >> f.is_dilated;
+        line1 >> str;
+        line1 >> f.fitness;
+        line1 >> str;
+        line1 >> f.numerosity;
+        getline(filter_file, line);
+        std::stringstream line2(line);
+        line2 >> str;
+        f.lower_bounds.reserve(f.filter_size*f.filter_size);
+        f.lower_bounds.assign(f.filter_size*f.filter_size, -1);
+        f.upper_bounds.reserve(f.filter_size*f.filter_size);
+        f.upper_bounds.assign(f.filter_size*f.filter_size, -1);
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line2 >> f.lower_bounds[i];
+        }
+        getline(filter_file, line);
+        std::stringstream line3(line);
+        line3 >> str;
+        for(int i=0; i<f.filter_size*f.filter_size; i++){
+            line3 >> f.upper_bounds[i];
+        }
+        master_filter_list.filters.resize(f.id + 1);
+        master_filter_list.filters[f.id] = f;
+        if(f.id > loaded_gid){
+            loaded_gid = f.id;
+        }
+    }
+    master_filter_list.gid = 1 + loaded_gid;
+    // populate stack with available slots
+    for(int i=0; i<master_filter_list.filters.size(); i++){
+        if(master_filter_list.filters[i].id == -1) filter_gid_stack.push(i);
     }
 }

@@ -14,14 +14,30 @@
 #include <float.h>
 #include <iomanip>
 #include <sys/stat.h>
+#include <stack>
+#include "cf_list.h"
 
-int cf_gid = 0;
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
 int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 
+std::vector<int> cl_gid_vector;
+std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
+//std::stack<int, std::vector<int>> classifier_gid_stack;
+
+int get_next_cl_gid()
+{
+    if(classifier_gid_stack.size()>0){
+        int val = classifier_gid_stack.top();
+        classifier_gid_stack.pop();
+        return val;
+    }else{
+        return classifier_gid++;
+    }
+}
+
 void setInitialVariables(Classifier &clfr, double setSize, int time){
-    clfr.id = classifier_gid++;
+//    clfr.id = get_next_cl_gid();  // it will be set just before adding to population
     clfr.prediction = predictionIni;
     clfr.predictionError = predictionErrorIni;
     clfr.accuracy = 0.0;
@@ -66,11 +82,11 @@ int get_set_numerosity(ClassifierSet &set)
   * Code review
   * Overall flow is as per algorithm
   */
-void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
+void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
     int population_numerosity=0, match_set_numerosity=0, representedActions;
 
     bool coveredActions[numActions];
-    population_numerosity = get_pop_numerosity(pop);
+    population_numerosity = get_pop_size(pop, true);
     get_matching_classifiers(pop, state, match_set, img_id, true);
     match_set_numerosity = get_set_numerosity(match_set);
 
@@ -96,6 +112,7 @@ void getMatchSet(ClassifierMap &pop, ClassifierSet &match_set, float *state, int
                                                             itTime);
                     // before inserting the new classifier into the population check for subsumption by a generic one
                     if(!subsumeClassifierToPop(coverClfr, pop)) {
+                        coverClfr.id = get_next_cl_gid();
                         pop[coverClfr.id] = coverClfr;
                         match_set.ids.push_back(coverClfr.id);
                     }
@@ -139,11 +156,9 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
-    for(int i=0; i < cl.cf.size(); i++)
+    for(int i=0; i < clfrCondMaxLength; i++)
     {
-        //std::cout<<"iscond\n";
-        //if( !isDontcareCF(clfrCond[i]) && evaluateCF(clfrCond[i].reverse_polish,state)==0 )
-        if(evaluateCF(cl.cf[i], state, cl.id, img_id, train) == 0 )
+        if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0 )
         {
             return false;
         }
@@ -163,18 +178,24 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
 void transfer_kb_filter(CodeFragment & cf)
 {
     for(int i=0; i<cf.num_filters; i++){
-        cf.filter_id[i] = add_filter(kb_filter[cf.filter_id[i]]);
+        cf.filter_ids[i] = add_filter(kb_filter[cf.filter_ids[i]]);
     }
 }
 
+//todo: create_new_cf should be done to temporary location and should be added to main cf_list only when cl is added to pop
 
+/*
+ * Default cf has id == -1 that represent don't care
+ */
 void createMatchingCondition(Classifier &cl, float *state)
 {
-    int count = irand(clfrCondMaxLength);
-    for(int i=0; i<=count; i++) {
-        add_cf(cl, state);
+    for(int i=0; i<clfrCondMaxLength; i++){
+        if(drand() >= P_dontcare){
+            CodeFragment new_cf;
+            create_new_cf(new_cf, state);
+            cl.cf_ids[i] = new_cf.cf_id;
+        }
     }
-
 }
 
 // ######################### prediction array operations ############################################
@@ -334,7 +355,7 @@ void updateFitness(ClassifierSet &action_set)
  * The discovery conmponent with the genetic algorithm
  * note: some classifiers in set could be deleted !
  */
-void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTime, float *situation)
+void discoveryComponent(ClassifierSet &action_set, ClassifierVector &pop, int itTime, float *situation)
 {
     Classifier child[2];
     int parent[2];
@@ -370,7 +391,7 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierMap &pop, int itTim
     child[1].fitness = child[0].fitness;
 
     // get the length of the population to check if clasifiers have to be deleted
-    len = get_pop_numerosity(pop);
+    len = get_pop_size(pop, true);
 
     // insert the new two classifiers and delete two if necessary
     insertDiscoveredClassifier(child, parent, action_set, len);
@@ -399,7 +420,7 @@ void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time step
 void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, double setsum)
 {
     double best_fitness = -1, prediction_error=0;
-    ClassifierList winner_set;
+    ClassifierIDVector winner_set;
 
     while(winner_set.empty()) {
         for (auto &id : set.ids) {
@@ -495,22 +516,16 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     tournament_selection(child1, parent1, action_set, setsum);
     tournament_selection(child2, parent2, action_set, setsum);
 
-    child1.id = classifier_gid++;
+//    child1.id = get_next_cl_gid();
     child1.numerosity = 1;
     child1.experience = 0;
     child1.fitness = child1.fitness / child1.numerosity;
-    child2.id = classifier_gid++;
+    add_classifier_cfs_to_list(child1);
+//    child2.id = get_next_cl_gid();
     child2.numerosity = 1;
     child2.experience = 0;
     child2.fitness = child2.fitness / child2.numerosity;
-
-    for(int i=0; i < child1.cf.size(); i++){
-        child1.cf[i].cf_id = cf_gid++;
-    }
-    for(int i=0; i < child2.cf.size(); i++){
-        child2.cf[i].cf_id = cf_gid++;
-    }
-
+    add_classifier_cfs_to_list(child2);
 }
 
 // ########################## crossover and mutation ########################################
@@ -562,7 +577,7 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     // crossover probability check
     if (drand() >= pX) return false;
 
-    int size = cl1.cf.size() < cl2.cf.size() ? cl1.cf.size() : cl2.cf.size();
+    int size = clfrCondMaxLength;
     int p1 = irand(size);
     int p2 = irand(size);
     if(p1 > p2){
@@ -570,64 +585,10 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     }
 
     for(int i=p1; i<p2; i++){
-        std::swap(cl1.cf[i], cl2.cf[i]);
+        std::swap(cl1.cf_ids[i], cl2.cf_ids[i]);
     }
-}
 
-bool crossover_old(Classifier &cl1, Classifier &cl2, float *state)
-{
-    // crossover probability check
-    if(drand() >= pX) return false;
-
-    bool success = false;
-    int cf_index1 = irand(cl1.cf.size());
-    int cf_index2 = irand(cl2.cf.size());
-    CodeFragment cf1 = cl1.cf[cf_index1];
-    CodeFragment cf2 = cl2.cf[cf_index2];
-    // swap code fragments if they do not introduce duplication
-    if(!is_cf_covered(cf1, cl2) && !is_cf_covered(cf2, cl1)){
-        std::swap(cl1.cf[cf_index1], cl2.cf[cf_index2]);
-        success = true;
-    }
-    // swap filters within code fragments if they do not introduce duplication of cf
-    if(!success){
-        int filter_index_1 = irand(cf1.num_filters);
-        int filter_index_2 = irand(cf2.num_filters);
-        // just swap the filters - just as good as crossover of filters
-        std::swap(cf1.filter_id[filter_index_1], cf2.filter_id[filter_index_2]);
-        if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
-            cl1.cf[cf_index1] = cf1;
-            cl2.cf[cf_index2] = cf2;
-            success = true;
-        }
-    }
-    if(!success){
-        cf1 = cl1.cf[cf_index1];
-        cf2 = cl2.cf[cf_index2];
-        // crossover two filters randomly
-        int filter_index_1 = irand(cl1.cf[cf_index1].num_filters);
-        int filter_index_2 = irand(cl2.cf[cf_index2].num_filters);
-        Filter filter1 = get_filter(cl1.cf[cf_index1].filter_id[filter_index_1]);
-        Filter filter2 = get_filter(cl2.cf[cf_index2].filter_id[filter_index_2]);
-        // Only do crossover if filters are of the same size or type
-        if (filter1.filter_size == filter2.filter_size && filter1.is_dilated == filter2.is_dilated) {
-            union_filter(filter1, filter2);
-            cf1.filter_id[filter_index_1] = add_filter(filter1);
-            cf2.filter_id[filter_index_2] = add_filter(filter2);
-            if (evaluateCF(cf1, state) != 1) {
-                negate_cf(cf1);
-            }
-            if (evaluateCF(cf2, state) != 1) {
-                negate_cf(cf2);
-            }
-            if(!is_cf_covered(cf1, cl1) && !is_cf_covered(cf2, cl2)){
-                cl1.cf[cf_index1] = cf1;
-                cl2.cf[cf_index2] = cf2;
-                success = true;
-            }
-        }
-    }
-    return success;
+    return true;
 }
 
 
@@ -658,58 +619,22 @@ void apply_filter_mutation(Filter& filter, float state[])
  */
 bool mutation(Classifier &clfr, float *state)
 {
-    int a = irand(clfrCondMaxLength);
-    if (a < clfr.cf.size()) {
-        remove_cf(clfr, state);
-    } else {
-        add_cf(clfr, state);
-    }
-}
-
-bool mutation_old(Classifier &clfr, float *state)
-{
-    // mutation probability check
-    if(drand() >= pM) return false;
-
-    // There are 2 alternatives we must try all before returning false
-    int alternative = irand(2);
-    bool success = false;
-
-    for(int count=0; !success && count < 2 ; count++){
-
-        // alternative - mutate cf operator
-        if(!success && (alternative + count) % 2 == 0){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            cf = clfr.cf[cf_index];
-            if(mutate_cf(cf, state)) {
-                if(!is_cf_covered(cf, clfr)){
-                    clfr.cf[cf_index] = cf;
-                    success = true;
-                }
-            }
-        }
-        // alternative - add new filter
-        if(!success && (alternative + count) % 2 == 1){
-            // acquire cf_index again since cf list might have changed
-            int cf_index = irand(clfr.cf.size());
-            CodeFragment cf = clfr.cf[cf_index];
-            int filter_index = irand(cf.num_filters);
-            cf.filter_id[filter_index] = get_new_filter(state);
-            if (evaluateCF(cf, state) != 1) {
-                negate_cf(cf);
-            }
-            if(!is_cf_covered(cf, clfr)){
-                clfr.cf[cf_index] = cf;
-                success = true;
+    bool changed = false;
+    for(int i=0; i<clfrCondMaxLength; i++){
+        if(drand() < pM){
+            changed = true;
+            if(clfr.cf_ids[i] != -1){
+                remove_cf_from_list(clfr.cf_ids[i]);
+                clfr.cf_ids[i] = -1; // set as don't care
+            }else{
+                CodeFragment new_cf;
+                create_new_cf(new_cf, state);
+                clfr.cf_ids[i] = new_cf.cf_id;
             }
         }
     }
 
-    // mutate action
-    bool action_success = false; // mutateAction(clfr);
-    return success || action_success;
+    return changed;
 }
 
 
@@ -741,14 +666,18 @@ void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierSet &a
     if(doGASubsumption)
     {
         if(!subsumeClassifier(child[0], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            child[0].id = get_next_cl_gid();
             action_set.pop[child[0].id] = child[0];
         }
         if(!subsumeClassifier(child[1], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+            child[1].id = get_next_cl_gid();
             action_set.pop[child[1].id] = child[1];
         }
     }
     else
     {
+        child[0].id = get_next_cl_gid();
+        child[1].id = get_next_cl_gid();
         action_set.pop[child[0].id] = child[0];
         action_set.pop[child[1].id] = child[1];
     }
@@ -788,7 +717,7 @@ void doActionSetSubsumption(ClassifierSet &action_set)
             if(isMoreGeneral(action_set.pop[subsumer], action_set.pop[id]))
                 action_set.pop[subsumer].numerosity += action_set.pop[id].numerosity;
                 remove_classifier(action_set, id);
-                action_set.pop.erase(id);
+                action_set.pop[id].id = -1;
         }
 
     }
@@ -803,11 +732,13 @@ bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, Classifie
     if(subsumes(p1, cl))
     {
         p1.numerosity++;
+        remove_classifier_cfs_from_list(cl);
         return true;
     }
     if(subsumes(p2, cl))
     {
         p2.numerosity++;
+        remove_classifier_cfs_from_list(cl);
         return true;
     }
     // as per algorithm child submsumption in population is not done
@@ -838,24 +769,52 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
         cl_set.pop[*random_it].numerosity++;
+        remove_classifier_cfs_from_list(cl);
         return true;
     }
     return false;
 }
 
+int count_classifier_cfs(const Classifier &cl)
+{
+    int count = 0;
+    for(int id : cl.cf_ids){
+        if(id != -1) count++;
+    }
+    return count;
+}
+
+void add_classifier_cfs_to_list(Classifier &cl)
+{
+    for(int cf_id : cl.cf_ids){
+        if(cf_id != -1) {
+            add_cf_to_list(get_cf(cf_id));
+        }
+    }
+}
+
+void remove_classifier_cfs_from_list(Classifier &cl)
+{
+    for(int cf_id : cl.cf_ids){
+        if(cf_id != -1) {
+            remove_cf_from_list(cf_id);
+        }
+    }
+}
 
 /**
  * Try to subsume in the population.
  */
-bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
+bool subsumeClassifierToPop(Classifier &cl, ClassifierVector &cl_set)
 {
     std::list<int> subsumers;
 
     for(auto & item : cl_set)
     {
-        if(subsumes(item.second, cl))
+        if(item.id == -1) continue; // skip empty slots in the array
+        if(subsumes(item, cl))
         {
-            subsumers.push_back(item.second.id);
+            subsumers.push_back(item.id);
         }
     }
     /* if there were classifiers found to subsume, then choose randomly one and subsume */
@@ -864,6 +823,7 @@ bool subsumeClassifierToPop(Classifier &cl, ClassifierMap &cl_set)
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
         cl_set[*random_it].numerosity++;
+        remove_classifier_cfs_from_list(cl);
         return true;
     }
     return false;
@@ -879,23 +839,6 @@ bool isSubsumer(Classifier &cl)
     return cl.experience > theta_sub && cl.predictionError <= epsilon_0;
 }
 
-// function added by me in new code
-// To subsume a CF to more general CF
-// filhal randomly selected two CFs, In future will select CFs based on their Fitness
-
-bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
-{
-    for(int i=0; i < cl.cf.size(); i++){
-        for(int j=0; j < cl.cf[i].num_filters; j++) {
-            if(filter_to_check_id == cl.cf[i].filter_id[j]){
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
 
 /*
  * This function checks that all the filters of one classifier are present in the second.
@@ -906,8 +849,8 @@ bool is_filter_covered_by_condition(int filter_to_check_id, Classifier &cl)
 bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
 {
     bool more_general = true;
-    for(int i=0; i < clfr_specific.cf.size(); i++){
-        if(!is_cf_covered(clfr_specific.cf[i], clfr_general)){
+    for(int i=0; i < clfrCondMaxLength; i++){
+        if(clfr_specific.cf_ids[i] != -1 && !is_cf_covered(get_cf(clfr_specific.cf_ids[i]), clfr_general)){
             more_general = false;
             break;
         }
@@ -915,19 +858,6 @@ bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
     return more_general;
 }
 
-
-
-bool isMoreGeneral_old(Classifier &clfr_general, Classifier &clfr_specific)
- {
-     for(int i=0; i < clfr_specific.cf.size(); i++){
-         for(int j=0; j < clfr_specific.cf[i].num_filters; j++) {
-             if (!is_filter_covered_by_condition(clfr_specific.cf[i].filter_id[j], clfr_general)) {
-                 return false;
-             }
-         }
-     }
-    return true;
- }
 
 // ###################### adding classifiers to a set ###################################
 
@@ -938,20 +868,22 @@ bool isMoreGeneral_old(Classifier &clfr_general, Classifier &clfr_specific)
  * The classifier that will be deleted is chosen by roulette wheel selection
  * considering the deletion vote. Returns position of the macro-classifier which got decreased by one micro-classifier.
  **/
-int deleteStochClassifier(ClassifierMap &pop)
+int deleteStochClassifier(ClassifierVector &pop)
 {
     double vote_sum=0.0, choicep, meanf=0.0;
     int size=0;
 
     for(auto& item : pop){
-        meanf += item.second.fitness;
-        size += item.second.numerosity;
+        if(item.id == -1) continue; // skip empty slots in the array
+        meanf += item.fitness;
+        size += item.numerosity;
     }
     meanf/=(double)size;
 
     /* get the delete proportion, which depends on the average fitness */
     for(auto& item : pop){
-        vote_sum += getDelProp(item.second, meanf);
+        if(item.id == -1) continue; // skip empty slots in the array
+        vote_sum += getDelProp(item, meanf);
     }
 
     /* choose the classifier that will be deleted */
@@ -960,13 +892,17 @@ int deleteStochClassifier(ClassifierMap &pop)
     vote_sum = 0;
     int removed_id = -1;
     for(auto& item : pop){
-        vote_sum += getDelProp(item.second, meanf);
+        if(item.id == -1) continue; // skip empty slots in the array
+        vote_sum += getDelProp(item, meanf);
         if(vote_sum > choicep){
-            removed_id = item.second.id;
-            if(item.second.numerosity > 1){
-                item.second.numerosity--;
+            removed_id = item.id;
+            if(item.numerosity > 1){
+                item.numerosity--;
             }else{
-                pop.erase(item.second.id);
+                // remove all classifier's cfs from the cf_list
+                remove_classifier_cfs_from_list(item);
+                classifier_gid_stack.push(removed_id);
+                pop[item.id].id = -1;
             }
             return removed_id;
         }
@@ -991,35 +927,33 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 // ############################### output operations ####################################
 
 
-void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file)
+void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_file)
 {
-    int size = pop.size();
-    //std::cout<<"\n--- Population Stats ---\n";
-    //std::cout << "Global Classifier ID: " << classifier_gid << std::endl;
-    //std::cout << "Population set size: " << size << std::endl;
-    //std::cout << "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
+    int size = 0; //get_pop_size(pop, false);
 
     output_stats_file<<"\n--- Population Stats ---\n";
     output_stats_file << "Global Classifier ID: " << classifier_gid << std::endl;
-    output_stats_file<< "Population set size: " << size << std::endl;
-    output_stats_file<< "Population numerosity size: " << get_pop_numerosity(pop) << std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
+    int cf_count = 0;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
     std::for_each(pop.begin(), pop.end(),
-                  [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
-                          (const ClassifierMap::value_type & item)
+                  [&size, &cf_count, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
+                          (const ClassifierVector::value_type & item)
                   {
-                      n_total+= item.second.numerosity;
-                      if(n_min > item.second.numerosity) n_min = item.second.numerosity;
-                      if(n_max < item.second.numerosity) n_max = item.second.numerosity;
-                      f_total+= item.second.fitness;
-                      if(f_min > item.second.fitness) f_min = item.second.fitness;
-                      if(f_max < item.second.fitness) f_max = item.second.fitness;
+                      if(item.id == -1) return; // skip empty slots in the array
+                      size++;
+                      cf_count += count_classifier_cfs(item);
+                      n_total+= item.numerosity;
+                      if(n_min > item.numerosity) n_min = item.numerosity;
+                      if(n_max < item.numerosity) n_max = item.numerosity;
+                      f_total+= item.fitness;
+                      if(f_min > item.fitness) f_min = item.fitness;
+                      if(f_max < item.fitness) f_max = item.fitness;
                   });
-    //std::cout<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    //std::cout<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
-    //std::cout<<"--- Population Stats ---\n\n";
 
+    output_stats_file<< "Population set size: " << size << std::endl;
+    output_stats_file << "Population numerosity size: " << n_total << std::endl;
+    output_stats_file<< "Avg cf count: " << cf_count/(float)size << std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     output_stats_file<<"--- Population Stats ---\n\n";
@@ -1029,7 +963,7 @@ void print_population_stats(ClassifierMap &pop, std::ofstream &output_stats_file
  * This function saves the classifier population and outputs various stats.
  * This function also saves promising code fragments and filters for reuse by the subsequent experiments
  */
-void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
+void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
 {
     std::string output_full_path = output_path + path_postfix;
     mkdir(output_full_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -1069,15 +1003,24 @@ void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
         std::cout << "Could not open output stats file";
         exit(1);
     }
+    std::ofstream output_parameter_file;
+    output_parameter_file.open(output_full_path + output_parameter_file_name);
+    if(!output_parameter_file.is_open()){
+        std::cout << "Could not open output parameter file";
+        exit(1);
+    }
+    output_parameter_file<<"pM "<<pM<<std::endl;
     print_population_stats(pop, output_stats_file);
+    print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
     print_filter_evaluation_stats(output_stats_file);
     for(auto& item : pop)
     {
-        fprintClassifier(item.second, output_classifier_file, output_code_fragment_file,
-                output_promising_code_fragment_file, output_promising_filter_file);
+        if(item.id == -1) continue; // skip empty slots in the array
+        fprintClassifier(item, output_classifier_file);
     }
     output_filters(output_filter_file, output_promising_filter_file);
+    output_cf_list(output_code_fragment_file, output_promising_code_fragment_file);
     //storeCFs(pop, fpCF);
     output_classifier_file.close();
     output_code_fragment_file.close();
@@ -1085,6 +1028,7 @@ void save_experiment_results(ClassifierMap &pop, std::string path_postfix)
     output_filter_file.close();
     output_promising_filter_file.close();
     output_stats_file.close();
+    output_parameter_file.close();
 }
 
 /**
@@ -1110,9 +1054,7 @@ void fprintClassifier(FILE *fp, Classifier *classifier){
 
 
 
-void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file,
-                      std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file,
-                      std::ofstream &output_promising_filter_file)
+void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file)
 {
     output_classifier_file << "id ";
     output_classifier_file.width(5);
@@ -1123,7 +1065,8 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file.width(5);
     output_classifier_file << classifier.experience;
     output_classifier_file << " num_cf ";
-    output_classifier_file << classifier.cf.size();
+    output_classifier_file.width(5);
+    output_classifier_file << count_classifier_cfs(classifier);
     output_classifier_file << " fitness ";
     output_classifier_file.width(11);
     output_classifier_file << classifier.fitness;
@@ -1145,14 +1088,10 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file << " action ";
     output_classifier_file << classifier.action << std::endl;
 
-    for(auto & cf : classifier.cf)
+    for(auto & id : classifier.cf_ids)
     {
-        output_classifier_file << cf.cf_id << " ";
-        output_code_fragment_to_file(cf, output_code_fragment_file);
-        // output promising code fragments separately
-        if(is_promising_classifier(classifier)){
-            output_code_fragment_to_file(cf, output_promising_code_fragment_file);
-        }
+        output_classifier_file << id << " ";
+
     }
     output_classifier_file << std::endl;
 }
@@ -1179,7 +1118,7 @@ double absoluteValue(double value)
 
 inline bool is_promising_classifier(Classifier& cl)
 {
-    cl.predictionError < epsilon_0 && cl.experience > theta_promising;
+    return cl.predictionError < epsilon_0 && cl.experience > theta_promising;
 
 }
 
@@ -1191,21 +1130,25 @@ inline bool is_promising_classifier(Classifier& cl)
  * A promising classifier is one whose error < 10 and experience > 10
  */
 
-void manage_filter_list(ClassifierMap &pop){
+void manage_filter_list(ClassifierVector &pop){
     // reset statistics of all filters before updating
     reset_filter_stats();
 
     for(auto& item : pop){
-        for(int i=0; i < item.second.cf.size(); i++){
-            for(int j=0; j < item.second.cf[i].num_filters; j++){
-                Filter& f = get_filter(item.second.cf[i].filter_id[j]);
-                f.numerosity++;
-                // if classifier is "promising" then increase the fitness of the filter
-                // a promising classifier is one whose error < 10 and experience > 10
-                if(is_promising_classifier(item.second)){
-                    f.fitness++;
-                }
+        if(item.id == -1) continue; // skip empty slots in the array
+        for(int i=0; i < clfrCondMaxLength; i++){
+            if(item.cf_ids[i] != -1) {
+                CodeFragment & cf = get_cf(item.cf_ids[i]);
+                for (int j = 0; j < cf.num_filters; j++) {
+                    Filter &f = get_filter(cf.filter_ids[j]);
+                    f.numerosity++;
+                    // if classifier is "promising" then increase the fitness of the filter
+                    // a promising classifier is one whose error < 10 and experience > 10
+                    if (is_promising_classifier(item)) {
+                        f.fitness++;
+                    }
 
+                }
             }
         }
     }
@@ -1215,22 +1158,86 @@ void manage_filter_list(ClassifierMap &pop){
     update_evaluation_cache(removed_filters);
 }
 
-int get_pop_numerosity(ClassifierMap &pop) {
+int get_pop_size(ClassifierVector &pop, bool numerosity) {
     int pop_numerosity = 0;
+    int pop_size = 0;
     std::for_each(pop.begin(), pop.end(),
-                  [&pop_numerosity](ClassifierMap::value_type& item)
+                  [&pop_numerosity, &pop_size](ClassifierVector::value_type& item)
                   {
-                      pop_numerosity+= item.second.numerosity;
+                      if(item.id == -1) return; // skip empty slots in the array
+                      pop_numerosity+= item.numerosity;
+                      pop_size += 1;
                   });
-    return pop_numerosity;
+    if(numerosity) return pop_numerosity;
+    else return pop_size;
 }
 
-void get_matching_classifiers(ClassifierMap &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
+void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
 
-    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierMap::value_type& item)
+    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierVector::value_type& item)
     {
-        if(isConditionMatched(item.second, state, img_id, train)){
-            match_set.ids.push_back(item.first);
+        if(item.id == -1) return; // skip empty slots in the array
+        if(isConditionMatched(item, state, img_id, train)){
+            match_set.ids.push_back(item.id);
         }
     });
+}
+
+
+void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
+{
+    int loaded_cl_gid = -1;
+    std::string line;
+    std::ifstream cl_file(classifier_file_name);
+    if (!cl_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(classifier_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cl_file, line)) {
+        // load classifier
+        Classifier cl;
+        int num_cf=-1;
+        std::string str;
+        std::stringstream line1(line);
+        line1>>str;
+        line1>>cl.id;
+        line1>>str;
+        line1>>cl.numerosity;
+        line1>>str;
+        line1>>cl.experience;
+        line1>>str;
+        line1>>num_cf;
+        line1>>str;
+        line1>>cl.fitness;
+        line1>>str;
+        line1>>cl.accuracy;
+        line1>>str;
+        line1>>cl.prediction;
+        line1>>str;
+        line1>>cl.predictionError;
+        line1>>str;
+        line1>>cl.actionSetSize;
+        line1>>str;
+        line1>>cl.timeStamp;
+        line1>>str;
+        line1>>cl.action;
+
+        getline(cl_file, line);
+        std::stringstream line2(line);
+        for(int i=0; i<clfrCondMaxLength; i++){
+            line2>>cl.cf_ids[i];
+        }
+        pop.resize(cl.id + 1);
+        pop[cl.id] = cl;
+        if(loaded_cl_gid < cl.id){
+            loaded_cl_gid = cl.id;
+        }
+    }
+    classifier_gid = 1 + loaded_cl_gid;
+    // populate stack with available slots
+    for(int i=0; i<pop.size(); i++){
+        if(pop[i].id == -1) classifier_gid_stack.push(i);
+    }
 }

@@ -17,10 +17,12 @@ const int theta_del = 20; //Specified the threshold over which the fitness of a 
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 extern double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 extern double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+extern double pM_initial;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+extern double pM_step;
 extern double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 extern double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 const int mutationType = 0; // 0 niche, and 1 general mutation.
-const double P_dontcare = 0; // 0.33; //The probability of using a don't care symbol in an allele when covering.
+const double P_dontcare = 0.33; //The probability of using a don't care symbol in an allele when covering.
 const double pDontcare_filter = .33; // this is for don't care within filter
 const double predictionErrorReduction = 1.0; //0.25; //The reduction of the prediction error when generating an offspring classifier.
 const double fitnessReduction=0.1; //The reduction of the fitness when generating an offspring classifier.

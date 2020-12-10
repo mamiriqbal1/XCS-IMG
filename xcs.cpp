@@ -21,15 +21,19 @@
 #include <signal.h>
 #include "codeFragment.h"
 #include "filter_list.h"
+#include "cf_list.h"
 #include <chrono>
 #include <ctime>
 
 auto start = std::chrono::system_clock::now();
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+double pM_initial;
+double pM_step = 0; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
 
+bool visualization = false;
 bool fixed_seed = true;
 bool use_kb = false;
 bool Testing = true;
@@ -85,20 +89,20 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
  * @param sysError The system error in the last fifty exploration trials.
  * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
+void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                       std::ofstream &output_training_file) {
 
-    int setSize = pop.size();
+    int setSize = get_pop_size(pop, false);
     output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierMap &pop, double performance, double sysError, int problem_count,
+void writeTestPerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
                           std::ofstream &output_test_file, int training_problem_count, double training_accuracy,
                           double training_error) {
 
-    int setSize = pop.size();
+    int setSize = get_pop_size(pop, false);
     output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
     << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Validation: " << training_problem_count << " " << problem_count <<
@@ -108,7 +112,7 @@ void writeTestPerformance(ClassifierMap &pop, double performance, double sysErro
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter, int img_id, int &correct,
+void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int counter, int img_id, int &correct,
                             double &sysError) {
 
     bool wasCorrect = false;
@@ -156,13 +160,30 @@ void doOneSingleStepProblem(ClassifierMap &pop, DataSource *object, int counter,
     sysError = absoluteValue(reward - getBestValue());
 }
 
-void load_state_for_resume(ClassifierMap &pop)
+
+void load_parameter(std::string parameter_file_name)
 {
-    int filter_gid = 1 + load_filter(output_path + resume_from + output_filter_file_name, master_filter_list.filters);
-    master_filter_list.gid = filter_gid;
-    CodeFragmentMap temp_cf;
-    cf_gid = 1 + load_code_fragment(output_path + resume_from + output_code_fragment_file_name, temp_cf);
-    classifier_gid = 1 + load_classifier(output_path + resume_from + output_classifier_file_name, pop, temp_cf);
+    std::string line;
+    std::ifstream parameter_file(parameter_file_name);
+    if (!parameter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(parameter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+    getline(parameter_file, line);
+    std::string str;
+    std::stringstream line1(line);
+    line1>>str;
+    line1>>pM;
+}
+
+
+void load_state_for_resume(ClassifierVector &pop)
+{
+//    load_parameter(output_path + resume_from + output_filter_file_name);
+    load_filter(output_path + resume_from + output_filter_file_name);
+    load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
+    load_classifier(output_path + resume_from + output_classifier_file_name, pop);
 }
 
 /*
@@ -172,7 +193,7 @@ void load_state_for_resume(ClassifierMap &pop)
  * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
  * modified to calculate training and validation accuracies after every epoch.
  */
-void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step experiment monitoring the performance.
+void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-step experiment monitoring the performance.
 
     std::ofstream output_training_file;
     output_training_file.open(output_path + output_training_file_name, std::ofstream::app);
@@ -198,12 +219,23 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
         output_training_file<<std::endl;
         output_test_file<<std::endl;
         load_state_for_resume(pop);
-        problem_count = 1 + std::atoi(resume_from.c_str());
+        update_cf_list_parameters(pop);
+        manage_filter_list(pop); // update filter parameters etc
+        problem_count = std::atoi(resume_from.c_str());
+        // reset pM
+        pM = pM_initial + pM_step * (problem_count / validation_frequency);
+        pM = fmax(pM, 0);
+        pM = fmin(pM, 1);
+        problem_count++;  // resume from next problem
+    }
+    if(visualization){
+        std::cout<<"Saving visualization data..."<<std::endl;
+        doOneSingleStepTest(pop, problem_count, output_test_file, true, 0, 0);
     }
     for( ; problem_count <= maxProblems; problem_count++)
     {
-        int pop_size = pop.size();
-        int pop_numerosity = get_pop_numerosity(pop);
+        int pop_size = get_pop_size(pop, false);
+        int pop_numerosity = get_pop_size(pop, true);
         //std::cout<<problem_count<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
@@ -229,9 +261,13 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
             double epoch_accuracy = epoch_correct_count/(double)validation_frequency;
             double epoch_error = epoch_error_sum/validation_frequency;
             save_experiment_results(pop, std::to_string(problem_count) + "/"); // save experiment results after every epoch
-            doOneSingleStepTest(pop, problem_count, output_test_file, problem_count == maxProblems, epoch_accuracy, epoch_error);
+            doOneSingleStepTest(pop, problem_count, output_test_file, false, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
+            // parameter control: change parameters after every epoch
+            pM = pM_initial + pM_step * (problem_count / validation_frequency);
+            pM = fmax(pM, 0);
+            pM = fmin(pM, 1);
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_list(pop);
@@ -243,7 +279,7 @@ void doOneSingleStepExperiment(ClassifierMap &pop) {  //Executes one single-step
 
 
 void
-doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstream &output_test_file, bool last_epoch,
+doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool visualization,
                     double training_performance, double training_error) {
 	bool wasCorrect = false;
     int correct_count = 0;
@@ -251,7 +287,7 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 	DataSource *testState = NULL;
 
     std::ofstream output_visualization_file;
-    if(last_epoch) {
+    if(visualization) {
         output_visualization_file.open(output_path + output_visualization_file_name);
         if (!output_visualization_file.is_open()) {
             std::cout << "Could not open output visualization file";
@@ -261,6 +297,7 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 
 	for(int t=0; t<testNumInstances; t++){
         ClassifierSet match_set(maxPopSize, pop);
+        ClassifierSet action_set(maxPopSize, pop);
         //std::cout<<t<<"/"<<testNumInstances<<"\r";
 		bool isMatched = false;
 		testState = &testingData[t];
@@ -271,6 +308,14 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
         if(isMatched) {
             getPredictionArray(match_set);
             actionWinner = bestActionWinner();
+            // save visualization data
+            if(visualization){
+                getActionSet(actionWinner, match_set, action_set);
+                // save visualization data - start with image id, actual action and predicted action
+                output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
+                save_visualization_data(action_set, t, output_visualization_file);
+
+            }
         }else{
             // if match set is empty then select an action randomly
             actionWinner = irand(numActions);
@@ -288,7 +333,7 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 		    correct_count += 1;
         }
     }
-	if(last_epoch){
+	if(visualization){
 	    output_visualization_file.close();
 	}
     double accuracy = correct_count/(double)testNumInstances;
@@ -298,9 +343,9 @@ doOneSingleStepTest(ClassifierMap &pop, int training_problem_count, std::ofstrea
 }
 
 
-
 void startXCS(){
-    ClassifierMap pop;
+//    ClassifierVector pop(maxPopSize * 2, 0);
+    ClassifierVector pop(maxPopSize + 10);
     printf("\nLoading Input! Please wait ....\n");
 
     trainingData = new DataSource[trainNumInstances];
@@ -380,6 +425,9 @@ void LoadConfig(char* file)
                 pX = atof(value.c_str());
             }else if(name == "pM"){
                 pM = atof(value.c_str());
+                pM_initial = pM;
+            }else if(name == "pM_step"){
+                pM_step = atof(value.c_str());
             }else if(name == "pM_allel"){
                 pM_allel = atof(value.c_str());
             }else if(name == "p_promising_filter"){
@@ -395,6 +443,12 @@ void LoadConfig(char* file)
                     fixed_seed = false;
                 }else if(value == "yes"){
                     fixed_seed = true;
+                }
+            }else if(name == "visualization"){
+                if(value == "no"){
+                    visualization = false;
+                }else if(value == "yes"){
+                    visualization = true;
                 }
             }else if(name == "kb_cf_file"){
                 kb_cf_file = value;
@@ -581,6 +635,8 @@ int main(int argc, char **argv){
 
     // standardized random number generator
     initialize_random_number_generator(fixed_seed);
+    initialize_cf_list(maxPopSize*clfrCondMaxLength);
+    initialize_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf/2);
 
     if(analyze){
         analyze_rules();

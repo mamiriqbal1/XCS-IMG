@@ -11,6 +11,7 @@
 #include "codeFragment.h"
 #include "env.h"
 #include "filter_list.h"
+#include "cf_list.h"
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
@@ -25,7 +26,7 @@ CodeFragment *previousCFPopulation;
 
 // <image_id, location_where_matched> if location >= 0 then matched otherwise not matched.
 typedef std::unordered_map<int, int> ImageEvaluationMap;
-typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_id, <img_id, bool>>
+typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_ids, <img_id, bool>>
 FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
 unsigned long map_hits = 0;
@@ -140,7 +141,7 @@ void initializeNewCF(int id, CodeFragment &cf)
         cf.reverse_polish[i] = OPNOP;
     }
     for(int i=0; i < cfMaxLeaf; i++){
-        cf.filter_id[i] = -1;
+        cf.filter_ids[i] = -1;
     }
     cf.cf_id = id;
 }
@@ -249,7 +250,7 @@ void addLeafCF(CodeFragment &cf, float *state){
         if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             cf.reverse_polish[i] = leafNum;
-            cf.filter_id[leafNum] = get_new_filter(state);
+            cf.filter_ids[leafNum] = get_new_filter(state);
             leafNum++;
         }
     }
@@ -365,10 +366,10 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
  * This function will save data that can be used to visualize classifiers and filters for an image
  * that was predicted correctly or incorrectly
  */
-void save_visualization_data(ClassifierSet &match_set, int img_id, std::ofstream &output_visualization_file) {
+void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file) {
 
-    for(auto & id:match_set.ids){
-        output_visualization_file<<id<<" "<<match_set.pop[id].action<<" ";
+    for(auto & id:action_set.ids){
+        output_visualization_file << id << " ";
     }
     output_visualization_file<<std::endl;
 //    for(auto & item:evaluation_validation_map){
@@ -478,11 +479,11 @@ bool remove_operator(CodeFragment& cf, float* state){
         if(cf.reverse_polish[i] < 0){ // its an operator
             // remove leaf from leaves list
             int leave_index = cf.reverse_polish[i-1];
-            cf.filter_id[leave_index] = -1;
+            cf.filter_ids[leave_index] = -1;
             for(int j=leave_index+1; j<cfMaxLeaf; j++){
-                cf.filter_id[j-1] = cf.filter_id[j];
+                cf.filter_ids[j - 1] = cf.filter_ids[j];
             }
-            cf.filter_id[cfMaxLeaf-1] = -1;
+            cf.filter_ids[cfMaxLeaf - 1] = -1;
             // now adjust indexes of all leaves which were greater than leave_index
             for(int k=0; k<cfMaxLength; k++){
                 if(cf.reverse_polish[k] > leave_index){
@@ -554,7 +555,7 @@ bool add_operator(CodeFragment& cf, float* state){
                     std::next(cf.reverse_polish.begin(),i+3)
                     );
             cf.reverse_polish[i+1] = cf.num_filters;
-            cf.filter_id[cf.num_filters] = new_filter_id;
+            cf.filter_ids[cf.num_filters] = new_filter_id;
             cf.num_filters++;
             cf.reverse_polish[i+2] = selected_operator;
             if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
@@ -568,7 +569,7 @@ bool add_operator(CodeFragment& cf, float* state){
                 cf.reverse_polish = temp_reverse_polish;
                 //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
                 cf.num_filters--;
-                cf.filter_id[cf.num_filters] = -1;
+                cf.filter_ids[cf.num_filters] = -1;
             }
         }
     }
@@ -576,43 +577,20 @@ bool add_operator(CodeFragment& cf, float* state){
 }
 
 
-
-
-/*
- * Grow cf by adding a new operator to it respecting the maximum depth
- */
-bool grow_cf(CodeFragment &cf, float* state){
-    return add_operator(cf, state);
-}
-
-bool remove_cf(Classifier &cl, float* state){
-   if(cl.cf.size() <= 1) return false;
-
-   int cf_index = irand(cl.cf.size());
-   cl.cf.erase(cl.cf.begin()+cf_index);
-   return true;
-}
-
-
-bool add_cf(Classifier &cl, float* state){
-    int num_cf = cl.cf.size();
-    if(num_cf >= clfrCondMaxLength) return false;
-
-    // add new cf to the classifier
+bool create_new_cf(CodeFragment &cf, float* state){
     CodeFragment temp;
-    initializeNewCF(cf_gid, temp);
-    temp.cf_id = -1;
+    initializeNewCF(-1, temp);
     if (use_kb && drand() < 0.5) {
         CodeFragment received_cf = get_kb_code_fragment(state);;
         if (received_cf.cf_id != -1) {
-            received_cf.cf_id = cf_gid;
-            temp = received_cf;
+//            received_cf.cf_id = cf_gid;
+//            temp = received_cf;
             // add the filters from kb to master filter list
             transfer_kb_filter(temp);
         }
     }
     if (temp.cf_id == -1) { // if cf not received from kb
-        temp.cf_id = cf_gid;
+//        temp.cf_id = cf_gid;
         // create a cf of depth zero to start with
         opType *end = randomProgram(temp.reverse_polish.data(), 0, cfMaxDepth, 0);
         addLeafCF(temp, state);
@@ -621,8 +599,9 @@ bool add_cf(Classifier &cl, float* state){
         negate_cf(temp);
     }
 
-    cl.cf.push_back(temp);
-    cf_gid++;
+    temp.cf_id = get_next_cf_gid();
+    add_cf_to_list(temp);
+    cf = temp;
     return true;
 }
 
@@ -663,7 +642,7 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
     if(cf1.num_filters != cf2.num_filters ||
        cf1.reverse_polish != cf2.reverse_polish ||
-       cf1.filter_id != cf2.filter_id) {
+       cf1.filter_ids != cf2.filter_ids) {
         return false;
     }else {
         return true;
@@ -671,22 +650,20 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 }
 
 
-bool is_cf_covered(CodeFragment& cf, CodeFragmentVector & cfv)
+bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 {
+    if(cf.cf_id == -1) return true;
+
     bool covered = false;
-    for(int i=0; i<cfv.size(); i++){
-        if(is_cf_equal(cf, cfv[i])){
-            covered = true;
-            break;
+    for(int i=0; i<clfrCondMaxLength; i++){
+        if(cl.cf_ids[i] != -1) {
+            if (is_cf_equal(cf, get_cf(cl.cf_ids[i]))) {
+                covered = true;
+                break;
+            }
         }
     }
     return covered;
-}
-
-bool is_cf_covered(CodeFragment& cf, Classifier& cl)
-{
-    return is_cf_covered(cf, cl.cf);
-
 }
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){
@@ -711,7 +688,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(get_filter(cf.filter_id[opcode]), state, cl_id, img_id, train))
+            if(evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train))
             {
                 stack[SP++] = 1;   //changed
             }
@@ -902,8 +879,8 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
         code = cf.reverse_polish[i];
         if(code == OPNOP){
             break;
-        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_id index
-            output_code_fragment_file << "D" << cf.filter_id[code] << " "; // print filter id
+        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_ids index
+            output_code_fragment_file << "D" << cf.filter_ids[code] << " "; // print filter id
         }else if (code>=condLength && isPreviousLevelsCode(code)){
             // output previous when implemented
         }else{

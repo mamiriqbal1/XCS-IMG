@@ -7,7 +7,9 @@
 #include "xcsMacros.h"
 #include <vector>
 #include <list>
-#include "flat_hash_map/unordered_map.hpp"
+//#include "flat_hash_map/unordered_map.hpp"
+#include "flat_hash_map/bytell_hash_map.hpp"
+//#include "HashMap/include/rigtorp/HashMap.h"
 
 extern bool use_kb;
 extern std::string kb_file;
@@ -47,7 +49,9 @@ const char output_promising_filter_file_name[] = "promising_filter.txt";
 const char output_stats_file_name[] = "stats.txt";
 const char output_visualization_file_name[] = "visualization.txt";
 const char output_done_file_name[] = "done.txt";  // file indicating completion of experiment
+const char output_parameter_file_name[] = "parameter.txt";  // file indicating completion of experiment
 
+extern bool visualization;
 extern int clfrCondMaxLength;//2 // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 extern int cfMaxDepth;// = 2;
 const int cfMinDepth = 0;
@@ -99,13 +103,16 @@ struct Filter{
     bool is_dilated = false; // what is the type of filter normal or dilated
     std::vector<float> lower_bounds;
     std::vector<float> upper_bounds;
-    //float lower_bounds[max_filter_size*max_filter_size];
-    //float upper_bounds[max_filter_size*max_filter_size];
 };
 
-typedef ska::unordered_map<int, Filter> FilterMap;
-//typedef std::unordered_map<int, Filter> FilterMap;
-extern FilterMap kb_filter;
+struct Hash {
+    size_t operator()(int v) const { return v; }
+};
+
+//typedef rigtorp::HashMap<int, Filter, Hash> FilterMap;
+typedef ska::bytell_hash_map<int, Filter, Hash> FilterMap2;
+typedef std::vector<Filter> FilterMap;
+extern FilterMap2 kb_filter;
 
 struct FilterList{
     FilterMap filters;
@@ -113,25 +120,18 @@ struct FilterList{
     int max_size_limit = N_filter_ol;
 };
 
-struct Leaf
-{
-    opType featureNumber;
-    float lowerBound;
-    float upperBound;
-};
-
-extern  int cf_gid;
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;
     int num_filters; // equal to number of leaves/filters to be determined at run time
-    std::vector<int> filter_id;  // leaves: ids of the filters included in this code fragment
+    std::vector<int> filter_ids;  // leaves: ids of the filters included in this code fragment
     int cf_id;
+    int numerosity = 0;
     CodeFragment(){
         reverse_polish.reserve(cfMaxLength);
         reverse_polish.assign(cfMaxLength, OPNOP);
-        filter_id.reserve(cfMaxLeaf);
-        filter_id.assign(cfMaxLeaf, -1);
+        filter_ids.reserve(cfMaxLeaf);
+        filter_ids.assign(cfMaxLeaf, -1);
         num_filters = -1;
         cf_id = -1;
     }
@@ -145,7 +145,7 @@ extern int classifier_gid;
 struct Classifier
 {
     int id = -1;
-    CodeFragmentVector cf;
+    std::vector<int> cf_ids;
     int action = -1;
     double prediction = 0;
     double predictionError = 0;
@@ -155,16 +155,21 @@ struct Classifier
     int numerosity = 0;
     double actionSetSize = 0;
     int timeStamp = 0;
+    Classifier() : cf_ids(clfrCondMaxLength){
+        cf_ids.assign(clfrCondMaxLength, -1);
+    }
 };
 
-typedef ska::unordered_map<int, Classifier> ClassifierMap;
-//typedef std::unordered_map<int, Classifier> ClassifierMap;
-typedef std::list<int> ClassifierList;
+
+//typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierVector;
+//typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierVector;
+typedef std::vector<Classifier> ClassifierVector;
+typedef std::vector<int> ClassifierIDVector;
 struct ClassifierSet{
-    ClassifierList ids;
-    ClassifierMap& pop;
-    ClassifierSet(int size, ClassifierMap& population) : pop(population){
-        //ids.reserve(size);
+    ClassifierIDVector ids;
+    ClassifierVector& pop;
+    ClassifierSet(int size, ClassifierVector& population) : pop(population){
+        ids.reserve(size);
     }
 };
 
