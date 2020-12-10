@@ -652,13 +652,12 @@ void apply_filter_mutation(Filter& filter, float state[])
 
 /*
  * Sync with original code. Toggle one code fragment
- * mutation probability = pM*1/cfMaxLength
+ * Mutation probability is not being used.
+ * Only one cf is being mutated that means 1/cfMaxLength% mutation probability
+ * Maxlength = 100 means 1%, Maxlength = 50 means 2% per cf
  */
 bool mutation(Classifier &clfr, float *state)
 {
-    // mutation probability check
-    if(drand() >= pM) return false;
-
     int a = irand(clfrCondMaxLength);
     if (a < clfr.cf.size()) {
         remove_cf(clfr, state);
