@@ -126,7 +126,8 @@ struct CodeFragment
     int num_filters; // equal to number of leaves/filters to be determined at run time
     std::vector<int> filter_ids;  // leaves: ids of the filters included in this code fragment
     int cf_id;
-    int numerosity = 0;
+    int numerosity = 1;
+    int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
     CodeFragment(){
         reverse_polish.reserve(cfMaxLength);
         reverse_polish.assign(cfMaxLength, OPNOP);

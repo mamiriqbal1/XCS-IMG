@@ -257,67 +257,6 @@ void addLeafCF(CodeFragment &cf, float *state){
     assert(cf.num_filters == leafNum);
 }
 
-/*
- * Return -1 if not matched otherwise return the location of match
- */
-int evaluate_filter_actual(const Filter& filter, float *state)
-{
-    int step = 1; // this will be used to map normal coordinates to dilated coordinates
-    int effective_filter_size = filter.filter_size;
-    if(filter.is_dilated){
-        step = 2;
-        effective_filter_size = filter.filter_size + filter.filter_size -1;
-    }
-    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
-    int i = filter.y;
-    int j = filter.x;
-    for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
-        for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
-            if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
-               || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
-                match_failed = true;
-            }
-        }
-    }
-    if(!match_failed){
-        // return the actual position where the filter matched
-        return i*image_width+j;
-        //return true;
-    }
-    return -1;
-    //return false;
-}
-
-int evaluate_filter_actual_old(const Filter& filter, float *state)
-{
-    int step = 1; // this will be used to map normal coordinates to dilated coordinates
-    int effective_filter_size = filter.filter_size;
-    if(filter.is_dilated){
-        step = 2;
-        effective_filter_size = filter.filter_size + filter.filter_size -1;
-    }
-    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
-    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
-        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
-            match_failed = false;
-            for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
-                for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
-                    if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
-                    || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
-                        match_failed = true;
-                    }
-                }
-            }
-            if(!match_failed){
-                // return the actual position where the filter matched
-                return i*image_width+j;
-                //return true;
-            }
-        }
-    }
-    return -1;
-    //return false;
-}
 
 void update_evaluation_cache(std::forward_list<int>& removed_filters){
     std::forward_list<int>::iterator it;
@@ -327,40 +266,7 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
     }
 }
 
-bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id, bool train)
-{
-//    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
-//    if(img_id >=0){
-//        // return prior result if it is found
-//        if(train){
-//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
-//            if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
-//                map_hits++;
-//                return inner_map[img_id]>=0;
-//            }
-//        }else {
-//            ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
-//            if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
-//                map_hits++;
-//                return inner_map[img_id]>=0;
-//            }
-//        }
-//    }
 
-    int evaluation = evaluate_filter_actual(filter, state);
-
-//    // set hasmap entry for re-using evaluation
-//    if(img_id >=0) {
-//        if(train){
-//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
-//            inner_map[img_id] = evaluation;
-//        }else{
-//            ImageEvaluationMap& inner_map = evaluation_validation_map[filter.id];
-//            inner_map[img_id] = evaluation;
-//        }
-//    }
-    return evaluation>=0;
-}
 
 /*
  * This function will save data that can be used to visualize classifiers and filters for an image
@@ -435,7 +341,13 @@ bool negate_cf(CodeFragment &cf){
  */
 int get_new_filter(float *state) {
     int id = -1;
-    if(drand() < p_promising_filter){
+    if(use_kb && drand() < p_kb_filter){
+        Filter kb_filter = get_kb_filter(state);
+        if(kb_filter.id != -1) {
+            id = add_filter(kb_filter);
+        }
+    }
+    if(id == -1 && drand() < p_promising_filter){
         id = get_promising_filter_id();
     }
     if(id == -1) {
@@ -577,17 +489,21 @@ bool add_operator(CodeFragment& cf, float* state){
 }
 
 
-bool create_new_cf(CodeFragment &cf, float* state){
+int create_new_cf(float *state) {
     CodeFragment temp;
     initializeNewCF(-1, temp);
-    if (use_kb && drand() < 0.5) {
-        CodeFragment received_cf = get_kb_code_fragment(state);;
-        if (received_cf.cf_id != -1) {
-//            received_cf.cf_id = cf_gid;
-//            temp = received_cf;
-            // add the filters from kb to master filter list
-            transfer_kb_filter(temp);
-        }
+//    if (use_kb && drand() < 0.5) {
+//        CodeFragment received_cf = get_kb_code_fragment(state);;
+//        if (received_cf.cf_id != -1) {
+////            received_cf.cf_id = cf_gid;
+////            temp = received_cf;
+//            // add the filters from kb to master filter list
+//            transfer_kb_filter(temp);
+//        }
+//    }
+    if(drand() < p_promising_filter){
+        int id = get_promising_cf_id();
+        return id;
     }
     if (temp.cf_id == -1) { // if cf not received from kb
 //        temp.cf_id = cf_gid;
@@ -601,8 +517,7 @@ bool create_new_cf(CodeFragment &cf, float* state){
 
     temp.cf_id = get_next_cf_gid();
     add_cf_to_list(temp);
-    cf = temp;
-    return true;
+    return temp.cf_id;
 }
 
 
@@ -892,31 +807,6 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 }
 
 
-/*
- * Return a matching filter randomly.
- * Returns filder with id -1 if not found in multiple tries
- */
-
-Filter get_kb_filter(float* state)
-{
-    Filter f;
-    auto random_it = kb_filter.begin();
-    bool matched = false;
-    int tries=0;
-    do{
-        tries++;
-        random_it = std::next(kb_filter.begin(), irand(kb_filter.size()));
-        // ignore the state for now.
-        //matched = evaluate_filter(random_it->second, state);
-        matched = true;
-    }while(!matched && tries < 100);
-    if(matched){
-        f = random_it->second;
-    }else{
-        f.id = -1;
-    }
-    return f;
-}
 
 
 CodeFragment get_kb_code_fragment(float* state)

@@ -15,5 +15,10 @@ void remove_cf_from_list(int id);
 void print_code_fragment_stats(std::ofstream &output_stats_file);
 void load_code_fragment(std::string cf_file_name);
 void update_cf_list_parameters(ClassifierVector pop);
+void reset_cf_stats();
+void prepare_promising_cf_list();
+int get_promising_cf_id();
+void remove_unused_cf();
+
 
 #endif //RCFC_KB_CF_LIST_H

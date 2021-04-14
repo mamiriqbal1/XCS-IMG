@@ -17,6 +17,7 @@
 #include <stack>
 #include "cf_list.h"
 
+
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
 int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
@@ -192,8 +193,7 @@ void createMatchingCondition(Classifier &cl, float *state)
     for(int i=0; i<clfrCondMaxLength; i++){
         if(drand() >= P_dontcare){
             CodeFragment new_cf;
-            create_new_cf(new_cf, state);
-            cl.cf_ids[i] = new_cf.cf_id;
+            cl.cf_ids[i] = create_new_cf(state);
         }
     }
 }
@@ -628,8 +628,7 @@ bool mutation(Classifier &clfr, float *state)
                 clfr.cf_ids[i] = -1; // set as don't care
             }else{
                 CodeFragment new_cf;
-                create_new_cf(new_cf, state);
-                clfr.cf_ids[i] = new_cf.cf_id;
+                clfr.cf_ids[i] = create_new_cf(state);
             }
         }
     }
@@ -1130,21 +1129,27 @@ inline bool is_promising_classifier(Classifier& cl)
  * A promising classifier is one whose error < 10 and experience > 10
  */
 
-void manage_filter_list(ClassifierVector &pop){
+void manage_filter_and_cf_list(ClassifierVector &pop){
     // reset statistics of all filters before updating
     reset_filter_stats();
+    reset_cf_stats();
 
     for(auto& item : pop){
         if(item.id == -1) continue; // skip empty slots in the array
+        bool promising = is_promising_classifier(item);
         for(int i=0; i < clfrCondMaxLength; i++){
             if(item.cf_ids[i] != -1) {
                 CodeFragment & cf = get_cf(item.cf_ids[i]);
+                cf.numerosity++;
+                if(promising){
+                    cf.fitness++;
+                }
                 for (int j = 0; j < cf.num_filters; j++) {
                     Filter &f = get_filter(cf.filter_ids[j]);
                     f.numerosity++;
                     // if classifier is "promising" then increase the fitness of the filter
                     // a promising classifier is one whose error < 10 and experience > 10
-                    if (is_promising_classifier(item)) {
+                    if (promising) {
                         f.fitness++;
                     }
 
@@ -1156,6 +1161,9 @@ void manage_filter_list(ClassifierVector &pop){
     std::forward_list<int> removed_filters;
     remove_unused_filters(removed_filters);
     update_evaluation_cache(removed_filters);
+    prepare_promising_filter_list();
+    remove_unused_cf();
+    prepare_promising_cf_list();
 }
 
 int get_pop_size(ClassifierVector &pop, bool numerosity) {

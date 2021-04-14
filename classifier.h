@@ -47,7 +47,7 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
 
 double absoluteValue(double value);
 
-void manage_filter_list(ClassifierVector &pop);
+void manage_filter_and_cf_list(ClassifierVector &pop);
 int get_pop_size(ClassifierVector &pop, bool numerosity);
 void get_matching_classifiers(ClassifierVector& pop, float *state, ClassifierSet &match_set, int img_id, bool train);
 bool is_promising_classifier(Classifier& cl);

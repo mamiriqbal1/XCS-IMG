@@ -14,9 +14,13 @@
 
 //FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
 FilterList master_filter_list; // The main filter list that is maintained
+FilterList kb_filter_list; // The knowledge base filter list
 
 std::vector<int> filter_gid_vector;
 std::stack<int, std::vector<int>> filter_gid_stack(filter_gid_vector);
+
+// lists of promising filter and cf ids updated periodically
+std::vector<int> promising_filter_ids;
 
 int get_next_filter_gid()
 {
@@ -46,6 +50,14 @@ void initialize_filter_list(int size)
  * If no then return the id of new filter.
  */
 int add_filter(Filter filter_to_add){
+    filter_to_add.id = get_next_filter_gid();
+    filter_to_add.numerosity = 1;
+    master_filter_list.filters[filter_to_add.id] = filter_to_add;
+    return filter_to_add.id;
+}
+
+
+int add_filter_old(Filter filter_to_add){
     // use find_if from <algorithm> to find a more general filter.
     auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
@@ -97,7 +109,20 @@ void reset_filter_stats(){
                                 filter_item.numerosity=0;
                                 filter_item.fitness=0;
                             });
+    promising_filter_ids.clear();
 }
+
+
+void prepare_promising_filter_list()
+{
+    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
+        if(it->id == -1) continue; // skip empty slots in the array
+        if(it->fitness > 0){
+            promising_filter_ids.push_back(it->id);
+        }
+    }
+}
+
 
 /*
  * This function removes any unused filters
@@ -105,7 +130,7 @@ void reset_filter_stats(){
 void remove_unused_filters(std::forward_list<int>& removed_filters){
     for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
         if(it->id == -1) continue; // skip empty slots in the array
-        if(it->numerosity == 0){
+        if(it->numerosity <= 0){
             removed_filters.push_front(it->id);
             filter_gid_stack.push(it->id);
             master_filter_list.filters[it->id].id = -1;  // remove unused filter by making it empty slot
@@ -166,20 +191,12 @@ void print_filter_stats(std::ofstream &output_stats_file) {
  * Returns -1 if no promising filter found
  */
 int get_promising_filter_id(){
-    // create a vector of promising filters
-    std::vector<int> promising_filters;
-    for(auto it=master_filter_list.filters.begin(); it!=master_filter_list.filters.end();++it){
-        if(it->id == -1) continue; // skip empty slots in the array
-        if(it->fitness > 0){
-            promising_filters.push_back(it->id);
-        }
-    }
     // select two filters for tournament
-    int size = promising_filters.size();
+    int size = promising_filter_ids.size();
     if(size == 0) return -1;
     int selected[2];
-    selected[0] = promising_filters[irand(size)];
-    selected[1] = promising_filters[irand(size)];
+    selected[0] = promising_filter_ids[irand(size)];
+    selected[1] = promising_filter_ids[irand(size)];
     if(master_filter_list.filters[selected[0]].fitness > master_filter_list.filters[selected[1]].fitness){
         return selected[0];
     }else if (master_filter_list.filters[selected[0]].fitness < master_filter_list.filters[selected[1]].fitness){
@@ -235,8 +252,50 @@ void output_filters(std::ofstream &output_filter_file, std::ofstream &output_pro
     }
 }
 
+void extract_filter_attributes(std::string& line, Filter& f) {
+    std::string str;
+    std::stringstream line1(line);
+    line1 >> str;
+    line1 >> f.id;
+    line1 >> str;
+    line1 >> f.x;
+    line1 >> str;
+    line1 >> f.y;
+    line1 >> str;
+    line1 >> f.filter_size;
+    line1 >> str;
+    line1 >> f.is_dilated;
+    line1 >> str;
+    line1 >> f.fitness;
+    line1 >> str;
+    line1 >> f.numerosity;
+}
 
-void load_filter(std::string filter_file_name)
+
+void extract_filter_lb(std::string& line, Filter& f) {
+    std::string str;
+    std::stringstream line2(line);
+    line2 >> str;
+    f.lower_bounds.reserve(f.filter_size * f.filter_size);
+    f.lower_bounds.assign(f.filter_size * f.filter_size, -1);
+    f.upper_bounds.reserve(f.filter_size * f.filter_size);
+    f.upper_bounds.assign(f.filter_size * f.filter_size, -1);
+    for (int i = 0; i < f.filter_size * f.filter_size; i++) {
+        line2 >> f.lower_bounds[i];
+    }
+}
+
+
+void extract_filter_ub(std::string& line, Filter& f) {
+    std::string str;
+    std::stringstream line3(line);
+    line3 >> str;
+    for(int i=0; i<f.filter_size*f.filter_size; i++){
+        line3 >> f.upper_bounds[i];
+    }
+}
+
+void load_filter_for_resume(std::string filter_file_name)
 {
     int loaded_gid = -1;
     std::string line;
@@ -249,38 +308,12 @@ void load_filter(std::string filter_file_name)
 
     while(getline(filter_file, line)){
         Filter f;
-        std::string str;
-        std::stringstream line1(line);
-        line1 >> str;
-        line1 >> f.id;
-        line1 >> str;
-        line1 >> f.x;
-        line1 >> str;
-        line1 >> f.y;
-        line1 >> str;
-        line1 >> f.filter_size;
-        line1 >> str;
-        line1 >> f.is_dilated;
-        line1 >> str;
-        line1 >> f.fitness;
-        line1 >> str;
-        line1 >> f.numerosity;
+        extract_filter_attributes(line, f);
         getline(filter_file, line);
-        std::stringstream line2(line);
-        line2 >> str;
-        f.lower_bounds.reserve(f.filter_size*f.filter_size);
-        f.lower_bounds.assign(f.filter_size*f.filter_size, -1);
-        f.upper_bounds.reserve(f.filter_size*f.filter_size);
-        f.upper_bounds.assign(f.filter_size*f.filter_size, -1);
-        for(int i=0; i<f.filter_size*f.filter_size; i++){
-            line2 >> f.lower_bounds[i];
-        }
+        extract_filter_lb(line, f);
         getline(filter_file, line);
-        std::stringstream line3(line);
-        line3 >> str;
-        for(int i=0; i<f.filter_size*f.filter_size; i++){
-            line3 >> f.upper_bounds[i];
-        }
+        extract_filter_ub(line, f);
+
         master_filter_list.filters.resize(f.id + 1);
         master_filter_list.filters[f.id] = f;
         if(f.id > loaded_gid){
@@ -293,3 +326,173 @@ void load_filter(std::string filter_file_name)
         if(master_filter_list.filters[i].id == -1) filter_gid_stack.push(i);
     }
 }
+/*
+ * Only load filter that are sufficiently specific.
+ * Avoid don't care and too wide filters
+ */
+bool should_load_filter(Filter& f)
+{
+    float thresh_hold = 0.5;
+    for(int i=0; i<f.filter_size*f.filter_size; i++){
+        if(f.upper_bounds[i] - f.lower_bounds[i] <= thresh_hold){
+            return true;
+        }
+    }
+    return false;
+}
+
+void load_filter_for_kb(std::string filter_file_name)
+{
+    int filter_id_seq = 0;
+    std::string line;
+    std::ifstream filter_file(filter_file_name);
+    if (!filter_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(filter_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(filter_file, line)){
+        Filter f;
+        extract_filter_attributes(line, f);
+        getline(filter_file, line);
+        extract_filter_lb(line, f);
+        getline(filter_file, line);
+        extract_filter_ub(line, f);
+
+        // check if the filter is specific enough to be loaded
+        if(should_load_filter(f)) {
+            // we set the filter ids sequentially
+            f.id = filter_id_seq++;
+            kb_filter_list.filters.resize(f.id + 1);
+            kb_filter_list.filters[f.id] = f;
+        }
+    }
+    kb_filter_list.gid = filter_id_seq;
+}
+
+
+/*
+ * Return a matching filter randomly.
+ * Returns filter with id -1 if could not match with the image at any location
+ * Otherwise return filter with correctly matching x,y coordinates
+ */
+
+Filter get_kb_filter(float* state)
+{
+    Filter f;
+    int random_index = irand(kb_filter_list.gid);
+    f = kb_filter_list.filters[random_index];
+    int result = evaluate_filter_actual_slide(f, state);
+    if(result == -1){
+        f.id = -1;
+    }
+
+    return f;
+}
+
+
+/*
+ * Return -1 if not matched otherwise return the location of match
+ */
+int evaluate_filter_actual(const Filter& filter, float *state)
+{
+    int step = 1; // this will be used to map normal coordinates to dilated coordinates
+    int effective_filter_size = filter.filter_size;
+    if(filter.is_dilated){
+        step = 2;
+        effective_filter_size = filter.filter_size + filter.filter_size -1;
+    }
+    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
+    int i = filter.y;
+    int j = filter.x;
+    for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
+        for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
+            if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
+               || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
+                match_failed = true;
+            }
+        }
+    }
+    if(!match_failed){
+        // return the actual position where the filter matched
+        return i*image_width+j;
+        //return true;
+    }
+    return -1;
+    //return false;
+}
+
+/*
+ * Returns -1 if filter could not be matched to any location
+ * Otherwise return position
+ * The filter in argument is always modified to the last location checked
+ * If the filter matches, the filer has correct x,y coordinates when function ends
+ */
+
+int evaluate_filter_actual_slide(Filter& filter, float *state)
+{
+    int step = 1; // this will be used to map normal coordinates to dilated coordinates
+    int effective_filter_size = filter.filter_size;
+    if(filter.is_dilated){
+        step = 2;
+        effective_filter_size = filter.filter_size + filter.filter_size -1;
+    }
+    std::vector<int> result_list;
+    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
+        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
+            filter.x = i;
+            filter.y = j;
+            int result = evaluate_filter_actual(filter, state);
+            if(result != -1){
+                result_list.push_back(result);
+            }
+        }
+    }
+    if(result_list.size() > 0){
+        int index = irand(result_list.size());
+        filter.x = result_list[index] % image_width;
+        filter.y = result_list[index] / image_width;
+        return result_list[index];
+    }else {
+        return -1;
+    }
+}
+
+
+bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id, bool train)
+{
+//    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
+//    if(img_id >=0){
+//        // return prior result if it is found
+//        if(train){
+//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
+//            if(inner_map.count(img_id) > 0){  // the image evaluation exist - unordered map always return  1
+//                map_hits++;
+//                return inner_map[img_id]>=0;
+//            }
+//        }else {
+//            ImageEvaluationMap &inner_map = evaluation_validation_map[filter.id];
+//            if (inner_map.count(img_id) > 0) {  // the image evaluation exist - unordered map always return  1
+//                map_hits++;
+//                return inner_map[img_id]>=0;
+//            }
+//        }
+//    }
+
+    int evaluation = evaluate_filter_actual(filter, state);
+
+//    // set hasmap entry for re-using evaluation
+//    if(img_id >=0) {
+//        if(train){
+//            ImageEvaluationMap& inner_map = evaluation_map[filter.id];
+//            inner_map[img_id] = evaluation;
+//        }else{
+//            ImageEvaluationMap& inner_map = evaluation_validation_map[filter.id];
+//            inner_map[img_id] = evaluation;
+//        }
+//    }
+    return evaluation>=0;
+}
+
+

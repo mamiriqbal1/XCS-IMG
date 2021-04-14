@@ -181,7 +181,7 @@ void load_parameter(std::string parameter_file_name)
 void load_state_for_resume(ClassifierVector &pop)
 {
 //    load_parameter(output_path + resume_from + output_filter_file_name);
-    load_filter(output_path + resume_from + output_filter_file_name);
+    load_filter_for_resume(output_path + resume_from + output_filter_file_name);
     load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name, pop);
 }
@@ -220,7 +220,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         output_test_file<<std::endl;
         load_state_for_resume(pop);
         update_cf_list_parameters(pop);
-        manage_filter_list(pop); // update filter parameters etc
+        manage_filter_and_cf_list(pop); // update filter parameters etc
         problem_count = std::atoi(resume_from.c_str());
         // reset pM
         pM = pM_initial + pM_step * (problem_count / validation_frequency);
@@ -270,7 +270,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             pM = fmin(pM, 1);
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
-            manage_filter_list(pop);
+            manage_filter_and_cf_list(pop);
         }
     }
     output_training_file.close();

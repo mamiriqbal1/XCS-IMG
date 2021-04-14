@@ -17,6 +17,10 @@ CodeFragmentVector main_cf_list;
 std::vector<int> cf_gid_vector;
 std::stack<int, std::vector<int>> cf_gid_stack(cf_gid_vector);
 
+// lists of promising filter and cf ids updated periodically
+std::vector<int> promising_cf_ids;
+
+
 int get_next_cf_gid()
 {
     if(cf_gid_stack.size()>0){
@@ -59,7 +63,7 @@ void remove_cf_from_list(int id)
 {
     if(main_cf_list[id].cf_id != -1) {
         main_cf_list[id].numerosity--;
-        if (main_cf_list[id].numerosity == 0) {
+        if (main_cf_list[id].numerosity <= 0) {
             main_cf_list[id].cf_id = -1;
             cf_gid_stack.push(id);
         }
@@ -168,5 +172,53 @@ void update_cf_list_parameters(ClassifierVector pop)
             if(cf_id == -1) continue; // skip empty slot
             main_cf_list[cf_id].numerosity++;
         }
+    }
+}
+
+void reset_cf_stats()
+{
+    for(CodeFragment& cf: main_cf_list){
+        if(cf.cf_id == -1) continue; // skip empty slot
+        cf.numerosity = 0;
+        cf.fitness = 0;
+    }
+    promising_cf_ids.clear();
+}
+
+
+void remove_unused_cf()
+{
+    for(CodeFragment& cf: main_cf_list){
+        if(cf.cf_id == -1) continue; // skip empty slot
+        if(cf.numerosity <= 0){
+            remove_cf_from_list(cf.cf_id);
+        }
+    }
+}
+
+void prepare_promising_cf_list()
+{
+    for(CodeFragment& cf: main_cf_list){
+        if(cf.cf_id == -1) continue; // skip empty slot
+        if(cf.fitness > 0) promising_cf_ids.push_back(cf.cf_id);
+    }
+
+}
+
+int get_promising_cf_id()
+{
+    int size = promising_cf_ids.size();
+    if(size == 0) return -1;
+    int index = irand(promising_cf_ids.size());
+    // select two filters for tournament
+    int selected[2];
+    selected[0] = promising_cf_ids[irand(size)];
+    selected[1] = promising_cf_ids[irand(size)];
+    if(main_cf_list[selected[0]].fitness > main_cf_list[selected[1]].fitness){
+        return selected[0];
+    }else if (main_cf_list[selected[0]].fitness < main_cf_list[selected[1]].fitness){
+        return selected[1];
+    }else{
+        return selected[irand(2)];  // return randomly if both have equal fitness
     }
 }
