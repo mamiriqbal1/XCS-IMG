@@ -179,7 +179,7 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
 void transfer_kb_filter(CodeFragment & cf)
 {
     for(int i=0; i<cf.num_filters; i++){
-        cf.filter_ids[i] = add_filter(kb_filter[cf.filter_ids[i]]);
+//        cf.filter_ids[i] = add_filter(kb_filter[cf.filter_ids[i]]);
     }
 }
 

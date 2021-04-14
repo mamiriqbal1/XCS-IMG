@@ -110,9 +110,7 @@ struct Hash {
 };
 
 //typedef rigtorp::HashMap<int, Filter, Hash> FilterMap;
-typedef ska::bytell_hash_map<int, Filter, Hash> FilterMap2;
 typedef std::vector<Filter> FilterMap;
-extern FilterMap2 kb_filter;
 
 struct FilterList{
     FilterMap filters;

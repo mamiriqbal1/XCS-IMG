@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.15)
-project(RCFC_kb)
+project(XCS-IMG)
 
 set(CMAKE_CXX_STANDARD 14)
 SET(GCC_COVERAGE_COMPILE_FLAGS "-ggdb -g3 -rdynamic")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 include_directories(.)
 
-add_executable(RCFC_kb
+add_executable(XCS-IMG
         classifier.cpp
         classifier.h
         codeFragment.cpp
