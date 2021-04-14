@@ -20,7 +20,7 @@ extern double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one alle
 extern double pM_initial;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 extern double pM_step;
 extern double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
-extern double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
+extern double p_promising;// = 0.5;  // probability of using a filter from observed list
 const double p_kb_filter = 0.5;  // probability of using a filter from observed list
 const int mutationType = 0; // 0 niche, and 1 general mutation.
 const double P_dontcare = 0.33; //The probability of using a don't care symbol in an allele when covering.

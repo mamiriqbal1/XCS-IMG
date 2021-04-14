@@ -31,7 +31,7 @@ double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and 
 double pM_initial;
 double pM_step = 0; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
-double p_promising_filter;// = 0.5;  // probability of using a filter from observed list
+double p_promising;// = 0.5;  // probability of using a filter from observed list
 
 bool visualization = false;
 bool fixed_seed = true;
@@ -430,8 +430,8 @@ void LoadConfig(char* file)
                 pM_step = atof(value.c_str());
             }else if(name == "pM_allel"){
                 pM_allel = atof(value.c_str());
-            }else if(name == "p_promising_filter"){
-                p_promising_filter = atof(value.c_str());
+            }else if(name == "p_promising"){
+                p_promising = atof(value.c_str());
             }else if(name == "use_kb"){
                 if(value == "no"){
                     use_kb = false;

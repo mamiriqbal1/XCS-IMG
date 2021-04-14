@@ -347,7 +347,7 @@ int get_new_filter(float *state) {
             id = add_filter(kb_filter);
         }
     }
-    if(id == -1 && drand() < p_promising_filter){
+    if(id == -1 && drand() < p_promising){
         id = get_promising_filter_id();
     }
     if(id == -1) {
@@ -501,9 +501,9 @@ int create_new_cf(float *state) {
 //            transfer_kb_filter(temp);
 //        }
 //    }
-    if(drand() < p_promising_filter){
+    if(drand() < p_promising){
         int id = get_promising_cf_id();
-        return id;
+        if(id != -1)    return id;
     }
     if (temp.cf_id == -1) { // if cf not received from kb
 //        temp.cf_id = cf_gid;
