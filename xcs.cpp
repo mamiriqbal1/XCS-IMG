@@ -219,7 +219,6 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         output_training_file<<std::endl;
         output_test_file<<std::endl;
         load_state_for_resume(pop);
-        update_cf_list_parameters(pop);
         manage_filter_and_cf_list(pop); // update filter parameters etc
         problem_count = std::atoi(resume_from.c_str());
         // reset pM

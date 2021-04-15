@@ -520,12 +520,10 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     child1.numerosity = 1;
     child1.experience = 0;
     child1.fitness = child1.fitness / child1.numerosity;
-    add_classifier_cfs_to_list(child1);
 //    child2.id = get_next_cl_gid();
     child2.numerosity = 1;
     child2.experience = 0;
     child2.fitness = child2.fitness / child2.numerosity;
-    add_classifier_cfs_to_list(child2);
 }
 
 // ########################## crossover and mutation ########################################
@@ -624,7 +622,6 @@ bool mutation(Classifier &clfr, float *state)
         if(drand() < pM){
             changed = true;
             if(clfr.cf_ids[i] != -1){
-                remove_cf_from_list(clfr.cf_ids[i]);
                 clfr.cf_ids[i] = -1; // set as don't care
             }else{
                 CodeFragment new_cf;
@@ -731,13 +728,11 @@ bool subsumeClassifier(Classifier &cl, Classifier &p1, Classifier &p2, Classifie
     if(subsumes(p1, cl))
     {
         p1.numerosity++;
-        remove_classifier_cfs_from_list(cl);
         return true;
     }
     if(subsumes(p2, cl))
     {
         p2.numerosity++;
-        remove_classifier_cfs_from_list(cl);
         return true;
     }
     // as per algorithm child submsumption in population is not done
@@ -768,7 +763,6 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
         cl_set.pop[*random_it].numerosity++;
-        remove_classifier_cfs_from_list(cl);
         return true;
     }
     return false;
@@ -822,7 +816,6 @@ bool subsumeClassifierToPop(Classifier &cl, ClassifierVector &cl_set)
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
         cl_set[*random_it].numerosity++;
-        remove_classifier_cfs_from_list(cl);
         return true;
     }
     return false;
@@ -898,8 +891,6 @@ int deleteStochClassifier(ClassifierVector &pop)
             if(item.numerosity > 1){
                 item.numerosity--;
             }else{
-                // remove all classifier's cfs from the cf_list
-                remove_classifier_cfs_from_list(item);
                 classifier_gid_stack.push(removed_id);
                 pop[item.id].id = -1;
             }
