@@ -49,7 +49,7 @@ void initialize_filter_list(int size)
  * If yes then return the id of more general filter.
  * If no then return the id of new filter.
  */
-int add_filter(Filter filter_to_add){
+int add_filter_plain(Filter filter_to_add){
     filter_to_add.id = get_next_filter_gid();
     filter_to_add.numerosity = 1;
     master_filter_list.filters[filter_to_add.id] = filter_to_add;
@@ -57,7 +57,7 @@ int add_filter(Filter filter_to_add){
 }
 
 
-int add_filter_old(Filter filter_to_add){
+int add_filter(Filter filter_to_add){
     // use find_if from <algorithm> to find a more general filter.
     auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
             [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
