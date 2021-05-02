@@ -581,7 +581,12 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
     return covered;
 }
 
+
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){
+    // keep track of filters that have contributed to the result of cf evaluation
+    std::stack<std::vector<int>> filter_stack;
+
+
     int stack[cfMaxStack];
     stack[0] = 0;
     int SP = 0;
@@ -606,10 +611,16 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             if(evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train))
             {
                 stack[SP++] = 1;   //changed
+                // save filter id in stack
+                std::vector<int> fv {cf.filter_ids[opcode]};
+                filter_stack.push(fv);
             }
             else
             {
                 stack[SP++] = 0;   //changed
+                // save filter id in stack
+                std::vector<int> fv {cf.filter_ids[opcode]};
+                filter_stack.push(fv);
             }
 
         }
@@ -617,11 +628,19 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
             const int sp = stack[--SP];
             stack[SP++] = (!sp)?1:0;
+            // no change in the filter stack because NOT retains all filters regardless its bool value
         }
         else
         {
             const int sp2 = stack[--SP];
             const int sp1 = stack[--SP];
+            // pop filter vectors from the stack
+            std::vector<int> fv2 = filter_stack.top();
+            filter_stack.pop();
+            std::vector<int> fv1 = filter_stack.top();
+            filter_stack.pop();
+
+
             switch(opcode)
             {
             case OPAND:
@@ -643,11 +662,52 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 stack[SP++] = (sp1!=sp2)?0:1;
                 break;
             }//end switch
+            // significant filter management
+            std::vector<int> fv;
+            switch(opcode)
+            {
+                case OPAND:
+                case OPOR:
+                    // if the result of the operand id true then select filters from true side(s)
+                    if(stack[SP-1] == 1) {
+                        if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                        if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                    }
+                    // if the result of the operand id false then select filters from false side(s)
+                    if(stack[SP-1] == 0) {
+                        if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                        if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                    }
+                    filter_stack.push(fv);
+                    break;
+                case OPNAND:
+                case OPNOR:
+                    // if the result of the operand id true then select filters from false side(s)
+                    if(stack[SP-1] == 1) {
+                        if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                        if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                    }
+                    // if the result of the operand id false then select filters from true side(s)
+                    if(stack[SP-1] == 0) {
+                        if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                        if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                    }
+                    filter_stack.push(fv);
+                    break;
+                case OPXOR:
+                case OPXNOR:
+                    // select all filters in case of XOR and XNOR
+                    fv.insert(fv.end(), fv2.begin(), fv2.end());
+                    fv.insert(fv.end(), fv1.begin(), fv1.end());
+                    filter_stack.push(fv);
+                    break;
+            }//end switch
         }
     }
     int value = stack[--SP];
     //std::cout<<"SP: "<<SP<<"\n";
     assert(SP==0);
+    assert(filter_stack.size()==1);
 
     return value;
 }
