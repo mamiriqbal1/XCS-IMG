@@ -301,7 +301,8 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 		bool isMatched = false;
 		testState = &testingData[t];
 
-        get_matching_classifiers(pop, testState->state, match_set, t, false);
+        std::unordered_map<int, std::vector<std::pair<int, bool>>> map_cl_contribution; // vector of pair(classifier_id, pair(filter_id, result))
+        get_matching_classifiers(pop, testState->state, match_set, t, false, true, &map_cl_contribution);
         isMatched = match_set.ids.size() > 0;
         int actionWinner=-1;
         if(isMatched) {
@@ -312,7 +313,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
                 getActionSet(actionWinner, match_set, action_set);
                 // save visualization data - start with image id, actual action and predicted action
                 output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
-                save_visualization_data(action_set, t, output_visualization_file);
+                save_visualization_data(action_set, t, output_visualization_file, map_cl_contribution);
 
             }
         }else{

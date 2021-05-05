@@ -272,10 +272,20 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
  * This function will save data that can be used to visualize classifiers and filters for an image
  * that was predicted correctly or incorrectly
  */
-void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file) {
+void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, bool>>> &map_cl_contribution) {
 
     for(auto & id:action_set.ids){
-        output_visualization_file << id << " ";
+        std::vector<std::pair<int, bool>> &filter_pairs = map_cl_contribution[id];
+        for(auto & item: filter_pairs) {
+            if(item.second)  output_visualization_file << item.first << " ";
+        }
+    }
+    output_visualization_file<<std::endl;
+    for(auto & id:action_set.ids){
+        std::vector<std::pair<int, bool>> &filter_pairs = map_cl_contribution[id];
+        for(auto & item: filter_pairs) {
+            if(!item.second)  output_visualization_file << item.first << " ";
+        }
     }
     output_visualization_file<<std::endl;
 //    for(auto & item:evaluation_validation_map){
@@ -582,9 +592,9 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 }
 
 
-int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train){
+int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train, bool transparent, std::vector<std::pair<int, bool>>* contribution){
     // keep track of filters that have contributed to the result of cf evaluation
-    std::stack<std::vector<int>> filter_stack;
+    std::stack<std::vector<std::pair<int, bool>>> filter_stack;  // stack of vector of pair(filter_id, result)
 
 
     int stack[cfMaxStack];
@@ -612,14 +622,16 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             {
                 stack[SP++] = 1;   //changed
                 // save filter id in stack
-                std::vector<int> fv {cf.filter_ids[opcode]};
+                std::pair<int, bool> pr(cf.filter_ids[opcode], true);
+                std::vector<std::pair<int,bool>> fv {pr};
                 filter_stack.push(fv);
             }
             else
             {
                 stack[SP++] = 0;   //changed
                 // save filter id in stack
-                std::vector<int> fv {cf.filter_ids[opcode]};
+                std::pair<int, bool> pr(cf.filter_ids[opcode], false);
+                std::vector<std::pair<int, bool>> fv {pr};
                 filter_stack.push(fv);
             }
 
@@ -635,9 +647,9 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             const int sp2 = stack[--SP];
             const int sp1 = stack[--SP];
             // pop filter vectors from the stack
-            std::vector<int> fv2 = filter_stack.top();
+            std::vector<std::pair<int, bool>> fv2 = filter_stack.top();
             filter_stack.pop();
-            std::vector<int> fv1 = filter_stack.top();
+            std::vector<std::pair<int, bool>> fv1 = filter_stack.top();
             filter_stack.pop();
 
 
@@ -663,7 +675,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 break;
             }//end switch
             // significant filter management
-            std::vector<int> fv;
+            std::vector<std::pair<int, bool>> fv;
             switch(opcode)
             {
                 case OPAND:
@@ -672,9 +684,8 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                     if(stack[SP-1] == 1) {
                         if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
                         if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }
+                    }else{
                     // if the result of the operand id false then select filters from false side(s)
-                    if(stack[SP-1] == 0) {
                         if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
                         if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
                     }
@@ -686,9 +697,8 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                     if(stack[SP-1] == 1) {
                         if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
                         if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }
+                    }else{
                     // if the result of the operand id false then select filters from true side(s)
-                    if(stack[SP-1] == 0) {
                         if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
                         if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
                     }
@@ -708,6 +718,10 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     //std::cout<<"SP: "<<SP<<"\n";
     assert(SP==0);
     assert(filter_stack.size()==1);
+    // report contributing filters along with their evaluation result
+    if(transparent && contribution != nullptr){
+        (*contribution) = filter_stack.top();
+    }
 
     return value;
 }

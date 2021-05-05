@@ -155,14 +155,24 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 }
 
 
-bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
+bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent, std::vector<std::pair<int, bool>>* contribution)
 {
+    std::vector<std::pair<int, bool>> list_local;
     for(int i=0; i < clfrCondMaxLength; i++)
     {
-        if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0 )
+        std::vector<std::pair<int, bool>> list_temp;
+        if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, &list_temp) == 0 )
         {
             return false;
+        }else{
+            // add contribution to list in case cf evaluates to true
+            if(transparent & contribution!= nullptr){
+                list_local.insert(list_local.end(), list_temp.begin(), list_temp.end());
+            }
         }
+    }
+    if(transparent && contribution != nullptr){
+        (*contribution) = list_local;
     }
     return true;
 }
@@ -1171,15 +1181,20 @@ int get_pop_size(ClassifierVector &pop, bool numerosity) {
     else return pop_size;
 }
 
-void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train) {
-
-    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train](ClassifierVector::value_type& item)
+void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent, std::unordered_map<int, std::vector<std::pair<int, bool>>> *contribution) {
+    std::unordered_map<int, std::vector<std::pair<int, bool>>> map_local; // vector of pair(classifier_id, pair(filter_id, result))
+    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train, transparent, &map_local](ClassifierVector::value_type& item)
     {
+        std::vector<std::pair<int, bool>> list_temp;
         if(item.id == -1) return; // skip empty slots in the array
-        if(isConditionMatched(item, state, img_id, train)){
+        if(isConditionMatched(item, state, img_id, train, transparent, &list_temp)){
             match_set.ids.push_back(item.id);
+            if(transparent){
+                map_local[item.id] = list_temp;
+            }
         }
     });
+    if(transparent) *contribution = map_local;
 }
 
 

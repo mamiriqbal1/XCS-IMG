@@ -1,8 +1,11 @@
+#ifndef XCS_IMG_CL_H
+#define XCS_IMG_CL_H
+
 void setInitialVariables(Classifier &clfr, double setSize, int time);
 
 void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id);
 int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
-bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
+bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent=false, std::vector<std::pair<int, bool>>* contribution=nullptr);
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);
 void createMatchingCondition(Classifier &cl, float *state);
 
@@ -49,10 +52,13 @@ double absoluteValue(double value);
 
 void manage_filter_and_cf_list(ClassifierVector &pop);
 int get_pop_size(ClassifierVector &pop, bool numerosity);
-void get_matching_classifiers(ClassifierVector& pop, float *state, ClassifierSet &match_set, int img_id, bool train);
+void get_matching_classifiers(ClassifierVector& pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent=false, std::unordered_map<int, std::vector<std::pair<int, bool>>> *contribution=nullptr);
 bool is_promising_classifier(Classifier& cl);
 void transfer_kb_filter(CodeFragment & cf);
 void remove_classifier_cfs_from_list(Classifier &cl);
 void add_classifier_cfs_to_list(Classifier &cl);
 int count_classifier_cfs(const Classifier &cl);
 void load_classifier(std::string classifier_file_name, ClassifierVector &pop);
+
+
+#endif //XCS_IMG_CL_H
