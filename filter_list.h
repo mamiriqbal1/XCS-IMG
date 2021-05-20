@@ -19,7 +19,7 @@ void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &out
 void load_filter_for_resume(std::string filter_file_name);
 void load_filter_for_kb(std::string filter_file_name);
 Filter get_kb_filter(float* state);
-bool evaluate_filter(const Filter& filter, float state[], int cl_id=-1, int img_id=-1, bool train=true);
+int evaluate_filter(const Filter& filter, float *state, int cl_id=-1, int img_id=-1, bool train=true);
 int evaluate_filter_actual(const Filter& filter, float *state);
 int evaluate_filter_actual_slide(Filter& filter, float *state);
 void prepare_promising_filter_list();

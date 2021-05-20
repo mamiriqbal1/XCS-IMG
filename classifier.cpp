@@ -155,12 +155,12 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 }
 
 
-bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent, std::vector<std::pair<int, bool>>* contribution)
+bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent, std::vector<std::pair<int, int>>* contribution)
 {
-    std::vector<std::pair<int, bool>> list_local;
+    std::vector<std::pair<int, int>> list_local;
     for(int i=0; i < clfrCondMaxLength; i++)
     {
-        std::vector<std::pair<int, bool>> list_temp;
+        std::vector<std::pair<int, int>> list_temp;
         if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, &list_temp) == 0 )
         {
             return false;
@@ -1181,11 +1181,11 @@ int get_pop_size(ClassifierVector &pop, bool numerosity) {
     else return pop_size;
 }
 
-void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent, std::unordered_map<int, std::vector<std::pair<int, bool>>> *contribution) {
-    std::unordered_map<int, std::vector<std::pair<int, bool>>> map_local; // vector of pair(classifier_id, pair(filter_id, result))
+void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent, std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution) {
+    std::unordered_map<int, std::vector<std::pair<int, int>>> map_local; // vector of pair(classifier_id, pair(filter_id, result))
     std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train, transparent, &map_local](ClassifierVector::value_type& item)
     {
-        std::vector<std::pair<int, bool>> list_temp;
+        std::vector<std::pair<int, int>> list_temp;
         if(item.id == -1) return; // skip empty slots in the array
         if(isConditionMatched(item, state, img_id, train, transparent, &list_temp)){
             match_set.ids.push_back(item.id);

@@ -406,21 +406,23 @@ int evaluate_filter_actual(const Filter& filter, float *state)
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
     int i = filter.y;
     int j = filter.x;
+    int y = 0, x = 0;
     for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
         for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
             if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
                || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
                 match_failed = true;
+                y = k;
+                x = l;
             }
         }
     }
-    if(!match_failed){
-        // return the actual position where the filter matched
-        return i*image_width+j;
-        //return true;
+    if(match_failed){
+        // return the actual position of filter that did not match
+        return y*filter.filter_size+x;
+    }else {  // if matched return -1
+        return -1;
     }
-    return -1;
-    //return false;
 }
 
 /*
@@ -460,7 +462,7 @@ int evaluate_filter_actual_slide(Filter& filter, float *state)
 }
 
 
-bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id, bool train)
+int evaluate_filter(const Filter& filter, float *state, int cl_id, int img_id, bool train)
 {
 //    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
 //    if(img_id >=0){
@@ -492,7 +494,7 @@ bool evaluate_filter(const Filter& filter, float state[], int cl_id, int img_id,
 //            inner_map[img_id] = evaluation;
 //        }
 //    }
-    return evaluation>=0;
+    return evaluation;
 }
 
 

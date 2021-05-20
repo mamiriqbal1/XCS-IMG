@@ -301,7 +301,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 		bool isMatched = false;
 		testState = &testingData[t];
 
-        std::unordered_map<int, std::vector<std::pair<int, bool>>> map_cl_contribution; // vector of pair(classifier_id, pair(filter_id, result))
+        std::unordered_map<int, std::vector<std::pair<int, int>>> map_cl_contribution; // vector of pair(classifier_id, pair(filter_id, result))
         get_matching_classifiers(pop, testState->state, match_set, t, false, true, &map_cl_contribution);
         isMatched = match_set.ids.size() > 0;
         int actionWinner=-1;

@@ -272,19 +272,21 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
  * This function will save data that can be used to visualize classifiers and filters for an image
  * that was predicted correctly or incorrectly
  */
-void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, bool>>> &map_cl_contribution) {
+void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution) {
 
     for(auto & id:action_set.ids){
-        std::vector<std::pair<int, bool>> &filter_pairs = map_cl_contribution[id];
+        std::vector<std::pair<int, int>> &filter_pairs = map_cl_contribution[id];
         for(auto & item: filter_pairs) {
-            if(item.second)  output_visualization_file << item.first << " ";
+            // save positive filter ids
+            if(item.second == -1)  output_visualization_file << item.first << " ";
         }
     }
     output_visualization_file<<std::endl;
     for(auto & id:action_set.ids){
-        std::vector<std::pair<int, bool>> &filter_pairs = map_cl_contribution[id];
+        std::vector<std::pair<int, int>> &filter_pairs = map_cl_contribution[id];
         for(auto & item: filter_pairs) {
-            if(!item.second)  output_visualization_file << item.first << " ";
+            // save negative filter ids along with location
+            if(item.second>=0)  output_visualization_file << item.first << " " << item.second << " ";
         }
     }
     output_visualization_file<<std::endl;
@@ -592,9 +594,9 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 }
 
 
-int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train, bool transparent, std::vector<std::pair<int, bool>>* contribution){
+int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train, bool transparent, std::vector<std::pair<int, int>>* contribution){
     // keep track of filters that have contributed to the result of cf evaluation
-    std::stack<std::vector<std::pair<int, bool>>> filter_stack;  // stack of vector of pair(filter_id, result)
+    std::stack<std::vector<std::pair<int, int>>> filter_stack;  // stack of vector of pair(filter_id, result)
 
 
     int stack[cfMaxStack];
@@ -618,21 +620,18 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            if(evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train))
+            int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train);
+            // save filter id in stack, result contains location if the filter match is unsuccessful, -1 otherwise
+            std::pair<int, int> pr(cf.filter_ids[opcode], result);
+            std::vector<std::pair<int,int>> fv {pr};
+            filter_stack.push(fv);
+            if(result == -1)  // if matched
             {
                 stack[SP++] = 1;   //changed
-                // save filter id in stack
-                std::pair<int, bool> pr(cf.filter_ids[opcode], true);
-                std::vector<std::pair<int,bool>> fv {pr};
-                filter_stack.push(fv);
             }
-            else
+            else // if not matched
             {
                 stack[SP++] = 0;   //changed
-                // save filter id in stack
-                std::pair<int, bool> pr(cf.filter_ids[opcode], false);
-                std::vector<std::pair<int, bool>> fv {pr};
-                filter_stack.push(fv);
             }
 
         }
@@ -647,9 +646,9 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             const int sp2 = stack[--SP];
             const int sp1 = stack[--SP];
             // pop filter vectors from the stack
-            std::vector<std::pair<int, bool>> fv2 = filter_stack.top();
+            std::vector<std::pair<int, int>> fv2 = filter_stack.top();
             filter_stack.pop();
-            std::vector<std::pair<int, bool>> fv1 = filter_stack.top();
+            std::vector<std::pair<int, int>> fv1 = filter_stack.top();
             filter_stack.pop();
 
 
@@ -675,7 +674,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 break;
             }//end switch
             // significant filter management
-            std::vector<std::pair<int, bool>> fv;
+            std::vector<std::pair<int, int>> fv;
             switch(opcode)
             {
                 case OPAND:
