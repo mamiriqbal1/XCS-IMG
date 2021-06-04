@@ -497,4 +497,15 @@ int evaluate_filter(const Filter& filter, float *state, int cl_id, int img_id, b
     return evaluation;
 }
 
-
+/*
+ * Sets the filter coordinates from bounding box
+ */
+void set_filter_coordinates(Filter &f, BoundingBox bb)
+{
+    int effective_filter_size = f.filter_size;
+    if(f.is_dilated){
+        effective_filter_size = f.filter_size + f.filter_size -1;
+    }
+    f.x = bb.x + irand(bb.size - effective_filter_size);
+    f.y = bb.y + irand(bb.size - effective_filter_size);
+}

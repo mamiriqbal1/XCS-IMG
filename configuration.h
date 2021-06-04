@@ -118,6 +118,18 @@ struct FilterList{
     int max_size_limit = N_filter_ol;
 };
 
+// CF will now have a bounding box within which all filters will lie.
+extern int cf_max_bounding_box_size;
+extern int cf_min_bounding_box_size;
+
+struct BoundingBox
+{
+    // bounding box related parameters; x, y coordinates and size, height
+    int x = 0;
+    int y = 0;
+    int size = 0;
+};
+
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;
@@ -126,6 +138,7 @@ struct CodeFragment
     int cf_id;
     int numerosity = 1;
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
+    BoundingBox bb;
     CodeFragment(){
         reverse_polish.reserve(cfMaxLength);
         reverse_polish.assign(cfMaxLength, OPNOP);

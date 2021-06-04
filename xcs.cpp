@@ -43,6 +43,9 @@ int cfMaxDepth = 0;
 int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
+int cf_max_bounding_box_size = 7;
+int cf_min_bounding_box_size = max_filter_size * 2;
+
 std::string inputTrainingFile;
 std::string inputTestFile;
 std::string kb_cf_file;
@@ -421,6 +424,10 @@ void LoadConfig(char* file)
                 cfMaxLeaf = std::pow(2, cfMaxDepth);
             }else if(name == "max_condition_length"){
                 clfrCondMaxLength = atoi(value.c_str());
+            }else if(name == "cf_max_bounding_box_size"){
+                cf_max_bounding_box_size = atoi(value.c_str());
+            }else if(name == "cf_min_bounding_box_size"){
+                cf_min_bounding_box_size = atoi(value.c_str());
             }else if(name == "pX"){
                 pX = atof(value.c_str());
             }else if(name == "pM"){
@@ -522,7 +529,6 @@ void LoadConfig(char* file)
     if(maxProblems == 0) {
         maxProblems = trainNumInstances * epochs;
     }
-
 }
 
 /*

@@ -5,7 +5,7 @@
 #include "configuration.h"
 #include "classifier.h"
 
-void addLeafCF(CodeFragment &cf, float *state);
+void addLeafCF(CodeFragment &cf, float *state, BoundingBox bb);
 
 int getNumPreviousCFs();
 bool isDontcareCF(CodeFragment &cf);
@@ -32,7 +32,7 @@ bool mutate_cf(CodeFragment &cf, float *state);
 
 bool shrink_cf(CodeFragment &cf, float* state);
 bool negate_cf(CodeFragment &cf);
-int get_new_filter(float *state);
+int get_new_filter(float *state, BoundingBox bb);
 int create_new_cf(float *state);
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);

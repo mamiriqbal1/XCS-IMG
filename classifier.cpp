@@ -200,12 +200,16 @@ void transfer_kb_filter(CodeFragment & cf)
  */
 void createMatchingCondition(Classifier &cl, float *state)
 {
-    for(int i=0; i<clfrCondMaxLength; i++){
-        if(drand() >= P_dontcare){
-            CodeFragment new_cf;
-            cl.cf_ids[i] = create_new_cf(state);
+    bool cf_added = false; // to ensure that at least one cf is added
+    do {
+        for (int i = 0; i < clfrCondMaxLength; i++) {
+            if (drand() >= P_dontcare) {
+                cf_added = true;
+                CodeFragment new_cf;
+                cl.cf_ids[i] = create_new_cf(state);
+            }
         }
-    }
+    }while(!cf_added);
 }
 
 // ######################### prediction array operations ############################################
@@ -578,23 +582,26 @@ void crossover_filter(Filter& parent1, Filter& parent2)
 }
 
 /*
- * implement two point crossover
+ * Swap two randomly selected filters between two CFs
+ * For now the assumption is that there is only one CF in one classifier
  */
 
 bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     // crossover probability check
     if (drand() >= pX) return false;
 
-    int size = clfrCondMaxLength;
-    int p1 = irand(size);
-    int p2 = irand(size);
-    if(p1 > p2){
-        std::swap(p1,p2);
-    }
-
-    for(int i=p1; i<p2; i++){
-        std::swap(cl1.cf_ids[i], cl2.cf_ids[i]);
-    }
+    // assumption is that each classifier has one cf
+    CodeFragment& cf1 = get_cf(cl1.cf_ids[0]);
+    CodeFragment& cf2 = get_cf(cl2.cf_ids[0]);
+    int filter_index1 = irand(cf1.num_filters);
+    int filter_index2 = irand(cf2.num_filters);
+    Filter f1 = get_filter(cf1.filter_ids[filter_index1]);
+    Filter f2 = get_filter(cf2.filter_ids[filter_index2]);
+    // now set bounding box and add to filter list as new filters
+    set_filter_coordinates(f1, cf2.bb);
+    set_filter_coordinates(f2, cf1.bb);
+    cf2.filter_ids[filter_index2] = add_filter(f1);
+    cf1.filter_ids[filter_index1] = add_filter(f2);
 
     return true;
 }
@@ -620,10 +627,8 @@ void apply_filter_mutation(Filter& filter, float state[])
 }
 
 /*
- * Sync with original code. Toggle one code fragment
- * Mutation probability is not being used.
- * Only one cf is being mutated that means 1/cfMaxLength% mutation probability
- * Maxlength = 100 means 1%, Maxlength = 50 means 2% per cf
+ * Mutate CFs by replacing a filter with a new filter
+ * For now the assumption is that there will be only one CF per classifier
  */
 bool mutation(Classifier &clfr, float *state)
 {
@@ -632,7 +637,14 @@ bool mutation(Classifier &clfr, float *state)
         if(drand() < pM){
             changed = true;
             if(clfr.cf_ids[i] != -1){
-                clfr.cf_ids[i] = -1; // set as don't care
+                // replace one filter in CF and assign new id to it because it is a new CF
+                CodeFragment temp_cf = get_cf(clfr.cf_ids[i]); // copy cf
+                // replace a filter
+                int filter_index = irand(temp_cf.num_filters);
+                temp_cf.filter_ids[filter_index] = get_new_filter(state, temp_cf.bb);
+                temp_cf.cf_id = get_next_cf_gid();
+                add_cf_to_list(temp_cf);
+                clfr.cf_ids[i] = temp_cf.cf_id;
             }else{
                 CodeFragment new_cf;
                 clfr.cf_ids[i] = create_new_cf(state);

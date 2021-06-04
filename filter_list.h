@@ -23,6 +23,6 @@ int evaluate_filter(const Filter& filter, float *state, int cl_id=-1, int img_id
 int evaluate_filter_actual(const Filter& filter, float *state);
 int evaluate_filter_actual_slide(Filter& filter, float *state);
 void prepare_promising_filter_list();
-
+void set_filter_coordinates(Filter &f, BoundingBox bb);
 
 #endif //RCFC_KB_FILTER_LIST_H

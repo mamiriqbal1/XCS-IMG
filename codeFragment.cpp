@@ -144,6 +144,10 @@ void initializeNewCF(int id, CodeFragment &cf)
         cf.filter_ids[i] = -1;
     }
     cf.cf_id = id;
+
+    cf.bb.size = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size);
+    cf.bb.x = irand(image_width - cf.bb.size);
+    cf.bb.y = irand(image_width - cf.bb.size);
 }
 
 // create without regard to state
@@ -173,55 +177,48 @@ void create_new_filter_from_input_random(Filter& filter, float *state)
     }
 }
 // new function for setting filter bounds
-void create_new_filter_from_input(Filter& filter, float *state)
+void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb)
 {
     // randomly selects a position in the image to create filter bounds
     //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
-    int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
-    bool is_dilated = false;
+    filter.filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
+    filter.is_dilated = false;
     if(allow_dilated_filters){
-        is_dilated = irand(2) != 0;
+        filter.is_dilated = irand(2) != 0;
     }
-    int effective_filter_size = new_filter_size;
-    if(is_dilated){
-        effective_filter_size = new_filter_size + new_filter_size -1;
+    int effective_filter_size = filter.filter_size;
+    if(filter.is_dilated){
+        effective_filter_size = filter.filter_size + filter.filter_size -1;
     }
-    int step = is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
-    float pixel_values[new_filter_size*new_filter_size];
+    int step = filter.is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
+    float pixel_values[filter.filter_size*filter.filter_size];
     float sum = 0;
-    int x_position = -1;
-    int y_position = -1;
     do{
         sum = 0;
         int index = 0;
-        x_position = irand(image_width-effective_filter_size);
-        y_position = irand(image_height-effective_filter_size);
-        for(int y=y_position; y<y_position+effective_filter_size; y+=step){
-            for(int x=x_position; x<x_position+effective_filter_size; x+=step){
+        set_filter_coordinates(filter, bb);
+        for(int y=filter.y; y<filter.y+effective_filter_size; y+=step){
+            for(int x=filter.x; x<filter.x+effective_filter_size; x+=step){
                 pixel_values[index] = state[y*image_width+x];
                 sum += pixel_values[index];
                 index++;
             }
         }
     }while(false && sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
-    filter.x = x_position;
-    filter.y = y_position;
 
-    filter.filter_size = new_filter_size;
     filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
     filter.lower_bounds.assign(filter.filter_size*filter.filter_size, -1);
     filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
     filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
-    filter.is_dilated = is_dilated;
     float delta = drand();
-    for(int i=0; i<new_filter_size*new_filter_size; i++){
+    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
         filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
         filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
     }
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position
-void addLeafCF(CodeFragment &cf, float *state){
+void addLeafCF(CodeFragment &cf, float *state, BoundingBox bb) {
 
     // count number of leaves
     int count = 0;
@@ -250,7 +247,7 @@ void addLeafCF(CodeFragment &cf, float *state){
         if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             cf.reverse_polish[i] = leafNum;
-            cf.filter_ids[leafNum] = get_new_filter(state);
+            cf.filter_ids[leafNum] = get_new_filter(state, bb);
             leafNum++;
         }
     }
@@ -351,20 +348,26 @@ bool negate_cf(CodeFragment &cf){
 /*
  * Get a new filter either from promising filters or create a new from the state
  */
-int get_new_filter(float *state) {
+int get_new_filter(float *state, BoundingBox bb) {
     int id = -1;
     if(use_kb && drand() < p_kb_filter){
         Filter kb_filter = get_kb_filter(state);
         if(kb_filter.id != -1) {
+            set_filter_coordinates(kb_filter, bb); // reset filter coordinates according to the bounding box
             id = add_filter(kb_filter);
         }
     }
     if(id == -1 && drand() < p_promising){
         id = get_promising_filter_id();
+        if(id != -1) {
+            Filter temp_filter = get_filter(id);
+            set_filter_coordinates(temp_filter, bb); // reset filter coordinates according to the bounding box
+            id = add_filter(temp_filter);
+        }
     }
     if(id == -1) {
         Filter new_filter;
-        create_new_filter_from_input(new_filter, state);
+        create_new_filter_from_input(new_filter, state, bb);
         id = add_filter(new_filter);
     }
     return id;
@@ -469,7 +472,7 @@ bool add_operator(CodeFragment& cf, float* state){
     temp_reverse_polish.assign(cfMaxLength, OPNOP);
     temp_reverse_polish = cf.reverse_polish;
     //std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
-    int new_filter_id = get_new_filter(state);
+    int new_filter_id = get_new_filter(state, BoundingBox());
     for(int i=0; i<cfMaxLength; i++){
         if(cf.reverse_polish[i] >= 0){ // its an operand
             // shift right all the contents to make room for one operand and one operator
@@ -521,7 +524,7 @@ int create_new_cf(float *state) {
 //        temp.cf_id = cf_gid;
         // create a cf of depth zero to start with
         opType *end = randomProgram(temp.reverse_polish.data(), 0, cfMaxDepth, 0);
-        addLeafCF(temp, state);
+        addLeafCF(temp, state, temp.bb);
     }
     if (evaluateCF(temp, state) != 1) {
         negate_cf(temp);
