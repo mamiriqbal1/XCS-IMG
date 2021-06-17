@@ -612,7 +612,6 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     // keep track of filters that have contributed to the result of cf evaluation
     std::stack<std::vector<std::pair<int, int>>> filter_stack;  // stack of vector of pair(filter_id, result)
 
-
     int stack[cfMaxStack];
     stack[0] = 0;
     int SP = 0;
@@ -638,10 +637,12 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             p.x = cf.bb.x = cf.filter_positions[opcode].x;
             p.y = cf.bb.y = cf.filter_positions[opcode].y;
             int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, p, cl_id, img_id, train);
-            // save filter id in stack, result contains location if the filter match is successful, -1 otherwise
-            std::pair<int, int> pr(cf.filter_ids[opcode], result);
-            std::vector<std::pair<int,int>> fv {pr};
-            filter_stack.push(fv);
+            if(transparent) {
+                // save filter id in stack, result contains location if the filter match is successful, -1 otherwise
+                std::pair<int, int> pr(cf.filter_ids[opcode], result);
+                std::vector<std::pair<int, int>> fv{pr};
+                filter_stack.push(fv);
+            }
             if(result == -1)  // if matched
             {
                 stack[SP++] = 1;   //changed
@@ -662,12 +663,16 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
             const int sp2 = stack[--SP];
             const int sp1 = stack[--SP];
-            // pop filter vectors from the stack
-            std::vector<std::pair<int, int>> fv2 = filter_stack.top();
-            filter_stack.pop();
-            std::vector<std::pair<int, int>> fv1 = filter_stack.top();
-            filter_stack.pop();
 
+            std::vector<std::pair<int, int>> fv2;
+            std::vector<std::pair<int, int>> fv1;
+            if(transparent) {
+                // pop filter vectors from the stack
+                fv2 = filter_stack.top();
+                filter_stack.pop();
+                fv1 = filter_stack.top();
+                filter_stack.pop();
+            }
 
             switch(opcode)
             {
@@ -690,52 +695,54 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 stack[SP++] = (sp1!=sp2)?0:1;
                 break;
             }//end switch
-            // significant filter management
-            std::vector<std::pair<int, int>> fv;
-            switch(opcode)
-            {
-                case OPAND:
-                case OPOR:
-                    // if the result of the operand id true then select filters from true side(s)
-                    if(stack[SP-1] == 1) {
-                        if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
-                        if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }else{
-                    // if the result of the operand id false then select filters from false side(s)
-                        if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
-                        if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }
-                    filter_stack.push(fv);
-                    break;
-                case OPNAND:
-                case OPNOR:
-                    // if the result of the operand id true then select filters from false side(s)
-                    if(stack[SP-1] == 1) {
-                        if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
-                        if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }else{
-                    // if the result of the operand id false then select filters from true side(s)
-                        if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
-                        if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    }
-                    filter_stack.push(fv);
-                    break;
-                case OPXOR:
-                case OPXNOR:
-                    // select all filters in case of XOR and XNOR
-                    fv.insert(fv.end(), fv2.begin(), fv2.end());
-                    fv.insert(fv.end(), fv1.begin(), fv1.end());
-                    filter_stack.push(fv);
-                    break;
-            }//end switch
+
+            if(transparent) {
+                // significant filter management
+                std::vector<std::pair<int, int>> fv;
+                switch (opcode) {
+                    case OPAND:
+                    case OPOR:
+                        // if the result of the operand id true then select filters from true side(s)
+                        if (stack[SP - 1] == 1) {
+                            if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                            if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                        } else {
+                            // if the result of the operand id false then select filters from false side(s)
+                            if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                            if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                        }
+                        filter_stack.push(fv);
+                        break;
+                    case OPNAND:
+                    case OPNOR:
+                        // if the result of the operand id true then select filters from false side(s)
+                        if (stack[SP - 1] == 1) {
+                            if (sp2 == 0) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                            if (sp1 == 0) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                        } else {
+                            // if the result of the operand id false then select filters from true side(s)
+                            if (sp2 == 1) fv.insert(fv.end(), fv2.begin(), fv2.end());
+                            if (sp1 == 1) fv.insert(fv.end(), fv1.begin(), fv1.end());
+                        }
+                        filter_stack.push(fv);
+                        break;
+                    case OPXOR:
+                    case OPXNOR:
+                        // select all filters in case of XOR and XNOR
+                        fv.insert(fv.end(), fv2.begin(), fv2.end());
+                        fv.insert(fv.end(), fv1.begin(), fv1.end());
+                        filter_stack.push(fv);
+                        break;
+                }//end switch
+            }
         }
     }
     int value = stack[--SP];
     //std::cout<<"SP: "<<SP<<"\n";
     assert(SP==0);
-    assert(filter_stack.size()==1);
     // report contributing filters along with their evaluation result
     if(transparent && contribution != nullptr){
+        assert(filter_stack.size()==1);
         (*contribution) = filter_stack.top();
     }
 
