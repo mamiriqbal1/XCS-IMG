@@ -134,15 +134,11 @@ void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
     }
 }
 
+/*
+ * Sets id and bounding box for cf
+ */
 void initializeNewCF(int id, CodeFragment &cf)
 {
-    for(int i=0; i<cfMaxLength; i++)
-    {
-        cf.reverse_polish[i] = OPNOP;
-    }
-    for(int i=0; i < cfMaxLeaf; i++){
-        cf.filter_ids[i] = -1;
-    }
     cf.cf_id = id;
 
     cf.bb.size = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size);
@@ -177,7 +173,7 @@ void create_new_filter_from_input_random(Filter& filter, float *state)
     }
 }
 // new function for setting filter bounds
-void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb)
+void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, Position &relative_position)
 {
     // randomly selects a position in the image to create filter bounds
     //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
@@ -196,9 +192,12 @@ void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb)
     do{
         sum = 0;
         int index = 0;
-        set_filter_coordinates(filter, bb);
-        for(int y=filter.y; y<filter.y+effective_filter_size; y+=step){
-            for(int x=filter.x; x<filter.x+effective_filter_size; x+=step){
+        relative_position = generate_relative_position(filter, bb);
+        int filter_x = bb.x + relative_position.x;
+        int filter_y = bb.y + relative_position.y;
+
+        for(int y=filter_y; y<filter_y+effective_filter_size; y+=step){
+            for(int x=filter_x; x<filter_x+effective_filter_size; x+=step){
                 pixel_values[index] = state[y*image_width+x];
                 sum += pixel_values[index];
                 index++;
@@ -247,7 +246,9 @@ void addLeafCF(CodeFragment &cf, float *state, BoundingBox bb) {
         if(0<=opcode && opcode<condLength)  //code_fragment bit
         {
             cf.reverse_polish[i] = leafNum;
-            cf.filter_ids[leafNum] = get_new_filter(state, bb);
+            Position p;
+            cf.filter_ids[leafNum] = get_new_filter(state, bb, p);
+            cf.filter_positions[leafNum] = p;
             leafNum++;
         }
     }
@@ -348,12 +349,12 @@ bool negate_cf(CodeFragment &cf){
 /*
  * Get a new filter either from promising filters or create a new from the state
  */
-int get_new_filter(float *state, BoundingBox bb) {
+int get_new_filter(float *state, BoundingBox bb, Position &relative_position) {
     int id = -1;
     if(use_kb && drand() < p_kb_filter){
         Filter kb_filter = get_kb_filter(state);
         if(kb_filter.id != -1) {
-            set_filter_coordinates(kb_filter, bb); // reset filter coordinates according to the bounding box
+            relative_position = generate_relative_position(kb_filter, bb);
             id = add_filter(kb_filter);
         }
     }
@@ -361,13 +362,15 @@ int get_new_filter(float *state, BoundingBox bb) {
         id = get_promising_filter_id();
         if(id != -1) {
             Filter temp_filter = get_filter(id);
-            set_filter_coordinates(temp_filter, bb); // reset filter coordinates according to the bounding box
+            relative_position = generate_relative_position(temp_filter, bb);
             id = add_filter(temp_filter);
         }
     }
     if(id == -1) {
         Filter new_filter;
-        create_new_filter_from_input(new_filter, state, bb);
+        Position p;
+        create_new_filter_from_input(new_filter, state, bb, p);
+        relative_position = p;
         id = add_filter(new_filter);
     }
     return id;
@@ -391,56 +394,56 @@ bool is_full(CodeFragment& cf){
  * Removes an operator from the cf.
  * Do nothing in case of depth 0 or depth 1 with NOT operator
  */
-bool remove_operator(CodeFragment& cf, float* state){
-    int depth = validateDepth(cf.reverse_polish.data());
-    if(depth == 0) return false;
-
-    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
-        return false;
-    }
-    std::vector<int> temp_reverse_polish;
-    temp_reverse_polish.reserve(cfMaxLength);
-    temp_reverse_polish.assign(cfMaxLength, OPNOP);
-    temp_reverse_polish = cf.reverse_polish;
-    for(int i=0; i<cfMaxLength; i++){
-        if(cf.reverse_polish[i] < 0){ // its an operator
-            // remove leaf from leaves list
-            int leave_index = cf.reverse_polish[i-1];
-            cf.filter_ids[leave_index] = -1;
-            for(int j=leave_index+1; j<cfMaxLeaf; j++){
-                cf.filter_ids[j - 1] = cf.filter_ids[j];
-            }
-            cf.filter_ids[cfMaxLeaf - 1] = -1;
-            // now adjust indexes of all leaves which were greater than leave_index
-            for(int k=0; k<cfMaxLength; k++){
-                if(cf.reverse_polish[k] > leave_index){
-                    cf.reverse_polish[k]--;
-                    temp_reverse_polish[k]--;
-                }
-            }
-
-            // shift left all the contents to remove the operator and one operand
-            std::copy(
-                    std::next(temp_reverse_polish.begin(),i+1),
-                    temp_reverse_polish.end(),
-                    std::next(cf.reverse_polish.begin(),i-1)
-            );
-            // now reset last two  slots
-            auto it = cf.reverse_polish.end();
-            it--;
-            *it = OPNOP;
-            it--;
-            *it = OPNOP;
-            cf.num_filters--;
-            if (evaluateCF(cf, state) != 1){
-                negate_cf(cf);
-                assert(evaluateCF(cf, state) == 1);
-            }
-            return true;
-        }
-    }
-    assert(false); // should not reach here
-}
+//bool remove_operator(CodeFragment& cf, float* state){
+//    int depth = validateDepth(cf.reverse_polish.data());
+//    if(depth == 0) return false;
+//
+//    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
+//        return false;
+//    }
+//    std::vector<int> temp_reverse_polish;
+//    temp_reverse_polish.reserve(cfMaxLength);
+//    temp_reverse_polish.assign(cfMaxLength, OPNOP);
+//    temp_reverse_polish = cf.reverse_polish;
+//    for(int i=0; i<cfMaxLength; i++){
+//        if(cf.reverse_polish[i] < 0){ // its an operator
+//            // remove leaf from leaves list
+//            int leave_index = cf.reverse_polish[i-1];
+//            cf.filter_ids[leave_index] = -1;
+//            for(int j=leave_index+1; j<cfMaxLeaf; j++){
+//                cf.filter_ids[j - 1] = cf.filter_ids[j];
+//            }
+//            cf.filter_ids[cfMaxLeaf - 1] = -1;
+//            // now adjust indexes of all leaves which were greater than leave_index
+//            for(int k=0; k<cfMaxLength; k++){
+//                if(cf.reverse_polish[k] > leave_index){
+//                    cf.reverse_polish[k]--;
+//                    temp_reverse_polish[k]--;
+//                }
+//            }
+//
+//            // shift left all the contents to remove the operator and one operand
+//            std::copy(
+//                    std::next(temp_reverse_polish.begin(),i+1),
+//                    temp_reverse_polish.end(),
+//                    std::next(cf.reverse_polish.begin(),i-1)
+//            );
+//            // now reset last two  slots
+//            auto it = cf.reverse_polish.end();
+//            it--;
+//            *it = OPNOP;
+//            it--;
+//            *it = OPNOP;
+//            cf.num_filters--;
+//            if (evaluateCF(cf, state) != 1){
+//                negate_cf(cf);
+//                assert(evaluateCF(cf, state) == 1);
+//            }
+//            return true;
+//        }
+//    }
+//    assert(false); // should not reach here
+//}
 
 
 
@@ -448,60 +451,60 @@ bool remove_operator(CodeFragment& cf, float* state){
 /*
  * Shrink cf by removing an operator from it
  */
-bool shrink_cf(CodeFragment &cf, float* state){
-    return remove_operator(cf, state);
-}
+//bool shrink_cf(CodeFragment &cf, float* state){
+//    return remove_operator(cf, state);
+//}
 
 
 /*
  * Adds a new operator to the cf from the operator list. The operator list does not include OPNOT operator.
  * OPNOT will only be added as a result of negation of zero depth cf.
  */
-bool add_operator(CodeFragment& cf, float* state){
-    int depth = validateDepth(cf.reverse_polish.data());
-    if(is_full(cf)) return false;
-//    if(depth >= cfMaxDepth) return false;
-
-    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
-        assert(depth == 1 && cf.num_filters == 1);
-        negate_cf(cf); // remove NOT operator
-    }
-    opType selected_operator = functionCodes[irand(totalFunctions)];
-    std::vector<int> temp_reverse_polish;
-    temp_reverse_polish.reserve(cfMaxLength);
-    temp_reverse_polish.assign(cfMaxLength, OPNOP);
-    temp_reverse_polish = cf.reverse_polish;
-    //std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
-    int new_filter_id = get_new_filter(state, BoundingBox());
-    for(int i=0; i<cfMaxLength; i++){
-        if(cf.reverse_polish[i] >= 0){ // its an operand
-            // shift right all the contents to make room for one operand and one operator
-            std::copy(
-                    std::next(temp_reverse_polish.begin(),i+1),
-                    std::prev(temp_reverse_polish.end(),2),
-                    std::next(cf.reverse_polish.begin(),i+3)
-                    );
-            cf.reverse_polish[i+1] = cf.num_filters;
-            cf.filter_ids[cf.num_filters] = new_filter_id;
-            cf.num_filters++;
-            cf.reverse_polish[i+2] = selected_operator;
-            if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
-                // now evaluate cf before returning
-                if (evaluateCF(cf, state) != 1){
-                    negate_cf(cf);
-                    assert(evaluateCF(cf, state) == 1);
-                }
-                return true;
-            }else{  // reset and try the next operand
-                cf.reverse_polish = temp_reverse_polish;
-                //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
-                cf.num_filters--;
-                cf.filter_ids[cf.num_filters] = -1;
-            }
-        }
-    }
-    assert(false); // should not reach here
-}
+//bool add_operator(CodeFragment& cf, float* state){
+//    int depth = validateDepth(cf.reverse_polish.data());
+//    if(is_full(cf)) return false;
+////    if(depth >= cfMaxDepth) return false;
+//
+//    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
+//        assert(depth == 1 && cf.num_filters == 1);
+//        negate_cf(cf); // remove NOT operator
+//    }
+//    opType selected_operator = functionCodes[irand(totalFunctions)];
+//    std::vector<int> temp_reverse_polish;
+//    temp_reverse_polish.reserve(cfMaxLength);
+//    temp_reverse_polish.assign(cfMaxLength, OPNOP);
+//    temp_reverse_polish = cf.reverse_polish;
+//    //std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
+//    int new_filter_id = get_new_filter(state, BoundingBox(), <#initializer#>);
+//    for(int i=0; i<cfMaxLength; i++){
+//        if(cf.reverse_polish[i] >= 0){ // its an operand
+//            // shift right all the contents to make room for one operand and one operator
+//            std::copy(
+//                    std::next(temp_reverse_polish.begin(),i+1),
+//                    std::prev(temp_reverse_polish.end(),2),
+//                    std::next(cf.reverse_polish.begin(),i+3)
+//                    );
+//            cf.reverse_polish[i+1] = cf.num_filters;
+//            cf.filter_ids[cf.num_filters] = new_filter_id;
+//            cf.num_filters++;
+//            cf.reverse_polish[i+2] = selected_operator;
+//            if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
+//                // now evaluate cf before returning
+//                if (evaluateCF(cf, state) != 1){
+//                    negate_cf(cf);
+//                    assert(evaluateCF(cf, state) == 1);
+//                }
+//                return true;
+//            }else{  // reset and try the next operand
+//                cf.reverse_polish = temp_reverse_polish;
+//                //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
+//                cf.num_filters--;
+//                cf.filter_ids[cf.num_filters] = -1;
+//            }
+//        }
+//    }
+//    assert(false); // should not reach here
+//}
 
 
 int create_new_cf(float *state) {
@@ -570,11 +573,19 @@ bool mutate_cf(CodeFragment &cf, float *state) {
 
 bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
+    if(cf1.cf_id == cf2.cf_id) return true;
+
     if(cf1.num_filters != cf2.num_filters ||
        cf1.reverse_polish != cf2.reverse_polish ||
        cf1.filter_ids != cf2.filter_ids) {
         return false;
     }else {
+        for(int i=0; i<cf1.num_filters; i++){
+            if(cf1.filter_positions[i].x != cf2.filter_positions[i].x ||
+                cf1.filter_positions[i].y != cf2.filter_positions[i].y){
+                return false;
+            }
+        }
         return true;
     }
 }
@@ -623,8 +634,11 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
         {
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, cl_id, img_id, train);
-            // save filter id in stack, result contains location if the filter match is unsuccessful, -1 otherwise
+            Position p;
+            p.x = cf.bb.x = cf.filter_positions[opcode].x;
+            p.y = cf.bb.y = cf.filter_positions[opcode].y;
+            int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, p, cl_id, img_id, train);
+            // save filter id in stack, result contains location if the filter match is successful, -1 otherwise
             std::pair<int, int> pr(cf.filter_ids[opcode], result);
             std::vector<std::pair<int,int>> fv {pr};
             filter_stack.push(fv);
@@ -863,7 +877,7 @@ inline std::string op_to_str(opType code)
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
-    output_code_fragment_file << cf.cf_id << " ";
+    output_code_fragment_file << cf.cf_id << " " << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size << " ";
     std::string str;
     opType code = 0;
     for(int i=0; i<cfMaxLength; i++){

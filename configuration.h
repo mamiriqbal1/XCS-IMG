@@ -93,8 +93,6 @@ const bool allow_dilated_filters = true;
 
 struct Filter{
     int id=-1; // uninitialized value
-    int x = -1; // x position of the filter on the image from top right corner
-    int y = -1; // y position of the filter on the image from top right corner
     int numerosity = 1; // initial numerosity when a filter is created
     // Fitness of a filter is the appearance of the filter in "promising classifiers"
     // a promising classifier is one whose error < 10 and experience > 10
@@ -130,11 +128,19 @@ struct BoundingBox
     int size = 0;
 };
 
+struct Position
+{
+    // relative position of filter with respective to CF bounding box
+    int x = -1;
+    int y = -1;
+};
+
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;
     int num_filters; // equal to number of leaves/filters to be determined at run time
     std::vector<int> filter_ids;  // leaves: ids of the filters included in this code fragment
+    std::vector<Position> filter_positions; // filter positions relative to bounding box
     int cf_id;
     int numerosity = 1;
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
@@ -144,6 +150,9 @@ struct CodeFragment
         reverse_polish.assign(cfMaxLength, OPNOP);
         filter_ids.reserve(cfMaxLeaf);
         filter_ids.assign(cfMaxLeaf, -1);
+        filter_positions.reserve(cfMaxLeaf);
+        Position p;
+        filter_positions.assign(cfMaxLeaf, p);
         num_filters = -1;
         cf_id = -1;
     }

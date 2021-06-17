@@ -32,7 +32,7 @@ bool mutate_cf(CodeFragment &cf, float *state);
 
 bool shrink_cf(CodeFragment &cf, float* state);
 bool negate_cf(CodeFragment &cf);
-int get_new_filter(float *state, BoundingBox bb);
+int get_new_filter(float *state, BoundingBox bb, Position &relative_position);
 int create_new_cf(float *state);
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);

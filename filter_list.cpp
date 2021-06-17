@@ -64,9 +64,8 @@ int add_filter(Filter filter_to_add){
             {
                 if(filter_item.id == -1) return false; // skip empty slots in the array
                 if(filter_item.fitness < 1) return false; // only a promising filter can subsume;
-                // only filter of same size and type and position can subsume
-                if(filter_item.x != filter_to_add.x || filter_item.y != filter_to_add.y ||
-                   filter_item.filter_size != filter_to_add.filter_size ||
+                // only filter of same size and type
+                if(filter_item.filter_size != filter_to_add.filter_size ||
                    filter_item.is_dilated != filter_to_add.is_dilated) return false;
                 for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
                     if(filter_item.lower_bounds[i] > filter_to_add.lower_bounds[i]
@@ -223,12 +222,6 @@ void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
     output_filter_file << "id ";
     output_filter_file.width(5);
     output_filter_file << filter.id;
-    output_filter_file << " x ";
-    output_filter_file.width(5);
-    output_filter_file << filter.x;
-    output_filter_file << " y ";
-    output_filter_file.width(5);
-    output_filter_file << filter.y;
     output_filter_file << " size ";
     output_filter_file << filter.filter_size;
     output_filter_file << " dilated ";
@@ -257,10 +250,6 @@ void extract_filter_attributes(std::string& line, Filter& f) {
     std::stringstream line1(line);
     line1 >> str;
     line1 >> f.id;
-    line1 >> str;
-    line1 >> f.x;
-    line1 >> str;
-    line1 >> f.y;
     line1 >> str;
     line1 >> f.filter_size;
     line1 >> str;
@@ -383,10 +372,10 @@ Filter get_kb_filter(float* state)
     Filter f;
     int random_index = irand(kb_filter_list.gid);
     f = kb_filter_list.filters[random_index];
-    int result = evaluate_filter_actual_slide(f, state);
-    if(result == -1){
-        f.id = -1;
-    }
+//    int result = evaluate_filter_actual_slide(f, state);
+//    if(result == -1){
+//        f.id = -1;
+//    }
 
     return f;
 }
@@ -395,7 +384,7 @@ Filter get_kb_filter(float* state)
 /*
  * Return -1 if not matched otherwise return the location of match
  */
-int evaluate_filter_actual(const Filter& filter, float *state)
+int evaluate_filter_actual(const Filter &filter, float *state, Position p)
 {
     int step = 1; // this will be used to map normal coordinates to dilated coordinates
     int effective_filter_size = filter.filter_size;
@@ -404,8 +393,8 @@ int evaluate_filter_actual(const Filter& filter, float *state)
         effective_filter_size = filter.filter_size + filter.filter_size -1;
     }
     bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
-    int i = filter.y;
-    int j = filter.x;
+    int i = p.y;
+    int j = p.x;
     int y = 0, x = 0;
     for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
         for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
@@ -432,37 +421,37 @@ int evaluate_filter_actual(const Filter& filter, float *state)
  * If the filter matches, the filer has correct x,y coordinates when function ends
  */
 
-int evaluate_filter_actual_slide(Filter& filter, float *state)
-{
-    int step = 1; // this will be used to map normal coordinates to dilated coordinates
-    int effective_filter_size = filter.filter_size;
-    if(filter.is_dilated){
-        step = 2;
-        effective_filter_size = filter.filter_size + filter.filter_size -1;
-    }
-    std::vector<int> result_list;
-    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
-        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
-            filter.x = i;
-            filter.y = j;
-            int result = evaluate_filter_actual(filter, state);
-            if(result != -1){
-                result_list.push_back(result);
-            }
-        }
-    }
-    if(result_list.size() > 0){
-        int index = irand(result_list.size());
-        filter.x = result_list[index] % image_width;
-        filter.y = result_list[index] / image_width;
-        return result_list[index];
-    }else {
-        return -1;
-    }
-}
+//int evaluate_filter_actual_slide(Filter& filter, float *state)
+//{
+//    int step = 1; // this will be used to map normal coordinates to dilated coordinates
+//    int effective_filter_size = filter.filter_size;
+//    if(filter.is_dilated){
+//        step = 2;
+//        effective_filter_size = filter.filter_size + filter.filter_size -1;
+//    }
+//    std::vector<int> result_list;
+//    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
+//        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
+//            filter.x = i;
+//            filter.y = j;
+//            int result = evaluate_filter_actual(filter, state, Position());
+//            if(result != -1){
+//                result_list.push_back(result);
+//            }
+//        }
+//    }
+//    if(result_list.size() > 0){
+//        int index = irand(result_list.size());
+//        filter.x = result_list[index] % image_width;
+//        filter.y = result_list[index] / image_width;
+//        return result_list[index];
+//    }else {
+//        return -1;
+//    }
+//}
 
 
-int evaluate_filter(const Filter& filter, float *state, int cl_id, int img_id, bool train)
+int evaluate_filter(const Filter &filter, float *state, Position p, int cl_id, int img_id, bool train)
 {
 //    // if cl_id or img_id is -1 then do not check evaluation map otherwise check for prior results
 //    if(img_id >=0){
@@ -482,7 +471,7 @@ int evaluate_filter(const Filter& filter, float *state, int cl_id, int img_id, b
 //        }
 //    }
 
-    int evaluation = evaluate_filter_actual(filter, state);
+    int evaluation = evaluate_filter_actual(filter, state, p);
 
 //    // set hasmap entry for re-using evaluation
 //    if(img_id >=0) {
@@ -500,12 +489,14 @@ int evaluate_filter(const Filter& filter, float *state, int cl_id, int img_id, b
 /*
  * Sets the filter coordinates from bounding box
  */
-void set_filter_coordinates(Filter &f, BoundingBox bb)
+Position generate_relative_position(Filter &f, BoundingBox bb)
 {
     int effective_filter_size = f.filter_size;
     if(f.is_dilated){
         effective_filter_size = f.filter_size + f.filter_size -1;
     }
-    f.x = bb.x + irand(bb.size - effective_filter_size);
-    f.y = bb.y + irand(bb.size - effective_filter_size);
+    Position p;
+    p.x = irand(bb.size - effective_filter_size);
+    p.y = irand(bb.size - effective_filter_size);
+    return p;
 }

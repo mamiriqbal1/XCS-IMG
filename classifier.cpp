@@ -597,11 +597,13 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     int filter_index2 = irand(cf2.num_filters);
     Filter f1 = get_filter(cf1.filter_ids[filter_index1]);
     Filter f2 = get_filter(cf2.filter_ids[filter_index2]);
-    // now set bounding box and add to filter list as new filters
-    set_filter_coordinates(f1, cf2.bb);
-    set_filter_coordinates(f2, cf1.bb);
+    // swap filters and relative positions
+    Position p1 = generate_relative_position(f1, cf2.bb);
+    Position p2 = generate_relative_position(f2, cf1.bb);
     cf2.filter_ids[filter_index2] = add_filter(f1);
+    cf2.filter_positions[filter_index2] = p1;
     cf1.filter_ids[filter_index1] = add_filter(f2);
+    cf1.filter_positions[filter_index1] = p2;
 
     return true;
 }
@@ -641,7 +643,9 @@ bool mutation(Classifier &clfr, float *state)
                 CodeFragment temp_cf = get_cf(clfr.cf_ids[i]); // copy cf
                 // replace a filter
                 int filter_index = irand(temp_cf.num_filters);
-                temp_cf.filter_ids[filter_index] = get_new_filter(state, temp_cf.bb);
+                Position p;
+                temp_cf.filter_ids[filter_index] = get_new_filter(state, temp_cf.bb, p);
+                temp_cf.filter_positions[filter_index] = p;
                 temp_cf.cf_id = get_next_cf_gid();
                 add_cf_to_list(temp_cf);
                 clfr.cf_ids[i] = temp_cf.cf_id;
