@@ -43,7 +43,7 @@ int cfMaxDepth = 0;
 int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
-int cf_max_bounding_box_size = 7;
+int cf_max_bounding_box_size = image_height;
 int cf_min_bounding_box_size = max_filter_size * 2;
 
 std::string inputTrainingFile;

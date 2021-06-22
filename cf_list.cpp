@@ -132,6 +132,14 @@ void load_code_fragment(std::string cf_file_name)
         std::stringstream line1(line);
         line1>>id;
         initializeNewCF(id, cf);
+        int val=0;
+        line1>>val;
+        cf.bb.x = val;
+        line1>>val;
+        cf.bb.y = val;
+        line1>>val;
+        cf.bb.size = val;
+
         int index = 0, leaf_index = 0;
         while(!line1.eof()){
             std::string token;
@@ -140,6 +148,12 @@ void load_code_fragment(std::string cf_file_name)
             if(token.empty()) break;
             if(token.substr(0,1) == "D"){ // this is filter id
                 int filter_id = std::stoi(token.substr(1));
+                cf.filter_ids[leaf_index] = filter_id;
+                int val = 0;
+                line1 >> val;
+                cf.filter_positions[leaf_index].x = val;
+                line1 >> val;
+                cf.filter_positions[leaf_index].y = val;
                 cf.filter_ids[leaf_index] = filter_id;
                 cf.reverse_polish[index] = leaf_index;
                 leaf_index++;

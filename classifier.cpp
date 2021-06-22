@@ -1246,15 +1246,15 @@ void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
         for(int i=0; i<clfrCondMaxLength; i++){
             line2>>cl.cf_ids[i];
         }
-        pop.resize(cl.id + 1);
+//        pop.resize(cl.id + 1);
         pop[cl.id] = cl;
         if(loaded_cl_gid < cl.id){
             loaded_cl_gid = cl.id;
         }
     }
     classifier_gid = 1 + loaded_cl_gid;
-    // populate stack with available slots
-    for(int i=0; i<pop.size(); i++){
+    // populate stack with available slots till classifier_gid
+    for(int i=0; i<classifier_gid; i++){
         if(pop[i].id == -1) classifier_gid_stack.push(i);
     }
 }

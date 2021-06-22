@@ -892,7 +892,7 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
         if(code == OPNOP){
             break;
         }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_ids index
-            output_code_fragment_file << "D" << cf.filter_ids[code] << " "; // print filter id
+            output_code_fragment_file << "D" << cf.filter_ids[code] << " " << cf.filter_positions[code].x << " " << cf.filter_positions[code].y << " "; // print filter id
         }else if (code>=condLength && isPreviousLevelsCode(code)){
             // output previous when implemented
         }else{
