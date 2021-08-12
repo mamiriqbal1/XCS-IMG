@@ -521,7 +521,12 @@ int create_new_cf(float *state) {
 //    }
     if(drand() < p_promising){
         int id = get_promising_cf_id();
-        if(id != -1)    return id;
+        if(id != -1) {
+            CodeFragment& cf = get_cf(id);
+            if(evaluateCF(cf, state)) {     // only use promising cf if it evaluates to true
+                return id;
+            }
+        }
     }
     if (temp.cf_id == -1) { // if cf not received from kb
 //        temp.cf_id = cf_gid;
