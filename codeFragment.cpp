@@ -358,7 +358,7 @@ int get_new_filter(float *state, BoundingBox bb, Position &relative_position) {
             id = add_filter(kb_filter);
         }
     }
-    if(id == -1 && drand() < p_promising){
+    if(false && id == -1 && drand() < p_promising){
         id = get_promising_filter_id();
         if(id != -1) {
             Filter temp_filter = get_filter(id);
@@ -525,6 +525,14 @@ int create_new_cf(float *state) {
             CodeFragment& cf = get_cf(id);
             if(evaluateCF(cf, state)) {     // only use promising cf if it evaluates to true
                 return id;
+            }else{  // copy and negate cf
+                CodeFragment copied_cf = cf;
+                copied_cf.cf_id = get_next_cf_gid();
+                copied_cf.numerosity = 1;
+                copied_cf.fitness = 0;
+                negate_cf(copied_cf);
+                add_cf_to_list(copied_cf);
+                return copied_cf.cf_id;
             }
         }
     }
@@ -643,8 +651,8 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
 
             //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
             Position p;
-            p.x = cf.bb.x = cf.filter_positions[opcode].x;
-            p.y = cf.bb.y = cf.filter_positions[opcode].y;
+            p.x = cf.bb.x + cf.filter_positions[opcode].x;
+            p.y = cf.bb.y + cf.filter_positions[opcode].y;
             int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, p, cl_id, img_id, train);
             if(transparent) {
                 // save filter id in stack, result contains location if the filter match is successful, -1 otherwise

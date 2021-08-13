@@ -29,7 +29,7 @@ int get_next_cf_gid()
         return val;
     }else{
         // only grow the vector when a new element is needed
-        main_cf_list.resize(cf_gid + 1);
+//        main_cf_list.resize(cf_gid + 1);
         return cf_gid++;
     }
 }
@@ -38,8 +38,8 @@ int get_next_cf_gid()
 void initialize_cf_list(int size)
 {
     main_cf_list.reserve(size);
-//    CodeFragment temp;
-//    main_cf_list.assign(size, temp);
+    CodeFragment temp;
+    main_cf_list.assign(size, temp);
 }
 
 CodeFragment& get_cf(int id)
@@ -96,6 +96,7 @@ void print_code_fragment_stats(std::ofstream &output_stats_file) {
                       if(f_max < item.num_filters) f_max = item.num_filters;
                   });
     output_stats_file<<"cf list size: "<<size<<std::endl;
+    output_stats_file<<"promising cf list size: "<<promising_cf_ids.size()<<std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg num filters: "<<f_total/(float)size<<" , max num filters: "<<f_max<<" , min num filters: "<<f_min<<std::endl;
     output_stats_file<<"--- Code Fragment Stats ---\n\n";
@@ -107,10 +108,9 @@ void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &out
         if(item.cf_id == -1) continue; // skip empty slots in the array
         output_code_fragment_to_file(item, output_code_fragment_file);
         //output promising code fragments separately
-//        if (is_promising_classifier(classifier)) {
-//            output_code_fragment_to_file(id, output_promising_code_fragment_file);
-//        }
-
+        if (item.fitness > 0) {  // if promising
+            output_code_fragment_to_file(item, output_promising_code_fragment_file);
+        }
     }
 }
 
