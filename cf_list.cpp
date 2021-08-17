@@ -81,9 +81,10 @@ void print_code_fragment_stats(std::ofstream &output_stats_file) {
     output_stats_file<<"cf_gid: "<<cf_gid<<std::endl;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     int f_total = 0, f_min = INT16_MAX, f_max = -1;
+    int n_filter = 0;
     int size = 0;
     std::for_each(main_cf_list.begin(), main_cf_list.end(),
-                  [&n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &size]
+                  [&n_total, &n_min, &n_max, &n_filter, &f_total, &f_min, &f_max, &size]
                           (const CodeFragmentVector::value_type & item)
                   {
                       if(item.cf_id == -1) return; // skip empty slots in the array
@@ -91,14 +92,16 @@ void print_code_fragment_stats(std::ofstream &output_stats_file) {
                       n_total+= item.numerosity;
                       if(n_min > item.numerosity) n_min = item.numerosity;
                       if(n_max < item.numerosity) n_max = item.numerosity;
-                      f_total+= item.num_filters;
-                      if(f_min > item.num_filters) f_min = item.num_filters;
-                      if(f_max < item.num_filters) f_max = item.num_filters;
+                      n_filter+= item.num_filters;
+                      f_total+= item.fitness;
+                      if(f_min > item.fitness) f_min = item.fitness;
+                      if(f_max < item.fitness) f_max = item.fitness;
                   });
     output_stats_file<<"cf list size: "<<size<<std::endl;
     output_stats_file<<"promising cf list size: "<<promising_cf_ids.size()<<std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
-    output_stats_file<<"avg num filters: "<<f_total/(float)size<<" , max num filters: "<<f_max<<" , min num filters: "<<f_min<<std::endl;
+    output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
+    output_stats_file<<"avg num filters: "<<n_filter/(float)size<<std::endl;
     output_stats_file<<"--- Code Fragment Stats ---\n\n";
 }
 

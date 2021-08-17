@@ -58,32 +58,36 @@ int add_filter_plain(Filter filter_to_add){
 
 
 int add_filter(Filter filter_to_add){
-    // use find_if from <algorithm> to find a more general filter.
-    auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
-            {
-                if(filter_item.id == -1) return false; // skip empty slots in the array
-                if(filter_item.fitness < 1) return false; // only a promising filter can subsume;
-                // only filter of same size and type
-                if(filter_item.filter_size != filter_to_add.filter_size ||
-                   filter_item.is_dilated != filter_to_add.is_dilated) return false;
-                for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
-                    if(filter_item.lower_bounds[i] > filter_to_add.lower_bounds[i]
-                       || filter_item.upper_bounds[i] < filter_to_add.upper_bounds[i]){
-                        return false;
-                    }
-                }
-                return true;
-            });
-    if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
-        filter_to_add.id = get_next_filter_gid();
-        filter_to_add.numerosity = 1;
-        master_filter_list.filters[filter_to_add.id] = filter_to_add;
-        return filter_to_add.id;
-    }else{
-        general_filter_iterator->numerosity++;
-        return general_filter_iterator->id;
-    }
+    filter_to_add.id = get_next_filter_gid();
+    filter_to_add.numerosity = 1;
+    master_filter_list.filters[filter_to_add.id] = filter_to_add;
+    return filter_to_add.id;
+//    // use find_if from <algorithm> to find a more general filter.
+//    auto general_filter_iterator = std::find_if(master_filter_list.filters.begin(), master_filter_list.filters.end(),
+//            [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
+//            {
+//                if(filter_item.id == -1) return false; // skip empty slots in the array
+//                if(filter_item.fitness < 1) return false; // only a promising filter can subsume;
+//                // only filter of same size and type
+//                if(filter_item.filter_size != filter_to_add.filter_size ||
+//                   filter_item.is_dilated != filter_to_add.is_dilated) return false;
+//                for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
+//                    if(filter_item.lower_bounds[i] > filter_to_add.lower_bounds[i]
+//                       || filter_item.upper_bounds[i] < filter_to_add.upper_bounds[i]){
+//                        return false;
+//                    }
+//                }
+//                return true;
+//            });
+//    if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
+//        filter_to_add.id = get_next_filter_gid();
+//        filter_to_add.numerosity = 1;
+//        master_filter_list.filters[filter_to_add.id] = filter_to_add;
+//        return filter_to_add.id;
+//    }else{
+//        general_filter_iterator->numerosity++;
+//        return general_filter_iterator->id;
+//    }
 }
 
 
@@ -146,7 +150,7 @@ void print_filter_stats(std::ofstream &output_stats_file) {
     output_stats_file<<"filter_gid: "<<master_filter_list.gid<<std::endl;
     int size = 0;
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
-    float f_total = 0, f_min = FLT_MAX, f_max = -1;
+    int f_total = 0, f_min = INT16_MAX, f_max = -1;
     int promising_filters = 0;
     int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
     int num_dilated = 0;
