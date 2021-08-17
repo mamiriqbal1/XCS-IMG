@@ -211,8 +211,13 @@ void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, 
     filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
     float delta = drand();
     for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
-        filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1),precisionDigits);
+        if(drand() < P_dontcare){  // don't care cell
+            filter.lower_bounds[i] = 0.0;
+            filter.upper_bounds[i] = 1.0;
+        }else {
+            filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
+            filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1), precisionDigits);
+        }
     }
 }
 

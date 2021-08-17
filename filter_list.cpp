@@ -496,7 +496,7 @@ Position generate_relative_position(Filter &f, BoundingBox bb)
         effective_filter_size = f.filter_size + f.filter_size -1;
     }
     Position p;
-    p.x = irand(bb.size - effective_filter_size);
-    p.y = irand(bb.size - effective_filter_size);
+    p.x = irand(bb.size - effective_filter_size+1);
+    p.y = irand(bb.size - effective_filter_size+1);
     return p;
 }
