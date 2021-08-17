@@ -863,7 +863,7 @@ bool isMoreGeneral(Classifier &clfr_general, Classifier &clfr_specific)
 {
     bool more_general = true;
     for(int i=0; i < clfrCondMaxLength; i++){
-        if(clfr_specific.cf_ids[i] != -1 && !is_cf_covered(get_cf(clfr_specific.cf_ids[i]), clfr_general)){
+        if(clfr_general.cf_ids[i] != -1 && !is_cf_covered(get_cf(clfr_general.cf_ids[i]), clfr_specific)){
             more_general = false;
             break;
         }
