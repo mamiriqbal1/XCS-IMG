@@ -137,6 +137,10 @@ void load_code_fragment(std::string cf_file_name)
         initializeNewCF(id, cf);
         int val=0;
         line1>>val;
+        cf.numerosity = val;
+        line1>>val;
+        cf.fitness = val;
+        line1>>val;
         cf.bb.x = val;
         line1>>val;
         cf.bb.y = val;
