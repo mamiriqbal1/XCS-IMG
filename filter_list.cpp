@@ -98,7 +98,7 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    return master_filter_list.filters.at(filter_id);
+    return master_filter_list.filters[filter_id];
 }
 
 

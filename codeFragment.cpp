@@ -141,7 +141,7 @@ void initializeNewCF(int id, CodeFragment &cf)
 {
     cf.cf_id = id;
 
-    cf.bb.size = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size);
+    cf.bb.size = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
     cf.bb.x = irand(image_width - cf.bb.size);
     cf.bb.y = irand(image_width - cf.bb.size);
 }
