@@ -86,8 +86,8 @@ const int num_negative_binary_operators = 2;
 const opType negative_binary_operators[] = {OPNAND, OPNOR};
 
 
-const int num_filter_sizes = 3;
-const int filter_sizes[] = {1, 2, 3}; // filter sizes to be used
+const int num_filter_sizes = 1;
+const int filter_sizes[] = {5}; // filter sizes to be used
 const int max_filter_size = filter_sizes[num_filter_sizes-1];  // the last one should be maximum
 const bool allow_dilated_filters = false;
 
