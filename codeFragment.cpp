@@ -211,7 +211,7 @@ void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, 
     filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
     float delta = drand();
     for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        if(drand() < P_dontcare){  // don't care cell
+        if(drand() < P_Dontcare_filter){  // don't care cell
             filter.lower_bounds[i] = 0.0;
             filter.upper_bounds[i] = 1.0;
         }else {
@@ -277,6 +277,10 @@ void update_evaluation_cache(std::forward_list<int>& removed_filters){
  */
 void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution) {
 
+    for(auto & id:action_set.ids){
+        output_visualization_file << id << " ";
+    }
+    output_visualization_file<<std::endl;
     for(auto & id:action_set.ids){
         std::vector<std::pair<int, int>> &filter_pairs = map_cl_contribution[id];
         for(auto & item: filter_pairs) {
@@ -630,8 +634,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     std::stack<std::vector<std::pair<int, int>>>* p_filter_stack = nullptr;  // stack of vector of pair(filter_id, result)
     if(transparent) {
         // keep track of filters that have contributed to the result of cf evaluation
-        std::stack<std::vector<std::pair<int, int>>> filter_stack;  // stack of vector of pair(filter_id, result)
-        p_filter_stack = &filter_stack;
+        p_filter_stack = new std::stack<std::vector<std::pair<int, int>>>;
     }
 
     int stack[cfMaxStack];
@@ -689,14 +692,12 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
             std::vector<std::pair<int, int>> *p_fv2 = nullptr;
             std::vector<std::pair<int, int>> *p_fv1 = nullptr;
             if(transparent) {
-                std::vector<std::pair<int, int>> fv2;
-                std::vector<std::pair<int, int>> fv1;
-                p_fv2 = &fv2;
-                p_fv1 = &fv1;
+                p_fv2 = new std::vector<std::pair<int, int>>;
+                p_fv1 = new std::vector<std::pair<int, int>>;
                 // pop filter vectors from the stack
-                fv2 = p_filter_stack->top();
+                *p_fv2 = p_filter_stack->top();
                 p_filter_stack->pop();
-                fv1 = p_filter_stack->top();
+                *p_fv1 = p_filter_stack->top();
                 p_filter_stack->pop();
             }
 
@@ -761,6 +762,8 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                         break;
                 }//end switch
             }
+            delete p_fv1;
+            delete p_fv2;
         }
     }
     int value = stack[--SP];
@@ -770,6 +773,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     if(transparent && contribution != nullptr){
         assert(p_filter_stack->size()==1);
         (*contribution) = p_filter_stack->top();
+        delete p_filter_stack;
     }
 
     return value;

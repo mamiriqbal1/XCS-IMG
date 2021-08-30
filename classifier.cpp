@@ -159,15 +159,13 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, b
 {
     std::vector<std::pair<int, int>> *p_list_local= nullptr;
     if(transparent){
-        std::vector<std::pair<int, int>> list_local;
-        p_list_local = &list_local;
+        p_list_local = new std::vector<std::pair<int, int>>;
     }
     for(int i=0; i < clfrCondMaxLength; i++)
     {
         std::vector<std::pair<int, int>> *p_list_temp= nullptr;
         if(contribution){
-            std::vector<std::pair<int, int>> list_temp;
-            p_list_temp = &list_temp;
+            p_list_temp = new std::vector<std::pair<int, int>>;
         }
         if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, p_list_temp) == 0 )
         {
@@ -176,11 +174,13 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, b
             // add contribution to list in case cf evaluates to true
             if(transparent & contribution!= nullptr){
                 p_list_local->insert(p_list_local->end(), p_list_temp->begin(), p_list_temp->end());
+                delete p_list_temp;
             }
         }
     }
     if(transparent && contribution != nullptr){
         (*contribution) = *p_list_local;
+        delete p_list_local;
     }
     return true;
 }
@@ -1195,25 +1195,25 @@ int get_pop_size(ClassifierVector &pop, bool numerosity) {
 void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent, std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution) {
     std::unordered_map<int, std::vector<std::pair<int, int>>> *p_map_local= nullptr; // vector of pair(classifier_id, pair(filter_id, result))
     if(transparent){
-        std::unordered_map<int, std::vector<std::pair<int, int>>> map_local; // vector of pair(classifier_id, pair(filter_id, result))
-        p_map_local = &map_local;
+        p_map_local = new std::unordered_map<int, std::vector<std::pair<int, int>>>; // vector of pair(classifier_id, pair(filter_id, result))
     }
     std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train, transparent, p_map_local](ClassifierVector::value_type& item)
     {
         std::vector<std::pair<int, int>> *p_list_temp= nullptr;
         if(transparent){
-            std::vector<std::pair<int, int>> list_temp;
-            p_list_temp = &list_temp;
+            p_list_temp = new std::vector<std::pair<int, int>>;
         }
         if(item.id == -1) return; // skip empty slots in the array
         if(isConditionMatched(item, state, img_id, train, transparent, p_list_temp)){
             match_set.ids.push_back(item.id);
             if(transparent){
                 (*p_map_local)[item.id] = *p_list_temp;
+                delete p_list_temp;
             }
         }
     });
     if(transparent) *contribution = *p_map_local;
+    delete p_map_local;
 }
 
 
