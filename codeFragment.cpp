@@ -367,7 +367,7 @@ int get_new_filter(float *state, BoundingBox bb, Position &relative_position) {
             id = add_filter(kb_filter);
         }
     }
-    if(id == -1 && drand() < p_promising){
+    if(false && id == -1 && drand() < p_promising){
         id = get_promising_filter_id();
         if(id != -1) {
             Filter temp_filter = get_filter(id);
@@ -595,25 +595,29 @@ bool mutate_cf(CodeFragment &cf, float *state) {
 
 bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
-    if(cf1.cf_id == cf2.cf_id) return true;
-
-    if(cf1.num_filters != cf2.num_filters ||
-       cf1.reverse_polish != cf2.reverse_polish ||
-       cf1.bb.x != cf2.bb.x ||
-       cf1.bb.y != cf2.bb.y ||
-       cf1.bb.size != cf2.bb.size ||
-//       cf1.filter_positions != cf2.filter_positions ||
-       cf1.filter_ids != cf2.filter_ids) {
-        return false;
-    }else {
-        for(int i=0; i<cf1.num_filters; i++){
-            if(cf1.filter_positions[i].x != cf2.filter_positions[i].x ||
-                cf1.filter_positions[i].y != cf2.filter_positions[i].y){
-                return false;
-            }
-        }
+    if(cf1.cf_id == cf2.cf_id){
         return true;
+    }else{
+        return false;
     }
+
+//    if(cf1.num_filters != cf2.num_filters ||
+//       cf1.reverse_polish != cf2.reverse_polish ||
+//       cf1.bb.x != cf2.bb.x ||
+//       cf1.bb.y != cf2.bb.y ||
+//       cf1.bb.size != cf2.bb.size ||
+////       cf1.filter_positions != cf2.filter_positions ||
+//       cf1.filter_ids != cf2.filter_ids) {
+//        return false;
+//    }else {
+//        for(int i=0; i<cf1.num_filters; i++){
+//            if(cf1.filter_positions[i].x != cf2.filter_positions[i].x ||
+//                cf1.filter_positions[i].y != cf2.filter_positions[i].y){
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
 }
 
 
