@@ -26,10 +26,13 @@
 #include <ctime>
 
 auto start = std::chrono::system_clock::now();
+double beta = 0.2;
+double beta_start = 0.2;
+double beta_end = 0.2;
 double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
-double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
-double pM_initial;
-double pM_step = 0; // parameter control during execution after every epoch
+double pM = 0.2;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+double pM_start = 0.2;
+double pM_end = 0.2; // parameter control during execution after every epoch
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising;// = 0.5;  // probability of using a filter from observed list
 
@@ -96,7 +99,7 @@ void writePerformance(ClassifierVector &pop, double performance, double sysError
                       std::ofstream &output_training_file) {
 
     int setSize = get_pop_size(pop, false);
-    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
+    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << " " << beta << " " << pM << std::endl;
     std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
@@ -107,7 +110,7 @@ void writeTestPerformance(ClassifierVector &pop, double performance, double sysE
 
     int setSize = get_pop_size(pop, false);
     output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
-    << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
+    << problem_count << " " << performance << " " << sysError << " " << setSize << " " << beta << " " << pM << std::endl;
     std::cout << "Validation: " << training_problem_count << " " << problem_count <<
     "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
@@ -185,7 +188,7 @@ void load_state_for_resume(ClassifierVector &pop)
 {
 //    load_parameter(output_path + resume_from + output_filter_file_name);
     load_filter_for_resume(output_path + resume_from + output_filter_file_name);
-    load_code_fragment(output_path + resume_from + output_code_fragment_file_name);
+    load_cf_for_resume(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name, pop);
 }
 
@@ -224,17 +227,16 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         load_state_for_resume(pop);
         manage_filter_and_cf_list(pop); // update filter parameters etc
         problem_count = std::atoi(resume_from.c_str());
-        // reset pM
-        pM = pM_initial + pM_step * (problem_count / validation_frequency);
-        pM = fmax(pM, 0);
-        pM = fmin(pM, 1);
         problem_count++;  // resume from next problem
+        // parameter control from initial value to final value
+        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
+        beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
     }
     if(visualization){
         std::cout<<"Saving visualization data..."<<std::endl;
         doOneSingleStepTest(pop, problem_count, output_test_file, true, 0, 0);
     }
-    for( ; problem_count <= maxProblems; problem_count++)
+    for( ; problem_count < maxProblems; problem_count++)
     {
         int pop_size = get_pop_size(pop, false);
         int pop_numerosity = get_pop_size(pop, true);
@@ -266,14 +268,13 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             doOneSingleStepTest(pop, problem_count, output_test_file, false, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
-            // parameter control: change parameters after every epoch
-            pM = pM_initial + pM_step * (problem_count / validation_frequency);
-            pM = fmax(pM, 0);
-            pM = fmin(pM, 1);
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_and_cf_list(pop);
         }
+        // parameter control from initial value to final value
+        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
+        beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
     }
     output_training_file.close();
     output_test_file.close();
@@ -433,11 +434,16 @@ void LoadConfig(char* file)
                 cf_min_bounding_box_size = atoi(value.c_str());
             }else if(name == "pX"){
                 pX = atof(value.c_str());
-            }else if(name == "pM"){
-                pM = atof(value.c_str());
-                pM_initial = pM;
-            }else if(name == "pM_step"){
-                pM_step = atof(value.c_str());
+            }else if(name == "pM_start"){
+                pM_start = atof(value.c_str());
+                pM = pM_start;
+            }else if(name == "pM_end"){
+                pM_end = atof(value.c_str());
+            }else if(name == "beta_start"){
+                beta_start = atof(value.c_str());
+                beta = beta_start;
+            }else if(name == "beta_end"){
+                beta_end = atof(value.c_str());
             }else if(name == "pM_allel"){
                 pM_allel = atof(value.c_str());
             }else if(name == "p_promising"){

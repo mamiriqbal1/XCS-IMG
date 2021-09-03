@@ -944,25 +944,3 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 
 
 
-CodeFragment get_kb_code_fragment(float* state)
-{
-    CodeFragment cf;
-    auto random_it = kb_cf.begin();
-    bool matched = false;
-    int tries = 0;
-    do{
-        tries++;
-        random_it = std::next(kb_cf.begin(), irand(kb_cf.size()));
-        // ignore the state for now
-        // transfer all filters to the list before evaluation
-        //matched = evaluateCF(random_it->second, state);
-        matched = true;
-    }while(!matched && tries < 100);
-    if(matched){
-        cf = random_it->second;
-    }else{
-        cf.cf_id = -1;
-    }
-    return cf;
-}
-

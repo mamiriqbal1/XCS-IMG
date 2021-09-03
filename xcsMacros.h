@@ -7,7 +7,9 @@
  */
 
 const double alpha=0.1; //The fall of rate in the fitness evaluation.
-const double beta=0.2; //The learning rate for updating fitness, prediction, prediction error, and action set size estimate in XCS's classifiers.
+extern double beta;//=0.2; //The learning rate for updating fitness, prediction, prediction error, and action set size estimate in XCS's classifiers.
+extern double beta_start;//=0.2; //The learning rate for updating fitness, prediction, prediction error, and action set size estimate in XCS's classifiers.
+extern double beta_end;//=0.2; //The learning rate for updating fitness, prediction, prediction error, and action set size estimate in XCS's classifiers.
 const double gama=0.95; //The discount rate in multi-step problems.
 const double delta=0.1; //The fraction of the mean fitness of the population below which the fitness of a classifier may be considered in its vote for deletion.
 const double nu=5.0; //Specifies the exponent in the power function for the fitness evaluation.
@@ -17,8 +19,8 @@ const int theta_del = 20; //Specified the threshold over which the fitness of a 
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 extern double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 extern double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
-extern double pM_initial;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
-extern double pM_step;
+extern double pM_start;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
+extern double pM_end;
 extern double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 extern double p_promising;// = 0.5;  // probability of using a filter from observed list
 const double p_kb_filter = 0.5;  // probability of using a filter from observed list

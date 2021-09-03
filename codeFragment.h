@@ -37,7 +37,6 @@ int create_new_cf(float *state);
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 opType str_to_opt(std::string str);
-CodeFragment get_kb_code_fragment(float* state);
 void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution);
 bool is_cf_covered(CodeFragment& cf, Classifier& cl);
 

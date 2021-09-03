@@ -13,6 +13,7 @@
 
 int cf_gid = 0;
 CodeFragmentVector main_cf_list;
+CodeFragmentVector kb_cf_list;
 
 std::vector<int> cf_gid_vector;
 std::stack<int, std::vector<int>> cf_gid_stack(cf_gid_vector);
@@ -117,7 +118,53 @@ void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &out
     }
 }
 
-void load_code_fragment(std::string cf_file_name)
+
+void extract_cf_attributes(std::string& line, CodeFragment& cf)
+{
+    int id=0;
+    std::stringstream line1(line);
+    line1>>id;
+    initializeNewCF(id, cf);
+    int val=0;
+    line1>>val;
+    cf.numerosity = val;
+    line1>>val;
+    cf.fitness = val;
+    line1>>val;
+    cf.bb.x = val;
+    line1>>val;
+    cf.bb.y = val;
+    line1>>val;
+    cf.bb.size = val;
+
+    int index = 0, leaf_index = 0;
+    while(!line1.eof()){
+        std::string token;
+        line1>>token;
+        // last token is "" that needs to be handled
+        if(token.empty()) break;
+        if(token.substr(0,1) == "D"){ // this is filter id
+            int filter_id = std::stoi(token.substr(1));
+            cf.filter_ids[leaf_index] = filter_id;
+            int val = 0;
+            line1 >> val;
+            cf.filter_positions[leaf_index].x = val;
+            line1 >> val;
+            cf.filter_positions[leaf_index].y = val;
+            cf.filter_ids[leaf_index] = filter_id;
+            cf.reverse_polish[index] = leaf_index;
+            leaf_index++;
+        }else{ // this is operator
+            cf.reverse_polish[index] = str_to_opt(token);
+        }
+        index++;
+    }
+    cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
+    cf.num_filters = leaf_index;
+}
+
+
+void load_cf_for_resume(std::string cf_file_name)
 {
     int loaded_cf_gid = -1;
     std::string line;
@@ -131,46 +178,7 @@ void load_code_fragment(std::string cf_file_name)
     while(getline(cf_file, line)) {
         // load cf
         CodeFragment cf;
-        int id=0;
-        std::stringstream line1(line);
-        line1>>id;
-        initializeNewCF(id, cf);
-        int val=0;
-        line1>>val;
-        cf.numerosity = val;
-        line1>>val;
-        cf.fitness = val;
-        line1>>val;
-        cf.bb.x = val;
-        line1>>val;
-        cf.bb.y = val;
-        line1>>val;
-        cf.bb.size = val;
-
-        int index = 0, leaf_index = 0;
-        while(!line1.eof()){
-            std::string token;
-            line1>>token;
-            // last token is "" that needs to be handled
-            if(token.empty()) break;
-            if(token.substr(0,1) == "D"){ // this is filter id
-                int filter_id = std::stoi(token.substr(1));
-                cf.filter_ids[leaf_index] = filter_id;
-                int val = 0;
-                line1 >> val;
-                cf.filter_positions[leaf_index].x = val;
-                line1 >> val;
-                cf.filter_positions[leaf_index].y = val;
-                cf.filter_ids[leaf_index] = filter_id;
-                cf.reverse_polish[index] = leaf_index;
-                leaf_index++;
-            }else{ // this is operator
-                cf.reverse_polish[index] = str_to_opt(token);
-            }
-            index++;
-        }
-        cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
-        cf.num_filters = leaf_index;
+        extract_cf_attributes(line, cf);
         main_cf_list.resize(cf.cf_id+1);
         main_cf_list[cf.cf_id] = cf;
         if(cf.cf_id > loaded_cf_gid){
@@ -181,6 +189,30 @@ void load_code_fragment(std::string cf_file_name)
     // populate stack with available slots
     for(int i=0; i<main_cf_list.size(); i++){
         if(main_cf_list[i].cf_id == -1) cf_gid_stack.push(i);
+    }
+}
+
+
+void load_cf_for_kb(std::string cf_file_name)
+{
+    int loaded_cf_gid = -1;
+    std::string line;
+    std::ifstream cf_file(cf_file_name);
+    if (!cf_file.is_open()) {
+        std::string error("Error opening input file: ");
+        error.append(cf_file_name).append(", could not load data!");
+        throw std::runtime_error(error);
+    }
+
+    while(getline(cf_file, line)) {
+        // load cf
+        CodeFragment cf;
+        extract_cf_attributes(line, cf);
+        kb_cf_list.resize(cf.cf_id+1);
+        kb_cf_list[cf.cf_id] = cf;
+        if(cf.cf_id > loaded_cf_gid){
+            loaded_cf_gid = cf.cf_id;
+        }
     }
 }
 
@@ -243,3 +275,28 @@ int get_promising_cf_id()
         return selected[irand(2)];  // return randomly if both have equal fitness
     }
 }
+
+
+
+CodeFragment get_kb_code_fragment(float* state)
+{
+//    CodeFragment cf;
+//    auto random_it = kb_cf_list.begin();
+//    bool matched = false;
+//    int tries = 0;
+//    do{
+//        tries++;
+//        random_it = std::next(kb_cf_list.begin(), irand(kb_cf_list.size()));
+//        // ignore the state for now
+//        // transfer all filters to the list before evaluation
+//        //matched = evaluateCF(random_it->second, state);
+//        matched = true;
+//    }while(!matched && tries < 100);
+//    if(matched){
+//        cf = random_it->second;
+//    }else{
+//        cf.cf_id = -1;
+//    }
+//    return cf;
+}
+

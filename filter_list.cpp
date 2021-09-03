@@ -336,7 +336,7 @@ bool should_load_filter(Filter& f)
 
 void load_filter_for_kb(std::string filter_file_name)
 {
-    int filter_id_seq = 0;
+    int loaded_gid = -1;
     std::string line;
     std::ifstream filter_file(filter_file_name);
     if (!filter_file.is_open()) {
@@ -353,15 +353,13 @@ void load_filter_for_kb(std::string filter_file_name)
         getline(filter_file, line);
         extract_filter_ub(line, f);
 
-        // check if the filter is specific enough to be loaded
-        if(should_load_filter(f)) {
-            // we set the filter ids sequentially
-            f.id = filter_id_seq++;
-            kb_filter_list.filters.resize(f.id + 1);
-            kb_filter_list.filters[f.id] = f;
+        kb_filter_list.filters.resize(f.id + 1);
+        kb_filter_list.filters[f.id] = f;
+        if(f.id > loaded_gid){
+            loaded_gid = f.id;
         }
     }
-    kb_filter_list.gid = filter_id_seq;
+    kb_filter_list.gid = 1 + loaded_gid;
 }
 
 

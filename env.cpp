@@ -12,9 +12,9 @@
 #include "env.h"
 #include "codeFragment.h"
 #include "filter_list.h"
+#include "cf_list.h"
 
 
-CodeFragmentMap kb_cf;
 float lowerLimit[condLength];
 float upperLimit[condLength];
 
@@ -136,6 +136,6 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
 void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
 
     load_filter_for_kb(kb_filter_file_name);
-//    load_code_fragment(kb_cf_file_name, kb_cf);
+    load_cf_for_kb(kb_cf_file_name);
 }
 
