@@ -502,3 +502,12 @@ Position generate_relative_position(Filter &f, BoundingBox bb)
     p.y = irand(bb.size - effective_filter_size+1);
     return p;
 }
+
+/*
+ * Transfer kb filter to main filter list and return filter id
+ */
+int transfer_kb_filter(int kb_filter_id)
+{
+    return add_filter(kb_filter_list.filters[kb_filter_id]);
+
+}

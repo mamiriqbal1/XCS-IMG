@@ -54,7 +54,7 @@ void manage_filter_and_cf_list(ClassifierVector &pop);
 int get_pop_size(ClassifierVector &pop, bool numerosity);
 void get_matching_classifiers(ClassifierVector& pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent=false, std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution=nullptr);
 bool is_promising_classifier(Classifier& cl);
-void transfer_kb_filter(CodeFragment & cf);
+
 void remove_classifier_cfs_from_list(Classifier &cl);
 void add_classifier_cfs_to_list(Classifier &cl);
 int count_classifier_cfs(const Classifier &cl);

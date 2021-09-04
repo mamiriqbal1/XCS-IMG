@@ -191,16 +191,6 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
     setInitialVariables(cl,setSize,time);
 }
 
-/*
- * Transfer the filters from kb to running state (i.e. the filter master list)
- */
-void transfer_kb_filter(CodeFragment & cf)
-{
-    for(int i=0; i<cf.num_filters; i++){
-//        cf.filter_ids[i] = add_filter(kb_filter[cf.filter_ids[i]]);
-    }
-}
-
 //todo: create_new_cf should be done to temporary location and should be added to main cf_list only when cl is added to pop
 
 /*

@@ -14,6 +14,7 @@ int validateDepth(opType *cf);
 void initializeNewCF(int id, CodeFragment &cf);
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id=-1, int img_id=-1, bool train=true, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
+int evaluate_cf_slide(CodeFragment &cf, float *state);
 bool isPreviousLevelsCode(const opType code);
 
 int getNumberOfArguments(const opType opcode);
@@ -39,5 +40,6 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 opType str_to_opt(std::string str);
 void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution);
 bool is_cf_covered(CodeFragment& cf, Classifier& cl);
+void transfer_filters_from_kb_cf(CodeFragment & kb_cf);
 
 #endif //XCS_IMG_CF_H

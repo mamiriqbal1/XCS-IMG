@@ -29,7 +29,9 @@ auto start = std::chrono::system_clock::now();
 double beta = 0.2;
 double beta_start = 0.2;
 double beta_end = 0.2;
-double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+double pX = 0.8;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+double pX_start = 0.8;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+double pX_end = 0.8;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 double pM = 0.2;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 double pM_start = 0.2;
 double pM_end = 0.2; // parameter control during execution after every epoch
@@ -217,7 +219,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
     int correct = 0, correct_count = 0, epoch_correct_count = 0;
     double sysError = 0, error_sum = 0, epoch_error_sum = 0;
     DataSource *state = NULL;
-    int problem_count=0;
+    int problem_count=1;
 
     // load state from previous execution in case resume is require
     if(!resume_from.empty()){
@@ -229,14 +231,15 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         problem_count = std::atoi(resume_from.c_str());
         problem_count++;  // resume from next problem
         // parameter control from initial value to final value
-        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
+        pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
+        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
     }
     if(visualization){
         std::cout<<"Saving visualization data..."<<std::endl;
         doOneSingleStepTest(pop, problem_count, output_test_file, true, 0, 0);
     }
-    for( ; problem_count < maxProblems; problem_count++)
+    for( ; problem_count <= maxProblems; problem_count++)
     {
         int pop_size = get_pop_size(pop, false);
         int pop_numerosity = get_pop_size(pop, true);
@@ -273,8 +276,9 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
             manage_filter_and_cf_list(pop);
         }
         // parameter control from initial value to final value
-        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
+        pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
+        pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
     }
     output_training_file.close();
     output_test_file.close();
@@ -432,8 +436,11 @@ void LoadConfig(char* file)
                 cf_max_bounding_box_size = atoi(value.c_str());
             }else if(name == "cf_min_bounding_box_size"){
                 cf_min_bounding_box_size = atoi(value.c_str());
-            }else if(name == "pX"){
-                pX = atof(value.c_str());
+            }else if(name == "pX_start"){
+                pX_start = atof(value.c_str());
+                pX = pX_start;
+            }else if(name == "pX_end"){
+                pX_end = atof(value.c_str());
             }else if(name == "pM_start"){
                 pM_start = atof(value.c_str());
                 pM = pM_start;

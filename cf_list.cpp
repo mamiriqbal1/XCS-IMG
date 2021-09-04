@@ -195,7 +195,7 @@ void load_cf_for_resume(std::string cf_file_name)
 
 void load_cf_for_kb(std::string cf_file_name)
 {
-    int loaded_cf_gid = -1;
+    int cf_id_seq = 0;
     std::string line;
     std::ifstream cf_file(cf_file_name);
     if (!cf_file.is_open()) {
@@ -208,11 +208,8 @@ void load_cf_for_kb(std::string cf_file_name)
         // load cf
         CodeFragment cf;
         extract_cf_attributes(line, cf);
-        kb_cf_list.resize(cf.cf_id+1);
-        kb_cf_list[cf.cf_id] = cf;
-        if(cf.cf_id > loaded_cf_gid){
-            loaded_cf_gid = cf.cf_id;
-        }
+        cf.cf_id = cf_id_seq++;
+        kb_cf_list.push_back(cf);
     }
 }
 
@@ -280,23 +277,21 @@ int get_promising_cf_id()
 
 CodeFragment get_kb_code_fragment(float* state)
 {
-//    CodeFragment cf;
-//    auto random_it = kb_cf_list.begin();
-//    bool matched = false;
-//    int tries = 0;
-//    do{
-//        tries++;
-//        random_it = std::next(kb_cf_list.begin(), irand(kb_cf_list.size()));
-//        // ignore the state for now
-//        // transfer all filters to the list before evaluation
-//        //matched = evaluateCF(random_it->second, state);
-//        matched = true;
-//    }while(!matched && tries < 100);
-//    if(matched){
-//        cf = random_it->second;
-//    }else{
-//        cf.cf_id = -1;
-//    }
-//    return cf;
+    CodeFragment cf;
+    int size = kb_cf_list.size();
+    if(size == 0) cf.cf_id = -1;
+    // select two filters for tournament
+    int selected[2];
+    selected[0] = irand(size);
+    selected[1] = irand(size);
+    if(kb_cf_list[selected[0]].fitness > kb_cf_list[selected[1]].fitness){
+        cf = kb_cf_list[selected[0]];
+    }else if (kb_cf_list[selected[0]].fitness < kb_cf_list[selected[1]].fitness){
+        cf = kb_cf_list[selected[1]];
+    }else{
+        cf = kb_cf_list[irand(2)];  // return randomly if both have equal fitness
+    }
+
+    return cf;
 }
 

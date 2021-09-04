@@ -32,6 +32,7 @@ FilterEvaluationMap evaluation_validation_map;
 unsigned long map_hits = 0;
 
 
+
 void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
     //std::cout<<"--- Filter Evaluation Stats ---\n";
 
@@ -517,47 +518,52 @@ bool is_full(CodeFragment& cf){
 
 
 int create_new_cf(float *state) {
-    CodeFragment temp;
-    initializeNewCF(-1, temp);
-//    if (use_kb && drand() < 0.5) {
-//        CodeFragment received_cf = get_kb_code_fragment(state);;
-//        if (received_cf.cf_id != -1) {
-////            received_cf.cf_id = cf_gid;
-////            temp = received_cf;
-//            // add the filters from kb to master filter list
-//            transfer_kb_filter(temp);
-//        }
-//    }
-    if(drand() < p_promising){
+    int new_cf_id = -1;
+//    initializeNewCF(-1, new_cf);
+    if (use_kb && drand() < 0.5) {
+        CodeFragment received_cf = get_kb_code_fragment(state);
+        if (received_cf.cf_id != -1) {
+            if(evaluate_cf_slide(received_cf, state)){
+                received_cf.cf_id = get_next_cf_gid();
+                received_cf.numerosity = 1;
+                received_cf.fitness = 0;
+                // add the filters from kb to master filter list
+                transfer_filters_from_kb_cf(received_cf);
+                add_cf_to_list(received_cf);
+                new_cf_id = received_cf.cf_id;
+            }
+        }
+    }
+    if(new_cf_id == -1 && drand() < p_promising){
         int id = get_promising_cf_id();
         if(id != -1) {
             CodeFragment& cf = get_cf(id);
             if(evaluateCF(cf, state)) {     // only use promising cf if it evaluates to true
-                return id;
-            }else{  // copy and negate cf
-                CodeFragment copied_cf = cf;
-                copied_cf.cf_id = get_next_cf_gid();
-                copied_cf.numerosity = 1;
-                copied_cf.fitness = 0;
-                negate_cf(copied_cf);
-                add_cf_to_list(copied_cf);
-                return copied_cf.cf_id;
+                new_cf_id = cf.cf_id;
             }
+//            else{  // copy and negate cf
+//                CodeFragment temp = cf;
+//                temp.cf_id = get_next_cf_gid();
+//                temp.numerosity = 1;
+//                temp.fitness = 0;
+//                negate_cf(temp);
+//                add_cf_to_list(temp);
+//            }
         }
     }
-    if (temp.cf_id == -1) { // if cf not received from kb
-//        temp.cf_id = cf_gid;
-        // create a cf of depth zero to start with
-        opType *end = randomProgram(temp.reverse_polish.data(), 0, cfMaxDepth, 0);
-        addLeafCF(temp, state, temp.bb);
+    if (new_cf_id == -1) { // if cf not received from kb
+        CodeFragment new_cf;
+        initializeNewCF(-1, new_cf);
+        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, 0);
+        addLeafCF(new_cf, state, new_cf.bb);
+//        if (evaluateCF(new_cf, state) != 1) {
+//            negate_cf(new_cf);
+//        }
+        new_cf.cf_id = get_next_cf_gid();
+        add_cf_to_list(new_cf);
+        new_cf_id = new_cf.cf_id;
     }
-    if (evaluateCF(temp, state) != 1) {
-        negate_cf(temp);
-    }
-
-    temp.cf_id = get_next_cf_gid();
-    add_cf_to_list(temp);
-    return temp.cf_id;
+    return new_cf_id;
 }
 
 
@@ -635,6 +641,21 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
         }
     }
     return covered;
+}
+
+
+int evaluate_cf_slide(CodeFragment &cf, float *state)
+{
+    for(int y=0; y<image_height-cf.bb.size; y++){
+        for(int x=0; x<image_width-cf.bb.size; x++){
+            cf.bb.y = y;
+            cf.bb.x = x;
+            if(evaluateCF(cf, state)){  // keep x,y coordinates for successful evaluation and return true
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 
@@ -942,5 +963,12 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 }
 
 
-
-
+/*
+ * Transfer the filters from kb to running state (i.e. the filter master list)
+ */
+void transfer_filters_from_kb_cf(CodeFragment & kb_cf)
+{
+    for(int i=0; i < kb_cf.num_filters; i++){
+        kb_cf.filter_ids[i] = transfer_kb_filter(kb_cf.filter_ids[i]);
+    }
+}

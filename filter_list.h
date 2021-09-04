@@ -24,5 +24,6 @@ int evaluate_filter_actual(const Filter &filter, float *state, Position p);
 int evaluate_filter_actual_slide(Filter& filter, float *state);
 void prepare_promising_filter_list();
 Position generate_relative_position(Filter &f, BoundingBox bb);
+int transfer_kb_filter(int kb_filter_id);
 
 #endif //RCFC_KB_FILTER_LIST_H

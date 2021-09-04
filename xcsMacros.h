@@ -18,6 +18,8 @@ const double epsilon_0= 10.0; //The error threshold under which the accuracy of 
 const int theta_del = 20; //Specified the threshold over which the fitness of a classifier may be considered in its deletion probability.
 const int crossoverType = 2; // 0 uniform, 1 onePoint, and 2 twoPoint crossover.
 extern double pX;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+extern double pX_start;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
+extern double pX_end;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of applying crossover in an offspring classifier.
 extern double pM;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 extern double pM_start;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 extern double pM_end;
