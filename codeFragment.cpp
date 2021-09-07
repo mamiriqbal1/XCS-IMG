@@ -361,21 +361,21 @@ bool negate_cf(CodeFragment &cf){
  */
 int get_new_filter(float *state, BoundingBox bb, Position &relative_position) {
     int id = -1;
-    if(use_kb && drand() < p_kb_filter){
-        Filter kb_filter = get_kb_filter(state);
-        if(kb_filter.id != -1) {
-            relative_position = generate_relative_position(kb_filter, bb);
-            id = add_filter(kb_filter);
-        }
-    }
-    if(false && id == -1 && drand() < p_promising){
-        id = get_promising_filter_id();
-        if(id != -1) {
-            Filter temp_filter = get_filter(id);
-            relative_position = generate_relative_position(temp_filter, bb);
-            id = add_filter(temp_filter);
-        }
-    }
+//    if(use_kb && drand() < p_kb){
+//        Filter kb_filter = get_kb_filter(state);
+//        if(kb_filter.id != -1) {
+//            relative_position = generate_relative_position(kb_filter, bb);
+//            id = add_filter(kb_filter);
+//        }
+//    }
+//    if(false && id == -1 && drand() < p_promising){
+//        id = get_promising_filter_id();
+//        if(id != -1) {
+//            Filter temp_filter = get_filter(id);
+//            relative_position = generate_relative_position(temp_filter, bb);
+//            id = add_filter(temp_filter);
+//        }
+//    }
     if(id == -1) {
         Filter new_filter;
         Position p;
@@ -520,7 +520,7 @@ bool is_full(CodeFragment& cf){
 int create_new_cf(float *state) {
     int new_cf_id = -1;
 //    initializeNewCF(-1, new_cf);
-    if (use_kb && drand() < 0.5) {
+    if (use_kb && drand() < p_kb) {
         CodeFragment received_cf = get_kb_code_fragment(state);
         if (received_cf.cf_id != -1) {
             if(evaluate_cf_slide(received_cf, state)){
@@ -554,7 +554,7 @@ int create_new_cf(float *state) {
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
-        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, 0);
+        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
         addLeafCF(new_cf, state, new_cf.bb);
 //        if (evaluateCF(new_cf, state) != 1) {
 //            negate_cf(new_cf);

@@ -35,6 +35,9 @@ double pX_end = 0.8;// = 0.5; // 0.8; // 0.04; //0.04; //The probability of appl
 double pM = 0.2;// = 0.5; //0.04; //0.8; //The probability of mutating one allele and the action in an offspring classifier.
 double pM_start = 0.2;
 double pM_end = 0.2; // parameter control during execution after every epoch
+double p_kb = 0.5;
+double p_kb_start = 0.5;
+double p_kb_end = 0.5;
 double pM_allel;// = 0.1; // number of allels modified during mutation of a filter
 double p_promising;// = 0.5;  // probability of using a filter from observed list
 
@@ -45,6 +48,7 @@ bool Testing = true;
 int numActions = 2;
 int clfrCondMaxLength = 0; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 int cfMaxDepth = 0;
+int cfMinDepth = 0;
 int cfMaxLength = 2;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
@@ -234,6 +238,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
         pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
+        p_kb = p_kb_start - (p_kb_start - p_kb_end) * problem_count/maxProblems;
     }
     if(visualization){
         std::cout<<"Saving visualization data..."<<std::endl;
@@ -279,6 +284,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
         pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
+        p_kb = p_kb_start - (p_kb_start - p_kb_end) * problem_count/maxProblems;
     }
     output_training_file.close();
     output_test_file.close();
@@ -430,6 +436,8 @@ void LoadConfig(char* file)
                 cfMaxLength = std::pow(2, cfMaxDepth+1);
                 cfMaxStack = (cfMaxArity-1)*(cfMaxDepth-1) + 2;
                 cfMaxLeaf = std::pow(2, cfMaxDepth);
+            }else if(name == "min_depth"){
+                cfMinDepth = atoi(value.c_str());
             }else if(name == "max_condition_length"){
                 clfrCondMaxLength = atoi(value.c_str());
             }else if(name == "cf_max_bounding_box_size"){
@@ -446,6 +454,11 @@ void LoadConfig(char* file)
                 pM = pM_start;
             }else if(name == "pM_end"){
                 pM_end = atof(value.c_str());
+            }else if(name == "p_kb_start"){
+                p_kb_start = atof(value.c_str());
+                p_kb = p_kb_start;
+            }else if(name == "p_kb_end"){
+                p_kb_end = atof(value.c_str());
             }else if(name == "beta_start"){
                 beta_start = atof(value.c_str());
                 beta = beta_start;

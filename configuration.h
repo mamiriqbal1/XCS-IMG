@@ -54,7 +54,7 @@ const char output_parameter_file_name[] = "parameter.txt";  // file indicating c
 extern bool visualization;
 extern int clfrCondMaxLength;//2 // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 extern int cfMaxDepth;// = 2;
-const int cfMinDepth = 0;
+extern int cfMinDepth; // = 0;
 extern int cfMaxLength;// = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 extern int cfMaxStack;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
