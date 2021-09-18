@@ -142,84 +142,30 @@ void initializeNewCF(int id, CodeFragment &cf)
 {
     cf.cf_id = id;
 
-    cf.bb.size = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    cf.bb.x = irand(image_width - cf.bb.size);
-    cf.bb.y = irand(image_width - cf.bb.size);
+    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    cf.bb.x = irand(image_width - cf.bb.size_x);
+    cf.bb.y = irand(image_height - cf.bb.size_y);
 }
 
-// create without regard to state
-void create_new_filter_from_input_random(Filter& filter, float *state)
-{
-    // randomly selects a position in the image to create filter bounds
-    //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
-    int new_filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
-    bool is_dilated = false;
-    if(allow_dilated_filters){
-        is_dilated = irand(2) != 0;
-    }
 
-    filter.filter_size = new_filter_size;
-    filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
-    filter.lower_bounds.assign(filter.filter_size*filter.filter_size, -1);
-    filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
-    filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
-    filter.is_dilated = is_dilated;
-    for(int i=0; i<new_filter_size*new_filter_size; i++){
-        float lower = drand();
-        float upper = drand();
-        if(lower > upper) std::swap(lower,upper);
-
-        filter.lower_bounds[i] = roundRealValue(fmax(lower, 0), precisionDigits);
-        filter.upper_bounds[i] = roundRealValue(fmin(upper, 1),precisionDigits);
-    }
-}
 // new function for setting filter bounds
 void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, Position &relative_position)
 {
-    // randomly selects a position in the image to create filter bounds
-    //int filter_size = (int)sqrt(cfMaxLeaf);  // filter size
-    filter.filter_size = filter_sizes[irand(num_filter_sizes)]; // select a filter size randomly
-    filter.is_dilated = false;
-    if(allow_dilated_filters){
-        filter.is_dilated = irand(2) != 0;
-    }
-    int effective_filter_size = filter.filter_size;
-    if(filter.is_dilated){
-        effective_filter_size = filter.filter_size + filter.filter_size -1;
-    }
-    int step = filter.is_dilated ? 2 : 1;  // this will be used to map normal coordinates to dilated coordinates
-    float pixel_values[filter.filter_size*filter.filter_size];
-    float sum = 0;
-    do{
-        sum = 0;
-        int index = 0;
-        relative_position = generate_relative_position(filter, bb);
-        int filter_x = bb.x + relative_position.x;
-        int filter_y = bb.y + relative_position.y;
-
-        for(int y=filter_y; y<filter_y+effective_filter_size; y+=step){
-            for(int x=filter_x; x<filter_x+effective_filter_size; x+=step){
-                pixel_values[index] = state[y*image_width+x];
-                sum += pixel_values[index];
-                index++;
-            }
-        }
-    }while(false && sum <= 0.1); // get to some interesting area in the image. All blanks will be ignored.
-
-    filter.lower_bounds.reserve(filter.filter_size*filter.filter_size);
-    filter.lower_bounds.assign(filter.filter_size*filter.filter_size, -1);
-    filter.upper_bounds.reserve(filter.filter_size*filter.filter_size);
-    filter.upper_bounds.assign(filter.filter_size*filter.filter_size, -1);
-    float delta = drand();
-    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        if(drand() < P_Dontcare_filter){  // don't care cell
-            filter.lower_bounds[i] = 0.0;
-            filter.upper_bounds[i] = 1.0;
-        }else {
-            filter.lower_bounds[i] = roundRealValue(fmax(pixel_values[i] - delta, 0), precisionDigits);
-            filter.upper_bounds[i] = roundRealValue(fmin(pixel_values[i] + delta, 1), precisionDigits);
+    filter.size_x = bb.size_x;
+    filter.size_y = bb.size_y;
+    filter.values.reserve(filter.size_x*filter.size_y);
+    filter.values.assign(filter.size_x*filter.size_y, -1);
+    int state_x = irand(image_width - filter.size_x);
+    int state_y = irand(image_height - filter.size_y);
+    int i = 0;
+    for(int y=state_y; y<state_y + filter.size_y; y++){
+        for(int x=state_x; x<state_x + filter.size_x; x++){
+           filter.values[i] = state[y*image_width+x];
+           i++;
         }
     }
+    relative_position.x = relative_position.y = 0; // to be removed
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position
@@ -646,8 +592,8 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 
 int evaluate_cf_slide(CodeFragment &cf, float *state)
 {
-    for(int y=0; y<image_height-cf.bb.size; y++){
-        for(int x=0; x<image_width-cf.bb.size; x++){
+    for(int y=0; y<image_height-cf.bb.size_y; y++){
+        for(int x=0; x<image_width-cf.bb.size_x; x++){
             cf.bb.y = y;
             cf.bb.x = x;
             if(evaluateCF(cf, state)){  // keep x,y coordinates for successful evaluation and return true
@@ -697,7 +643,7 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
                 std::vector<std::pair<int, int>> fv{pr};
                 p_filter_stack->push(fv);
             }
-            if(result == -1)  // if matched
+            if(result != -1)  // if matched
             {
                 stack[SP++] = 1;   //changed
             }
@@ -943,7 +889,7 @@ inline std::string op_to_str(opType code)
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
-    output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " " << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size << " ";
+    output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " " << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " ";
     std::string str;
     opType code = 0;
     for(int i=0; i<cfMaxLength; i++){

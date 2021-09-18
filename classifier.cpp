@@ -538,47 +538,6 @@ void selectTwoClassifiers(Classifier &child1, Classifier &child2, int &parent1, 
     child2.fitness = child2.fitness / child2.numerosity;
 }
 
-// ########################## crossover and mutation ########################################
-
-void union_filter(Filter& parent1, Filter& parent2)
-{
-    assert(parent1.filter_size == parent2.filter_size);
-    assert((parent1.is_dilated == parent2.is_dilated));
-    Filter temp = parent1;
-
-    for(int i=0; i<parent1.filter_size; i++){
-        temp.lower_bounds[i] = parent1.lower_bounds[i] < parent2.lower_bounds[i] ? parent1.lower_bounds[i] : parent2.lower_bounds[i];
-        temp.upper_bounds[i] = parent1.upper_bounds[i] > parent2.upper_bounds[i] ? parent1.upper_bounds[i] : parent2.upper_bounds[i];
-    }
-
-    parent1.lower_bounds = parent2.lower_bounds = temp.lower_bounds;
-    parent1.upper_bounds = parent2.upper_bounds = temp.upper_bounds;
-}
-
-void crossover_filter(Filter& parent1, Filter& parent2)
-{
-    assert(parent1.filter_size == parent2.filter_size);
-    assert((parent1.is_dilated == parent2.is_dilated));
-    int point1 = irand(parent1.filter_size*parent1.filter_size);
-    int point2 = irand(parent1.filter_size*parent1.filter_size);
-
-    if(point1 > point2){
-        int temp = point1;
-        point1 = point2;
-        point2 = temp;
-    }
-
-    float temp_lower, temp_upper;
-    for(int i=point1; i<point2; i++){
-        temp_lower = parent1.lower_bounds[i];
-        temp_upper = parent1.upper_bounds[i];
-        parent1.lower_bounds[i] = parent2.lower_bounds[i];
-        parent1.upper_bounds[i] = parent2.upper_bounds[i];
-        parent2.lower_bounds[i] = temp_lower;
-        parent2.upper_bounds[i] = temp_upper;
-    }
-}
-
 
 /*
  * implement two point crossover
@@ -600,26 +559,6 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
     }
 
     return true;
-}
-
-
-void apply_filter_mutation(Filter& filter, float state[])
-{
-    float delta = 0;
-
-    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        if(drand() < pM_allel) {  // mutation based on mutation probability
-            delta = drand()*m;  // how much to mutate
-            if(drand() < 0.5){  // revert sign with 50% probability
-                delta *= -1;
-            }
-            if(drand() < 0.5){
-                filter.lower_bounds[i] = roundRealValue(fmax(filter.lower_bounds[i] + delta, 0), precisionDigits);
-            }else{
-                filter.upper_bounds[i] = roundRealValue( fmin( filter.upper_bounds[i] + delta, 1), precisionDigits);
-            }
-        }
-    }
 }
 
 

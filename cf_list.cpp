@@ -135,7 +135,9 @@ void extract_cf_attributes(std::string& line, CodeFragment& cf)
     line1>>val;
     cf.bb.y = val;
     line1>>val;
-    cf.bb.size = val;
+    cf.bb.size_x = val;
+    line1>>val;
+    cf.bb.size_y = val;
 
     int index = 0, leaf_index = 0;
     while(!line1.eof()){

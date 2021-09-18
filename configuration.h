@@ -97,10 +97,10 @@ struct Filter{
     // Fitness of a filter is the appearance of the filter in "promising classifiers"
     // a promising classifier is one whose error < 10 and experience > 10
     int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
-    int filter_size = -1;
+    int size_x = -1;
+    int size_y = -1;
+    std::vector<float> values;
     bool is_dilated = false; // what is the type of filter normal or dilated
-    std::vector<float> lower_bounds;
-    std::vector<float> upper_bounds;
 };
 
 struct Hash {
@@ -125,7 +125,8 @@ struct BoundingBox
     // bounding box related parameters; x, y coordinates and size, height
     int x = 0;
     int y = 0;
-    int size = 0;
+    int size_x = 0;
+    int size_y = 0;
 };
 
 struct Position

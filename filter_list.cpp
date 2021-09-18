@@ -152,10 +152,10 @@ void print_filter_stats(std::ofstream &output_stats_file) {
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     int f_total = 0, f_min = INT16_MAX, f_max = -1;
     int promising_filters = 0;
-    int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
-    int num_dilated = 0;
+//    int filter_sizes_count[100] = {0};  // ASSUME MAX SIZE OF FILTER TO BE 100 :)
+//    int num_dilated = 0;
     std::for_each(master_filter_list.filters.begin(), master_filter_list.filters.end(),
-            [&size, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters, &filter_sizes_count, &num_dilated]
+            [&size, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max, &promising_filters]
             (const FilterMap::value_type & filter_item)
             {
                 if(filter_item.id == -1) return; // skip empty slots in the array
@@ -167,24 +167,12 @@ void print_filter_stats(std::ofstream &output_stats_file) {
                 if(f_min > filter_item.fitness) f_min = filter_item.fitness;
                 if(f_max < filter_item.fitness) f_max = filter_item.fitness;
                 if(filter_item.fitness>0) promising_filters++;
-                filter_sizes_count[filter_item.filter_size]++;
-                if(filter_item.is_dilated) num_dilated++;
             });
 
     output_stats_file<<"filter list size: "<<size<<std::endl;
     output_stats_file<<"avg numerosity: "<<n_total/(float)size<<" , max numerosity: "<<n_max<<" , min numerosity: "<<n_min<<std::endl;
     output_stats_file<<"avg fitness: "<<f_total/(float)size<<" , max fitness: "<<f_max<<" , min fitness: "<<f_min<<std::endl;
     output_stats_file<<"promising filters: "<<promising_filters<<std::endl;
-    for(int i=0; i<100; i++){
-        if(filter_sizes_count[i] > 0){
-            //std::cout<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
-            output_stats_file<<"filter size "<<i<<" count: "<<filter_sizes_count[i]<<std::endl;
-        }
-    }
-    //std::cout<<"dilated filters: "<<num_dilated<<std::endl;
-    //std::cout<<"--- Filter Stats ---\n\n";
-
-    output_stats_file<<"dilated filters: "<<num_dilated<<std::endl;
     output_stats_file<<"--- Filter Stats ---\n\n";
 }
 
@@ -209,16 +197,11 @@ int get_promising_filter_id(){
     }
 }
 
-void output_bounds_to_file(Filter& filter, std::ofstream &output_filter_file) {
-    output_filter_file << "lower_bound ";
-    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
+void output_filter_values_to_file(Filter& filter, std::ofstream &output_filter_file) {
+    output_filter_file << "values ";
+    for(int i=0; i<filter.size_x*filter.size_y; i++){
         output_filter_file.width(4);
-        output_filter_file << filter.lower_bounds[i] << " ";
-    }
-    output_filter_file << "\nupper_bound ";
-    for(int i=0; i<filter.filter_size*filter.filter_size; i++){
-        output_filter_file.width(4);
-        output_filter_file << filter.upper_bounds[i] << " ";
+        output_filter_file << filter.values[i] << " ";
     }
 }
 
@@ -226,8 +209,10 @@ void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
     output_filter_file << "id ";
     output_filter_file.width(5);
     output_filter_file << filter.id;
-    output_filter_file << " size ";
-    output_filter_file << filter.filter_size;
+    output_filter_file << " size_x ";
+    output_filter_file << filter.size_x;
+    output_filter_file << " size_y ";
+    output_filter_file << filter.size_y;
     output_filter_file << " dilated ";
     output_filter_file << filter.is_dilated;
     output_filter_file << " fitness ";
@@ -235,7 +220,7 @@ void output_filter_to_file(Filter& filter, std::ofstream &output_filter_file) {
     output_filter_file << filter.fitness;
     output_filter_file << " num ";
     output_filter_file << filter.numerosity << std::endl;
-    output_bounds_to_file(filter, output_filter_file);
+    output_filter_values_to_file(filter, output_filter_file);
     output_filter_file << std::endl;
 }
 
@@ -255,7 +240,9 @@ void extract_filter_attributes(std::string& line, Filter& f) {
     line1 >> str;
     line1 >> f.id;
     line1 >> str;
-    line1 >> f.filter_size;
+    line1 >> f.size_x;
+    line1 >> str;
+    line1 >> f.size_y;
     line1 >> str;
     line1 >> f.is_dilated;
     line1 >> str;
@@ -265,28 +252,18 @@ void extract_filter_attributes(std::string& line, Filter& f) {
 }
 
 
-void extract_filter_lb(std::string& line, Filter& f) {
+void extract_filter_values(std::string& line, Filter& f) {
     std::string str;
     std::stringstream line2(line);
     line2 >> str;
-    f.lower_bounds.reserve(f.filter_size * f.filter_size);
-    f.lower_bounds.assign(f.filter_size * f.filter_size, -1);
-    f.upper_bounds.reserve(f.filter_size * f.filter_size);
-    f.upper_bounds.assign(f.filter_size * f.filter_size, -1);
-    for (int i = 0; i < f.filter_size * f.filter_size; i++) {
-        line2 >> f.lower_bounds[i];
+    f.values.reserve(f.size_x * f.size_y);
+    f.values.assign(f.size_x * f.size_y, -1);
+    for (int i = 0; i < f.size_x * f.size_y; i++) {
+        line2 >> f.values[i];
     }
 }
 
 
-void extract_filter_ub(std::string& line, Filter& f) {
-    std::string str;
-    std::stringstream line3(line);
-    line3 >> str;
-    for(int i=0; i<f.filter_size*f.filter_size; i++){
-        line3 >> f.upper_bounds[i];
-    }
-}
 
 void load_filter_for_resume(std::string filter_file_name)
 {
@@ -303,9 +280,7 @@ void load_filter_for_resume(std::string filter_file_name)
         Filter f;
         extract_filter_attributes(line, f);
         getline(filter_file, line);
-        extract_filter_lb(line, f);
-        getline(filter_file, line);
-        extract_filter_ub(line, f);
+        extract_filter_values(line, f);
 
         master_filter_list.filters.resize(f.id + 1);
         master_filter_list.filters[f.id] = f;
@@ -319,20 +294,7 @@ void load_filter_for_resume(std::string filter_file_name)
         if(master_filter_list.filters[i].id == -1) filter_gid_stack.push(i);
     }
 }
-/*
- * Only load filter that are sufficiently specific.
- * Avoid don't care and too wide filters
- */
-bool should_load_filter(Filter& f)
-{
-    float thresh_hold = 0.5;
-    for(int i=0; i<f.filter_size*f.filter_size; i++){
-        if(f.upper_bounds[i] - f.lower_bounds[i] <= thresh_hold){
-            return true;
-        }
-    }
-    return false;
-}
+
 
 void load_filter_for_kb(std::string filter_file_name)
 {
@@ -349,9 +311,7 @@ void load_filter_for_kb(std::string filter_file_name)
         Filter f;
         extract_filter_attributes(line, f);
         getline(filter_file, line);
-        extract_filter_lb(line, f);
-        getline(filter_file, line);
-        extract_filter_ub(line, f);
+        extract_filter_values(line, f);
 
         kb_filter_list.filters.resize(f.id + 1);
         kb_filter_list.filters[f.id] = f;
@@ -384,35 +344,25 @@ Filter get_kb_filter(float* state)
 
 
 /*
- * Return -1 if not matched otherwise return the location of match
+ * Return 1 if matched 0 otherwise
  */
 int evaluate_filter_actual(const Filter &filter, float *state, Position p)
 {
-    int step = 1; // this will be used to map normal coordinates to dilated coordinates
-    int effective_filter_size = filter.filter_size;
-    if(filter.is_dilated){
-        step = 2;
-        effective_filter_size = filter.filter_size + filter.filter_size -1;
-    }
-    bool match_failed = false; // flag that controls if the next position to be evaluated when current does not match
-    int i = p.y;
-    int j = p.x;
-    int y = 0, x = 0;
-    for(int k=0; k<filter.filter_size && !match_failed; k++){  // k is filter y coordinate
-        for(int l=0; l<filter.filter_size && !match_failed; l++){  // l is filter x coordinate
-            if(state[i*image_width+j + k*step*image_width+l*step] < filter.lower_bounds[k*filter.filter_size+l]
-               || state[i*image_width+j + k*step*image_width+l*step] > filter.upper_bounds[k*filter.filter_size+l]){
-                match_failed = true;
-                y = k;
-                x = l;
-            }
+    int state_x = p.x;
+    int state_y = p.y;
+    int i = 0;
+    float distance = 0;
+    for(int y=state_y; y<state_y + filter.size_y; y++){
+        for(int x=state_x; x<state_x + filter.size_x; x++){
+            distance += abs(filter.values[i] - state[y*image_width+x]);
+            i++;
         }
     }
-    if(match_failed){
-        // return the actual position of filter that did not match
-        return y*filter.filter_size+x;
-    }else {  // if matched return -1
-        return -1;
+    float thresh_hold = 0.1;
+    if(distance < thresh_hold){
+        return 1;
+    }else{
+        return 0;
     }
 }
 
@@ -423,34 +373,21 @@ int evaluate_filter_actual(const Filter &filter, float *state, Position p)
  * If the filter matches, the filer has correct x,y coordinates when function ends
  */
 
-//int evaluate_filter_actual_slide(Filter& filter, float *state)
-//{
-//    int step = 1; // this will be used to map normal coordinates to dilated coordinates
-//    int effective_filter_size = filter.filter_size;
-//    if(filter.is_dilated){
-//        step = 2;
-//        effective_filter_size = filter.filter_size + filter.filter_size -1;
-//    }
-//    std::vector<int> result_list;
-//    for(int i=0; i<image_height - effective_filter_size; i++){  // i is image y coordinate
-//        for(int j=0; j<image_width - effective_filter_size; j++){  // j is image x coordinate
-//            filter.x = i;
-//            filter.y = j;
-//            int result = evaluate_filter_actual(filter, state, Position());
-//            if(result != -1){
-//                result_list.push_back(result);
-//            }
-//        }
-//    }
-//    if(result_list.size() > 0){
-//        int index = irand(result_list.size());
-//        filter.x = result_list[index] % image_width;
-//        filter.y = result_list[index] / image_width;
-//        return result_list[index];
-//    }else {
-//        return -1;
-//    }
-//}
+int evaluate_filter_actual_slide(const Filter& filter, float *state)
+{
+    Position p;
+    for(int y=0; y < image_height - filter.size_y; y++) {
+        for (int x = 0; x < image_width - filter.size_x; x++) {
+            p.x = x;
+            p.y = y;
+            if (evaluate_filter_actual(filter, state, p)) {
+                return y * image_width + x;
+            }
+        }
+    }
+
+    return -1;
+}
 
 
 int evaluate_filter(const Filter &filter, float *state, Position p, int cl_id, int img_id, bool train)
@@ -473,7 +410,7 @@ int evaluate_filter(const Filter &filter, float *state, Position p, int cl_id, i
 //        }
 //    }
 
-    int evaluation = evaluate_filter_actual(filter, state, p);
+    int evaluation = evaluate_filter_actual_slide(filter, state);
 
 //    // set hasmap entry for re-using evaluation
 //    if(img_id >=0) {
@@ -488,20 +425,7 @@ int evaluate_filter(const Filter &filter, float *state, Position p, int cl_id, i
     return evaluation;
 }
 
-/*
- * Sets the filter coordinates from bounding box
- */
-Position generate_relative_position(Filter &f, BoundingBox bb)
-{
-    int effective_filter_size = f.filter_size;
-    if(f.is_dilated){
-        effective_filter_size = f.filter_size + f.filter_size -1;
-    }
-    Position p;
-    p.x = irand(bb.size - effective_filter_size+1);
-    p.y = irand(bb.size - effective_filter_size+1);
-    return p;
-}
+
 
 /*
  * Transfer kb filter to main filter list and return filter id
