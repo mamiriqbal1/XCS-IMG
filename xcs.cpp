@@ -54,6 +54,7 @@ int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
 int cf_max_bounding_box_size = image_height;
 int cf_min_bounding_box_size = max_filter_size * 2;
+float filter_matching_threshold = 0.001; // thresh hold for filter matching
 
 std::string inputTrainingFile;
 std::string inputTestFile;
@@ -444,6 +445,8 @@ void LoadConfig(char* file)
                 cf_max_bounding_box_size = atoi(value.c_str());
             }else if(name == "cf_min_bounding_box_size"){
                 cf_min_bounding_box_size = atoi(value.c_str());
+            }else if(name == "filter_matching_threshold"){
+                filter_matching_threshold = atof(value.c_str());
             }else if(name == "pX_start"){
                 pX_start = atof(value.c_str());
                 pX = pX_start;

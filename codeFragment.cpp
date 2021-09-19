@@ -146,6 +146,9 @@ void initializeNewCF(int id, CodeFragment &cf)
     cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
     cf.bb.x = irand(image_width - cf.bb.size_x);
     cf.bb.y = irand(image_height - cf.bb.size_y);
+    // align with image slice
+    cf.bb.x = cf.bb.x - cf.bb.x % image_slice_size;
+    cf.bb.y = cf.bb.y - cf.bb.y % image_slice_size;
 }
 
 

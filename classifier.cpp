@@ -784,7 +784,6 @@ bool isSubsumer(Classifier &cl)
 
 /*
  * This function checks that all the filters of one classifier are present in the second.
- * todo: At this time it does not check the result of the evaluation of the code fragment. It only compares filters.
  */
 
 // changed it to compare cfs for equality

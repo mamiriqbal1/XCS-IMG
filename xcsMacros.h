@@ -29,7 +29,7 @@ extern double p_kb; // = 0.5;  // probability of using a filter from observed li
 extern double p_kb_start; // = 0.5;  // probability of using a filter from observed list
 extern double p_kb_end; // = 0.5;  // probability of using a filter from observed list
 const int mutationType = 0; // 0 niche, and 1 general mutation.
-const double P_dontcare = 0; //The probability of using a don't care symbol in an allele when covering.
+const double P_dontcare = 0.33; //The probability of using a don't care symbol in an allele when covering.
 const double P_Dontcare_filter = .33; // this is for don't care within filter
 const double predictionErrorReduction = 1.0; //0.25; //The reduction of the prediction error when generating an offspring classifier.
 const double fitnessReduction=0.1; //The reduction of the fitness when generating an offspring classifier.
@@ -49,7 +49,8 @@ const float m_0 = 0.5; //to be used in mutation
 const float m = 0.1; // how much to mutuate one single ellel
 const float epsilon = 0.5; // the probability of exploration for epsilon greedy strategy
 const int N_filter_ol = 2500;  // maximum limit of filters in the managed observed list
-
+extern float filter_matching_threshold; // = 0.001; // thresh hold for filter matching
+const int image_slice_size = 1; // The size of image slice used for filer sliding
 
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).

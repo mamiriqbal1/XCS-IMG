@@ -67,16 +67,9 @@ int add_filter(Filter filter_to_add){
 //            [&filter_to_add](const FilterMap::value_type & filter_item) -> bool
 //            {
 //                if(filter_item.id == -1) return false; // skip empty slots in the array
-//                if(filter_item.fitness < 1) return false; // only a promising filter can subsume;
-//                // only filter of same size and type
-//                if(filter_item.filter_size != filter_to_add.filter_size ||
-//                   filter_item.is_dilated != filter_to_add.is_dilated) return false;
-//                for(int i=0; i<filter_to_add.filter_size*filter_to_add.filter_size; i++){
-//                    if(filter_item.lower_bounds[i] > filter_to_add.lower_bounds[i]
-//                       || filter_item.upper_bounds[i] < filter_to_add.upper_bounds[i]){
-//                        return false;
-//                    }
-//                }
+//                if(filter_item.size_x != filter_to_add.size_x ||
+//                   filter_item.size_y != filter_to_add.size_y ||
+//                   filter_item.values != filter_to_add.values) return false;
 //                return true;
 //            });
 //    if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
@@ -358,8 +351,7 @@ int evaluate_filter_actual(const Filter &filter, float *state, Position p)
             i++;
         }
     }
-    float thresh_hold = 0.1;
-    if(distance < thresh_hold){
+    if(distance/(filter.size_x*filter.size_y) < filter_matching_threshold){  // average distance per pixel
         return 1;
     }else{
         return 0;
@@ -376,8 +368,8 @@ int evaluate_filter_actual(const Filter &filter, float *state, Position p)
 int evaluate_filter_actual_slide(const Filter& filter, float *state)
 {
     Position p;
-    for(int y=0; y < image_height - filter.size_y; y++) {
-        for (int x = 0; x < image_width - filter.size_x; x++) {
+    for(int y=0; y < image_height - filter.size_y; y+=image_slice_size) {
+        for (int x = 0; x < image_width - filter.size_x; x+=image_slice_size) {
             p.x = x;
             p.y = y;
             if (evaluate_filter_actual(filter, state, p)) {
