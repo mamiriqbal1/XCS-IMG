@@ -59,6 +59,7 @@ extern int cfMaxLength;// = 8;// 2^(cdfMaxDepth+1); //allow for endstop OPNOP
 const int cfMaxArity = 2;
 extern int cfMaxStack;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 extern int cfMaxLeaf;// = 4; // 2^cfMaxDepth
+extern int cfMinLeaf;// = 1; // 2^cfMinDepth
 
 typedef int opType;
 const int opSize = sizeof(opType);

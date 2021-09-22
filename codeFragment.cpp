@@ -144,8 +144,8 @@ void initializeNewCF(int id, CodeFragment &cf)
 
     cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
     cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    cf.bb.x = irand(image_width - cf.bb.size_x);
-    cf.bb.y = irand(image_height - cf.bb.size_y);
+    cf.bb.x = irand(image_width - cf.bb.size_x+1);
+    cf.bb.y = irand(image_height - cf.bb.size_y+1);
     // align with image slice
     cf.bb.x = cf.bb.x - cf.bb.x % image_slice_size;
     cf.bb.y = cf.bb.y - cf.bb.y % image_slice_size;
@@ -155,12 +155,17 @@ void initializeNewCF(int id, CodeFragment &cf)
 // new function for setting filter bounds
 void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, Position &relative_position)
 {
-    filter.size_x = bb.size_x;
-    filter.size_y = bb.size_y;
+    filter.size_x = irand(bb.size_x)+1;
+    filter.size_y = irand(bb.size_y)+1;
     filter.values.reserve(filter.size_x*filter.size_y);
     filter.values.assign(filter.size_x*filter.size_y, -1);
-    int state_x = irand(image_width - filter.size_x);
-    int state_y = irand(image_height - filter.size_y);
+//    int state_x = irand(image_width - filter.size_x);
+//    int state_y = irand(image_height - filter.size_y);
+
+    relative_position = generate_relative_position(filter, bb);
+    int state_x = bb.x + relative_position.x;
+    int state_y = bb.y + relative_position.y;
+
     int i = 0;
     for(int y=state_y; y<state_y + filter.size_y; y++){
         for(int x=state_x; x<state_x + filter.size_x; x++){
@@ -168,7 +173,6 @@ void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, 
            i++;
         }
     }
-    relative_position.x = relative_position.y = 0; // to be removed
 }
 
 // new function that randomly selects a position on filter and create a matching filter at that position

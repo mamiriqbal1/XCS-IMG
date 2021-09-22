@@ -238,6 +238,17 @@ void reset_cf_stats()
 }
 
 
+int count_total_cf()
+{
+    int count = 0;
+    for(CodeFragment& cf: main_cf_list){
+        if(cf.cf_id == -1) continue; // skip empty slot
+        count++;
+    }
+    return count;
+}
+
+
 void remove_unused_cf()
 {
     for(CodeFragment& cf: main_cf_list){

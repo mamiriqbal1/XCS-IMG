@@ -32,6 +32,8 @@ void initializeInput(DataSource inputArray[],int numofRows){
 }
 
 float roundRealValue(float val, int num){
+    // do nothing
+    return val;
     float p = (float)pow(10.0,num);
     val = val * p;
     float tmp = roundf(val);

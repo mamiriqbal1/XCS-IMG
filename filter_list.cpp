@@ -337,24 +337,24 @@ Filter get_kb_filter(float* state)
 
 
 /*
- * Return 1 if matched 0 otherwise
+ * Return 1 if matched -1 otherwise
  */
 int evaluate_filter_actual(const Filter &filter, float *state, Position p)
 {
     int state_x = p.x;
     int state_y = p.y;
     int i = 0;
-    float distance = 0;
+    double distance = 0;
     for(int y=state_y; y<state_y + filter.size_y; y++){
         for(int x=state_x; x<state_x + filter.size_x; x++){
-            distance += abs(filter.values[i] - state[y*image_width+x]);
+            distance += std::abs(filter.values[i] - state[y*image_width+x]);
             i++;
         }
     }
     if(distance/(filter.size_x*filter.size_y) < filter_matching_threshold){  // average distance per pixel
         return 1;
     }else{
-        return 0;
+        return -1;
     }
 }
 
@@ -402,7 +402,8 @@ int evaluate_filter(const Filter &filter, float *state, Position p, int cl_id, i
 //        }
 //    }
 
-    int evaluation = evaluate_filter_actual_slide(filter, state);
+//    int evaluation = evaluate_filter_actual_slide(filter, state);
+    int evaluation = evaluate_filter_actual(filter, state, p);
 
 //    // set hasmap entry for re-using evaluation
 //    if(img_id >=0) {
@@ -426,4 +427,15 @@ int transfer_kb_filter(int kb_filter_id)
 {
     return add_filter(kb_filter_list.filters[kb_filter_id]);
 
+}
+
+/*
+ * Sets the filter coordinates from bounding box
+ */
+Position generate_relative_position(Filter &f, BoundingBox bb)
+{
+    Position p;
+    p.x = irand(bb.size_x - f.size_x+1);
+    p.y = irand(bb.size_y - f.size_y+1);
+    return p;
 }
