@@ -14,7 +14,7 @@ int validateDepth(opType *cf);
 void initializeNewCF(int id, CodeFragment &cf);
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id=-1, int img_id=-1, bool train=true, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
-int evaluate_cf_slide(CodeFragment &cf, float *state);
+int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id=-1, int img_id=-1, bool train=true, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
 bool isPreviousLevelsCode(const opType code);
 
 int getNumberOfArguments(const opType opcode);

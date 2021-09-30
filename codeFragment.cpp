@@ -491,7 +491,7 @@ int create_new_cf(float *state) {
         int id = get_promising_cf_id();
         if(id != -1) {
             CodeFragment& cf = get_cf(id);
-            if(evaluateCF(cf, state)) {     // only use promising cf if it evaluates to true
+            if(evaluate_cf_slide(cf, state)) {     // only use promising cf if it evaluates to true
                 new_cf_id = cf.cf_id;
             }
 //            else{  // copy and negate cf
@@ -597,18 +597,38 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 }
 
 
-int evaluate_cf_slide(CodeFragment &cf, float *state)
+int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, bool train, bool transparent, std::vector<std::pair<int, int>>* contribution)
 {
-    for(int y=0; y<image_height-cf.bb.size_y; y++){
-        for(int x=0; x<image_width-cf.bb.size_x; x++){
+    // evaluate cf in the +/- 4 (8x8 region)
+    int region_shift = 0;
+    // save cf coordinates
+    int cf_x = cf.bb.x;
+    int cf_y = cf.bb.y;
+
+    // define region of search
+    int y_start = std::max(cf_y - region_shift, 0);
+    int x_start = std::max(cf_x - region_shift, 0);
+    int y_end = std::min(cf_y + region_shift, image_height - cf.bb.size_y);
+    int x_end = std::min(cf_x + region_shift ,image_width - cf.bb.size_x);
+
+    bool matched = false;
+    int evaluation = -1;
+
+    for(int y=y_start; y<=y_end && !matched; y++){
+        for(int x=x_start; x<=x_end && !matched; x++){
             cf.bb.y = y;
             cf.bb.x = x;
-            if(evaluateCF(cf, state)){  // keep x,y coordinates for successful evaluation and return true
-                return 1;
+            if(evaluateCF(cf, state, cl_id, img_id, train, transparent, contribution)){  // keep x,y coordinates for successful evaluation and return true
+                matched = true;
             }
         }
     }
-    return 0;
+    if(matched) evaluation = 1;
+    else evaluation = 0;
+    // restore coordinates
+    cf.bb.y = cf_y;
+    cf.bb.x = cf_x;
+    return evaluation;
 }
 
 

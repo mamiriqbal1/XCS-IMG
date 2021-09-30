@@ -167,7 +167,7 @@ bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, b
         if(contribution){
             p_list_temp = new std::vector<std::pair<int, int>>;
         }
-        if(cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, p_list_temp) == 0 )
+        if(cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, p_list_temp) == 0 )
         {
             return false;
         }else{
