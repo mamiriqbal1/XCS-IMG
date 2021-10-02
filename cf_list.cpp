@@ -45,13 +45,17 @@ void initialize_cf_list(int size)
 
 CodeFragment& get_cf(int id)
 {
-    return main_cf_list[id];
+    assert(main_cf_list.at(id).cf_id); // ensures that value exists at the location
+    CodeFragment & cf = main_cf_list[id];
+    assert(cf.cf_id != -1);
+    return cf;
 }
 
 
 void add_cf_to_list(CodeFragment & cf)
 {
     assert(cf.cf_id != -1);
+    assert(main_cf_list.at(cf.cf_id).cf_id); // ensures that value exists at the location
     if(main_cf_list[cf.cf_id].cf_id != -1){
         main_cf_list[cf.cf_id].numerosity++;
     }else{
@@ -62,6 +66,8 @@ void add_cf_to_list(CodeFragment & cf)
 
 void remove_cf_from_list(int id)
 {
+    assert(id != -1);
+    assert(main_cf_list.at(id).cf_id); // ensures that value exists at the location
     if(main_cf_list[id].cf_id != -1) {
         main_cf_list[id].numerosity--;
         if (main_cf_list[id].numerosity <= 0) {

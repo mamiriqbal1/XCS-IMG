@@ -11,6 +11,7 @@
 #include <float.h>
 #include <stack>
 #include <sstream>
+#include <assert.h>
 
 //FilterList master_filter_list(maxPopSize*clfrCondMaxLength*cfMaxLeaf, 0); // The main filter list that is maintained
 FilterList master_filter_list; // The main filter list that is maintained
@@ -91,7 +92,10 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    return master_filter_list.filters[filter_id];
+    assert(master_filter_list.filters.at(filter_id).id);  // ensures that value exists at the location
+    Filter& f = master_filter_list.filters[filter_id];
+    assert(f.id != -1);
+    return f;
 }
 
 
