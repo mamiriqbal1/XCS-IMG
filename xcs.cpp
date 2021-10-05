@@ -107,7 +107,7 @@ void writePerformance(ClassifierVector &pop, double performance, double sysError
                       std::ofstream &output_training_file) {
 
     int setSize = get_pop_size(pop, false);
-    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << " " << beta << " " << pM << std::endl;
+    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
@@ -118,7 +118,7 @@ void writeTestPerformance(ClassifierVector &pop, double performance, double sysE
 
     int setSize = get_pop_size(pop, false);
     output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
-    << problem_count << " " << performance << " " << sysError << " " << setSize << " " << beta << " " << pM << std::endl;
+    << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Validation: " << training_problem_count << " " << problem_count <<
     "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }

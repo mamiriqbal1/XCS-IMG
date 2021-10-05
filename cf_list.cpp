@@ -30,7 +30,7 @@ int get_next_cf_gid()
         return val;
     }else{
         // only grow the vector when a new element is needed
-//        main_cf_list.resize(cf_gid + 1);
+        main_cf_list.resize(cf_gid + 1);
         return cf_gid++;
     }
 }
@@ -39,13 +39,13 @@ int get_next_cf_gid()
 void initialize_cf_list(int size)
 {
     main_cf_list.reserve(size);
-    CodeFragment temp;
-    main_cf_list.assign(size, temp);
+//    CodeFragment temp;
+//    main_cf_list.assign(size, temp);
 }
 
 CodeFragment& get_cf(int id)
 {
-    assert(main_cf_list.at(id).cf_id); // ensures that value exists at the location
+    assert(main_cf_list.at(id).cf_id >= 0); // ensures that value exists at the location
     CodeFragment & cf = main_cf_list[id];
     assert(cf.cf_id != -1);
     return cf;
@@ -55,7 +55,7 @@ CodeFragment& get_cf(int id)
 void add_cf_to_list(CodeFragment & cf)
 {
     assert(cf.cf_id != -1);
-    assert(main_cf_list.at(cf.cf_id).cf_id); // ensures that value exists at the location
+    assert(main_cf_list.at(cf.cf_id).cf_id >= -1); // ensures that value exists at the location
     if(main_cf_list[cf.cf_id].cf_id != -1){
         main_cf_list[cf.cf_id].numerosity++;
     }else{
@@ -67,7 +67,7 @@ void add_cf_to_list(CodeFragment & cf)
 void remove_cf_from_list(int id)
 {
     assert(id != -1);
-    assert(main_cf_list.at(id).cf_id); // ensures that value exists at the location
+    assert(main_cf_list.at(id).cf_id >= 0); // ensures that value exists at the location
     if(main_cf_list[id].cf_id != -1) {
         main_cf_list[id].numerosity--;
         if (main_cf_list[id].numerosity <= 0) {

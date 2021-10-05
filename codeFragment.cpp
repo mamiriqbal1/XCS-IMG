@@ -476,7 +476,7 @@ int create_new_cf(float *state) {
     if (use_kb && drand() < p_kb) {
         CodeFragment received_cf = get_kb_code_fragment(state);
         if (received_cf.cf_id != -1) {
-            if(evaluate_cf_slide(received_cf, state)){
+            if(evaluate_cf_slide(received_cf, state)){  // todo slide now depends on a parameter in the evaluate_cf_slide which is currently zero
                 received_cf.cf_id = get_next_cf_gid();
                 received_cf.numerosity = 1;
                 received_cf.fitness = 0;
@@ -521,13 +521,34 @@ int create_new_cf(float *state) {
 
 
 /*
- * Mutate CF by randomly replacing one filter
+ * Mutate CF by randomly changing an operator
  */
 bool mutate_cf(CodeFragment &cf, float *state) {
-    int mutate_filter_index = irand(cf.num_filters);
-    Position p;
-    cf.filter_ids[mutate_filter_index] = get_new_filter(state, cf.bb, p);
-    cf.filter_positions[mutate_filter_index] = p;
+    int functions_index[cfMaxLength];  // collect indices of functions for possible mutation
+    int functions_i = 0;
+    for(int i=0; /*i<cfMaxLength*/; i++){
+        const opType opcode = cf.reverse_polish[i];
+        if(opcode == OPNOP){
+            break;
+        }else if(getNumberOfArguments(opcode) > 1){  // only select binary functions for now
+            functions_index[functions_i++] = i;
+        }
+    }
+    if(functions_i == 0) return false;
+    // number of functions in the CF are functions_i
+    int k = irand(functions_i); // select a function index at random for mutation
+    opType new_function=0;
+    do{
+        new_function = randomFunction(); // there is a possiblity of selecting the same function
+        if(getNumberOfArguments(new_function) == getNumberOfArguments(cf.reverse_polish[functions_index[k]])){
+            cf.reverse_polish[functions_index[k]] = new_function;
+            break;
+        }
+    }while(true);
+    if (evaluateCF(cf, state) != 1){
+        negate_cf(cf);
+        assert(evaluateCF(cf, state) == 1);
+    }
     return true;
 }
 

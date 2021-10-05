@@ -562,8 +562,9 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
 }
 
 
+
 /*
- * mutate by the existing cf after copying it
+ * Sync with original code. Toggle one code fragment
  */
 bool mutation(Classifier &clfr, float *state)
 {
@@ -572,11 +573,10 @@ bool mutation(Classifier &clfr, float *state)
         if(drand() < pM){
             changed = true;
             if(clfr.cf_ids[i] != -1){
-                CodeFragment new_cf = get_cf(clfr.cf_ids[i]);
-                new_cf.cf_id = get_next_cf_gid();
-                clfr.cf_ids[i] = new_cf.cf_id;
-                mutate_cf(new_cf, state);
-                add_cf_to_list(new_cf);
+                clfr.cf_ids[i] = -1; // set as don't care
+            }else{
+                CodeFragment new_cf;
+                clfr.cf_ids[i] = create_new_cf(state);
             }
         }
     }

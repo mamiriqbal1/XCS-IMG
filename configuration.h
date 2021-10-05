@@ -80,11 +80,11 @@ const opType OPNOT = -105;
 const opType OPXOR = -107;
 const opType OPXNOR = -108;
 
-const int totalFunctions = 2;
+const int totalFunctions = 1;
 // OPNOT must be the last operator
-const opType functionCodes[] = {OPAND, OPOR};
-const int num_negative_binary_operators = 2;
-const opType negative_binary_operators[] = {OPNAND, OPNOR};
+const opType functionCodes[] = {OPAND};
+//const int num_negative_binary_operators = 2;
+//const opType negative_binary_operators[] = {OPNAND, OPNOR};
 
 
 const int num_filter_sizes = 3;
@@ -124,10 +124,10 @@ extern int cf_min_bounding_box_size;
 struct BoundingBox
 {
     // bounding box related parameters; x, y coordinates and size, height
-    int x = 0;
-    int y = 0;
-    int size_x = 0;
-    int size_y = 0;
+    int x = -1;
+    int y = -1;
+    int size_x = -1;
+    int size_y = -1;
 };
 
 struct Position

@@ -61,6 +61,7 @@ int add_filter_plain(Filter filter_to_add){
 int add_filter(Filter filter_to_add){
     filter_to_add.id = get_next_filter_gid();
     filter_to_add.numerosity = 1;
+    assert(master_filter_list.filters.at(filter_to_add.id).id >= -1);  // ensures that value exists at the location
     master_filter_list.filters[filter_to_add.id] = filter_to_add;
     return filter_to_add.id;
 //    // use find_if from <algorithm> to find a more general filter.
@@ -76,6 +77,7 @@ int add_filter(Filter filter_to_add){
 //    if(general_filter_iterator == master_filter_list.filters.end()){  // did not find any general filter
 //        filter_to_add.id = get_next_filter_gid();
 //        filter_to_add.numerosity = 1;
+//        assert(master_filter_list.filters.at(filter_to_add.id).id >= -1);  // ensures that value exists at the location
 //        master_filter_list.filters[filter_to_add.id] = filter_to_add;
 //        return filter_to_add.id;
 //    }else{
@@ -92,7 +94,7 @@ int add_filter(Filter filter_to_add){
  * Throws std::runtime_error in case id is not found
  */
 Filter& get_filter(int filter_id){
-    assert(master_filter_list.filters.at(filter_id).id);  // ensures that value exists at the location
+    assert(master_filter_list.filters.at(filter_id).id >= 0);  // ensures that value exists at the location
     Filter& f = master_filter_list.filters[filter_id];
     assert(f.id != -1);
     return f;
