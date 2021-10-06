@@ -6,12 +6,11 @@ DataSource *trainingData = NULL, *testingData = NULL;
 double executeAction(int action, int stateAction, bool &wasCorrect);
 
 
-void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
-                      std::ofstream &output_training_file);
+void writePerformance(double performance, double sysError, int problem_count, std::ofstream &output_training_file);
 
 void startXCS();
-void doOneSingleStepExperiment(ClassifierVector &pop);
+void doOneSingleStepExperiment();
 
 void
-doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool visualization,
+doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, bool visualization,
                     double training_performance, double training_error);

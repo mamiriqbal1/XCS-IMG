@@ -103,20 +103,18 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
  * @param sysError The system error in the last fifty exploration trials.
  * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
-                      std::ofstream &output_training_file) {
+void writePerformance(double performance, double sysError, int problem_count, std::ofstream &output_training_file) {
 
-    int setSize = get_pop_size(pop, false);
+    int setSize = get_pop_size(false);
     output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(ClassifierVector &pop, double performance, double sysError, int problem_count,
-                          std::ofstream &output_test_file, int training_problem_count, double training_accuracy,
-                          double training_error) {
+void writeTestPerformance(double performance, double sysError, int problem_count, std::ofstream &output_test_file,
+                          int training_problem_count, double training_accuracy, double training_error) {
 
-    int setSize = get_pop_size(pop, false);
+    int setSize = get_pop_size(false);
     output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
     << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
     std::cout << "Validation: " << training_problem_count << " " << problem_count <<
@@ -126,14 +124,13 @@ void writeTestPerformance(ClassifierVector &pop, double performance, double sysE
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int counter, int img_id, int &correct,
-                            double &sysError) {
+void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &correct, double &sysError) {
 
     bool wasCorrect = false;
-    ClassifierSet match_set(maxPopSize, pop);
-    ClassifierSet action_set(maxPopSize, pop);
+    ClassifierSet match_set(maxPopSize);
+    ClassifierSet action_set(maxPopSize);
 
-    getMatchSet(pop, match_set, object->state, counter, object->action, img_id);
+    getMatchSet(match_set, object->state, counter, object->action, img_id);
     getPredictionArray(match_set);
 
     int actionWinner;
@@ -159,7 +156,7 @@ void doOneSingleStepProblem(ClassifierVector &pop, DataSource *object, int count
 
     // apply GA only with exploration step
     if(explore) {
-        discoveryComponent(action_set, pop, counter, object->state);
+        discoveryComponent(action_set, counter, object->state);
     }
 
     // get best action for statistics
@@ -192,12 +189,12 @@ void load_parameter(std::string parameter_file_name)
 }
 
 
-void load_state_for_resume(ClassifierVector &pop)
+void load_state_for_resume()
 {
 //    load_parameter(output_path + resume_from + output_filter_file_name);
     load_filter_for_resume(output_path + resume_from + output_filter_file_name);
     load_cf_for_resume(output_path + resume_from + output_code_fragment_file_name);
-    load_classifier(output_path + resume_from + output_classifier_file_name, pop);
+    load_classifier(output_path + resume_from + output_classifier_file_name);
 }
 
 /*
@@ -207,7 +204,7 @@ void load_state_for_resume(ClassifierVector &pop)
  * It should be changed to use epsilon-greedy strategy and also the performance monitoring part should be
  * modified to calculate training and validation accuracies after every epoch.
  */
-void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-step experiment monitoring the performance.
+void doOneSingleStepExperiment() {  //Executes one single-step experiment monitoring the performance.
 
     std::ofstream output_training_file;
     output_training_file.open(output_path + output_training_file_name, std::ofstream::app);
@@ -232,8 +229,8 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         // insert one empty line before resuming performance recording
         output_training_file<<std::endl;
         output_test_file<<std::endl;
-        load_state_for_resume(pop);
-        manage_filter_and_cf_list(pop); // update filter parameters etc
+        load_state_for_resume();
+        manage_filter_and_cf_list(); // update filter parameters etc
         problem_count = std::atoi(resume_from.c_str());
         problem_count++;  // resume from next problem
         // parameter control from initial value to final value
@@ -244,12 +241,12 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
     }
     if(visualization){
         std::cout<<"Saving visualization data..."<<std::endl;
-        doOneSingleStepTest(pop, problem_count, output_test_file, true, 0, 0);
+        doOneSingleStepTest(problem_count, output_test_file, true, 0, 0);
     }
     for( ; problem_count <= maxProblems; problem_count++)
     {
-        int pop_size = get_pop_size(pop, false);
-        int pop_numerosity = get_pop_size(pop, true);
+        int pop_size = get_pop_size(false);
+        int pop_numerosity = get_pop_size(true);
         //std::cout<<problem_count<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
         // state = inputArray[irand(totalNumInstances)];
         //index = ;
@@ -257,7 +254,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
 
-        doOneSingleStepProblem(pop, state, problem_count, img_id, correct, sysError);
+        doOneSingleStepProblem(state, problem_count, img_id, correct, sysError);
         correct_count += correct;
         error_sum += sysError;
         epoch_correct_count += correct;
@@ -266,7 +263,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
        if(problem_count % testFrequency == 0 && problem_count > 0){
            double accuracy = correct_count/(double)testFrequency;
            double error = error_sum / testFrequency;
-           writePerformance(pop, accuracy, error, problem_count, output_training_file);
+           writePerformance(accuracy, error, problem_count, output_training_file);
            correct_count = 0;
            error_sum = 0;
         }
@@ -274,13 +271,13 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
 
             double epoch_accuracy = epoch_correct_count/(double)validation_frequency;
             double epoch_error = epoch_error_sum/validation_frequency;
-            save_experiment_results(pop, std::to_string(problem_count) + "/"); // save experiment results after every epoch
-            doOneSingleStepTest(pop, problem_count, output_test_file, false, epoch_accuracy, epoch_error);
+            save_experiment_results(std::to_string(problem_count) + "/"); // save experiment results after every epoch
+            doOneSingleStepTest(problem_count, output_test_file, false, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
-            manage_filter_and_cf_list(pop);
+            manage_filter_and_cf_list();
         }
         // parameter control from initial value to final value
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
@@ -294,7 +291,7 @@ void doOneSingleStepExperiment(ClassifierVector &pop) {  //Executes one single-s
 
 
 void
-doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofstream &output_test_file, bool visualization,
+doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, bool visualization,
                     double training_performance, double training_error) {
 	bool wasCorrect = false;
     int correct_count = 0;
@@ -311,8 +308,8 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
     }
 
 	for(int t=0; t<testNumInstances; t++){
-        ClassifierSet match_set(maxPopSize, pop);
-        ClassifierSet action_set(maxPopSize, pop);
+        ClassifierSet match_set(maxPopSize);
+        ClassifierSet action_set(maxPopSize);
         //std::cout<<t<<"/"<<testNumInstances<<"\r";
 		bool isMatched = false;
 		testState = &testingData[t];
@@ -321,7 +318,7 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 		if(visualization){
             p_map_cl_contribution = new std::unordered_map<int, std::vector<std::pair<int, int>>>; // vector of pair(classifier_id, pair(filter_id, result))
 		}
-        get_matching_classifiers(pop, testState->state, match_set, t, false, visualization, p_map_cl_contribution);
+        get_matching_classifiers(testState->state, match_set, t, false, visualization, p_map_cl_contribution);
         isMatched = match_set.ids.size() > 0;
         int actionWinner=-1;
         if(isMatched) {
@@ -357,14 +354,13 @@ doOneSingleStepTest(ClassifierVector &pop, int training_problem_count, std::ofst
 	}
     double accuracy = correct_count/(double)testNumInstances;
     double error = error_sum / testNumInstances;
-    writeTestPerformance(pop, accuracy, error, testNumInstances, output_test_file, training_problem_count, training_performance, training_error);
+    writeTestPerformance(accuracy, error, testNumInstances, output_test_file, training_problem_count,
+                         training_performance, training_error);
     output_test_file.flush();
 }
 
 
 void startXCS(){
-//    ClassifierVector pop(maxPopSize * 2, 0);
-    ClassifierVector pop(maxPopSize + 10);
     printf("\nLoading Input! Please wait ....\n");
 
     trainingData = new DataSource[trainNumInstances];
@@ -380,7 +376,7 @@ void startXCS(){
     }
     printf("\nIt is in progress! Please wait ....\n");
 
-    doOneSingleStepExperiment(pop);
+    doOneSingleStepExperiment();
 
     delete []testingData;
     delete []trainingData;
@@ -675,6 +671,7 @@ int main(int argc, char **argv){
 
     // standardized random number generator
     initialize_random_number_generator(fixed_seed);
+    initialize_population(maxPopSize + 10);
     // initialize size of cf_list such that it can accommodate enough code fragments before periodic cleanup
     initialize_cf_list(clfrCondMaxLength*(maxPopSize + filter_list_management_frequency*numActions));
     initialize_filter_list(clfrCondMaxLength * cfMaxLeaf * (maxPopSize + filter_list_management_frequency*numActions));

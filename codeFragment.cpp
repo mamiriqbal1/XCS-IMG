@@ -159,8 +159,6 @@ void create_new_filter_from_input(Filter &filter, float *state, BoundingBox bb, 
     filter.size_y = irand(bb.size_y)+1;
     filter.values.reserve(filter.size_x*filter.size_y);
     filter.values.assign(filter.size_x*filter.size_y, -1);
-//    int state_x = irand(image_width - filter.size_x);
-//    int state_y = irand(image_height - filter.size_y);
 
     relative_position = generate_relative_position(filter, bb);
     int state_x = bb.x + relative_position.x;

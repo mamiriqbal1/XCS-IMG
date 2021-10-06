@@ -18,13 +18,15 @@
 #include "cf_list.h"
 
 
+ClassifierVector population; //(maxPopSize + 10);
+int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 double predictionArray[max_actions]; //prediction array
 double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
-int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
 
 std::vector<int> cl_gid_vector;
 std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
 //std::stack<int, std::vector<int>> classifier_gid_stack;
+
 
 int get_next_cl_gid()
 {
@@ -33,8 +35,15 @@ int get_next_cl_gid()
         classifier_gid_stack.pop();
         return val;
     }else{
+        // only grow the vector when a new element is needed
+        population.resize(classifier_gid+1);
         return classifier_gid++;
     }
+}
+
+void initialize_population(int size)
+{
+    population.reserve(size);
 }
 
 void setInitialVariables(Classifier &clfr, double setSize, int time){
@@ -63,7 +72,7 @@ int get_set_numerosity(ClassifierSet &set)
 {
     int sum = 0;
     for(auto& id : set.ids){
-        sum += set.pop[id].numerosity;
+        sum += population[id].numerosity;
     }
     return sum;
 }
@@ -83,12 +92,12 @@ int get_set_numerosity(ClassifierSet &set)
   * Code review
   * Overall flow is as per algorithm
   */
-void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
+ void getMatchSet(ClassifierSet &match_set, float *state, int itTime, int action, int img_id) {
     int population_numerosity=0, match_set_numerosity=0, representedActions;
 
     bool coveredActions[numActions];
-    population_numerosity = get_pop_size(pop, true);
-    get_matching_classifiers(pop, state, match_set, img_id, true);
+    population_numerosity = get_pop_size(true);
+     get_matching_classifiers(state, match_set, img_id, true);
     match_set_numerosity = get_set_numerosity(match_set);
 
     representedActions = nrActionsInSet(match_set,coveredActions);
@@ -112,9 +121,9 @@ void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, 
                     matchingCondAndSpecifiedAct(coverClfr, state, i, match_set_numerosity + 1,
                                                             itTime);
                     // before inserting the new classifier into the population check for subsumption by a generic one
-                    if(!subsumeClassifierToPop(coverClfr, pop)) {
+                    if(!subsumeClassifierToPop(coverClfr)) {
                         coverClfr.id = get_next_cl_gid();
-                        pop[coverClfr.id] = coverClfr;
+                        population[coverClfr.id] = coverClfr;
                         match_set.ids.push_back(coverClfr.id);
                     }
                     match_set_numerosity++;
@@ -127,7 +136,7 @@ void getMatchSet(ClassifierVector &pop, ClassifierSet &match_set, float *state, 
         while(population_numerosity > maxPopSize )
         {
             /* PL */
-            int cl_id = deleteStochClassifier(pop);
+            int cl_id = deleteStochClassifier(population);
             // also remove from match set
             remove_classifier(match_set, cl_id);
             population_numerosity--;
@@ -145,8 +154,8 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
         coveredActions[i] = false;
     }
     for(auto & id : match_set.ids){
-        if(!coveredActions[match_set.pop[id].action]){
-            coveredActions[match_set.pop[id].action] = true;
+        if(!coveredActions[population[id].action]){
+            coveredActions[population[id].action] = true;
             nr++;
             if(nr >= numActions) break;
         }
@@ -221,9 +230,9 @@ void getPredictionArray(ClassifierSet &match_set)  //determines the prediction a
     }
     for(auto& id : match_set.ids)
     {
-        int actionValue = match_set.pop[id].action;
-        predictionArray[actionValue]+= match_set.pop[id].prediction * match_set.pop[id].fitness;
-        sumClfrFitnessInPredictionArray[actionValue]+= match_set.pop[id].fitness;
+        int actionValue = population[id].action;
+        predictionArray[actionValue]+= population[id].prediction * population[id].fitness;
+        sumClfrFitnessInPredictionArray[actionValue]+= population[id].fitness;
     }
     for(int i=0; i<numActions; i++)
     {
@@ -278,7 +287,7 @@ void getActionSet(int action, ClassifierSet &match_set,
                    ClassifierSet &action_set)  // constructs an action set out of the match set ms.
 {
     for(auto& id : match_set.ids){
-        if(action == match_set.pop[id].action){
+        if(action == population[id].action){
             action_set.ids.push_back(id);
         }
     }
@@ -306,25 +315,25 @@ void getActionSet(int action, ClassifierSet &match_set,
 
     for(auto& id : action_set.ids)
     {
-        setsize += action_set.pop[id].numerosity;
-        action_set.pop[id].experience++;
+        setsize += population[id].numerosity;
+        population[id].experience++;
     }
 
     for(auto& id : action_set.ids)   // update prediction, prediction error and action set size estimate
     {
-        if((double)action_set.pop[id].experience < 1.0 / beta)
+        if((double)population[id].experience < 1.0 / beta)
         {
             // !first adjustments! -> simply calculate the average
-            action_set.pop[id].predictionError = (action_set.pop[id].predictionError * ((double)action_set.pop[id].experience - 1.0) + absoluteValue(P - action_set.pop[id].prediction)) / (double)action_set.pop[id].experience;
-            action_set.pop[id].prediction = (action_set.pop[id].prediction * ((double)action_set.pop[id].experience - 1.0) + P) / (double)action_set.pop[id].experience;
-            action_set.pop[id].actionSetSize = (action_set.pop[id].actionSetSize * ((double)(action_set.pop[id].experience - 1)) + setsize) / (double)action_set.pop[id].experience;
+            population[id].predictionError = (population[id].predictionError * ((double)population[id].experience - 1.0) + absoluteValue(P - population[id].prediction)) / (double)population[id].experience;
+            population[id].prediction = (population[id].prediction * ((double)population[id].experience - 1.0) + P) / (double)population[id].experience;
+            population[id].actionSetSize = (population[id].actionSetSize * ((double)(population[id].experience - 1)) + setsize) / (double)population[id].experience;
         }
         else
         {
             // normal adjustment -> use widrow hoff delta rule
-            action_set.pop[id].predictionError += beta * (absoluteValue(P - action_set.pop[id].prediction) - action_set.pop[id].predictionError);
-            action_set.pop[id].prediction += beta * (P - action_set.pop[id].prediction);
-            action_set.pop[id].actionSetSize += beta * (setsize - action_set.pop[id].actionSetSize);
+            population[id].predictionError += beta * (absoluteValue(P - population[id].prediction) - population[id].predictionError);
+            population[id].prediction += beta * (P - population[id].prediction);
+            population[id].actionSetSize += beta * (setsize - population[id].actionSetSize);
         }
     }
     updateFitness(action_set);
@@ -346,18 +355,18 @@ void updateFitness(ClassifierSet &action_set)
 
     //First, calculate the accuracies of the classifier and the accuracy sums
     for(auto& id : action_set.ids){
-        if(action_set.pop[id].predictionError <= epsilon_0){
-            action_set.pop[id].accuracy = 1.0;
+        if(population[id].predictionError <= epsilon_0){
+            population[id].accuracy = 1.0;
         }
         else{
-            action_set.pop[id].accuracy = alpha * pow(action_set.pop[id].predictionError / epsilon_0 , -nu);
+            population[id].accuracy = alpha * pow(population[id].predictionError / epsilon_0 , -nu);
         }
-        ksum += action_set.pop[id].accuracy * (double)action_set.pop[id].numerosity;
+        ksum += population[id].accuracy * (double)population[id].numerosity;
     }
 
     //Next, update the fitnesses accordingly
     for(auto& id : action_set.ids){
-        action_set.pop[id].fitness += beta * ((action_set.pop[id].accuracy * action_set.pop[id].numerosity) / ksum - action_set.pop[id].fitness );
+        population[id].fitness += beta * ((population[id].accuracy * population[id].numerosity) / ksum - population[id].fitness );
     }
 }
 
@@ -367,7 +376,7 @@ void updateFitness(ClassifierSet &action_set)
  * The discovery conmponent with the genetic algorithm
  * note: some classifiers in set could be deleted !
  */
-void discoveryComponent(ClassifierSet &action_set, ClassifierVector &pop, int itTime, float *situation)
+void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation)
 {
     Classifier child[2];
     int parent[2];
@@ -403,7 +412,7 @@ void discoveryComponent(ClassifierSet &action_set, ClassifierVector &pop, int it
     child[1].fitness = child[0].fitness;
 
     // get the length of the population to check if clasifiers have to be deleted
-    len = get_pop_size(pop, true);
+    len = get_pop_size(true);
 
     // insert the new two classifiers and delete two if necessary
     insertDiscoveredClassifier(child, parent, action_set, len);
@@ -415,16 +424,16 @@ void getDiscoversSums(ClassifierSet &action_set, double *fitsum, int *setsum, in
     *gaitsum=0;
     for(auto& id : action_set.ids)
     {
-        (*fitsum)+=action_set.pop[id].fitness;
-        (*setsum)+=action_set.pop[id].numerosity;
-        (*gaitsum) += action_set.pop[id].timeStamp * action_set.pop[id].numerosity;
+        (*fitsum)+=population[id].fitness;
+        (*setsum)+=population[id].numerosity;
+        (*gaitsum) += population[id].timeStamp * population[id].numerosity;
     }
 }
 void setTimeStamps(ClassifierSet &action_set, int itTime)  // Sets the time steps of all classifiers in the set to itTime (because a GA application is occurring in this set!).
 {
     for(auto& id : action_set.ids)
     {
-        action_set.pop[id].timeStamp = itTime;
+        population[id].timeStamp = itTime;
     }
 }
 
@@ -436,24 +445,24 @@ void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, do
 
     while(winner_set.empty()) {
         for (auto &id : set.ids) {
-            prediction_error = set.pop[id].predictionError;
+            prediction_error = population[id].predictionError;
             if (winner_set.empty() ||
                 (!doGAErrorBasedSelect &&
-                 best_fitness - selectTolerance <= set.pop[id].fitness / set.pop[id].numerosity) ||
+                 best_fitness - selectTolerance <= population[id].fitness / population[id].numerosity) ||
                 (doGAErrorBasedSelect && best_fitness + selectTolerance * maxPayoff >= prediction_error)) {
-                for (int i = 0; i < set.pop[id].numerosity; i++) {
+                for (int i = 0; i < population[id].numerosity; i++) {
                     if (drand() < tournamentSize) {
                         if (winner_set.empty()) {
                             winner_set.push_back(id);
                             if (doGAErrorBasedSelect) {
                                 best_fitness = prediction_error;
                             } else {
-                                best_fitness = set.pop[id].fitness / set.pop[id].numerosity;
+                                best_fitness = population[id].fitness / population[id].numerosity;
                             }
                         } else {
                             /* another guy in the tournament */
                             if ((!doGAErrorBasedSelect &&
-                                 best_fitness + selectTolerance > set.pop[id].fitness / set.pop[id].numerosity) ||
+                                 best_fitness + selectTolerance > population[id].fitness / population[id].numerosity) ||
                                 (doGAErrorBasedSelect &&
                                  best_fitness - selectTolerance * maxPayoff < prediction_error)) {
                                 /* both classifiers in tournament have a similar fitness/error */
@@ -465,7 +474,7 @@ void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, do
                                 if (doGAErrorBasedSelect) {
                                     best_fitness = prediction_error;
                                 } else {
-                                    best_fitness = set.pop[id].fitness / set.pop[id].numerosity;
+                                    best_fitness = population[id].fitness / population[id].numerosity;
                                 }
                             }
                         }
@@ -479,7 +488,7 @@ void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, do
     assert(!winner_set.empty());
     auto random_it = winner_set.begin();
     random_it = std::next(winner_set.begin(), irand(winner_set.size()));
-    child = set.pop[*random_it];
+    child = population[*random_it];
     parent = *random_it;
 }
 
@@ -501,9 +510,9 @@ void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, d
     assert(first != -1);
     assert(second != -1);
     int selected = -1;
-    if(set.pop[first].fitness > set.pop[second].fitness){
+    if(population[first].fitness > population[second].fitness){
         selected = first;
-    }else if(set.pop[first].fitness < set.pop[second].fitness){
+    }else if(population[first].fitness < population[second].fitness){
         selected = second;
     }else{
         int r = irand(2);
@@ -513,7 +522,7 @@ void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, d
             selected = second;
         }
     }
-    child = set.pop[selected];
+    child = population[selected];
     parent = selected;
 }
 
@@ -612,27 +621,27 @@ void insertDiscoveredClassifier(Classifier *child, int *parent, ClassifierSet &a
     len+=2;
     if(doGASubsumption)
     {
-        if(!subsumeClassifier(child[0], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+        if(!subsumeClassifier(child[0], population[parent[0]], population[parent[1]], action_set)){
             child[0].id = get_next_cl_gid();
-            action_set.pop[child[0].id] = child[0];
+            population[child[0].id] = child[0];
         }
-        if(!subsumeClassifier(child[1], action_set.pop[parent[0]], action_set.pop[parent[1]], action_set)){
+        if(!subsumeClassifier(child[1], population[parent[0]], population[parent[1]], action_set)){
             child[1].id = get_next_cl_gid();
-            action_set.pop[child[1].id] = child[1];
+            population[child[1].id] = child[1];
         }
     }
     else
     {
         child[0].id = get_next_cl_gid();
         child[1].id = get_next_cl_gid();
-        action_set.pop[child[0].id] = child[0];
-        action_set.pop[child[1].id] = child[1];
+        population[child[0].id] = child[0];
+        population[child[1].id] = child[1];
     }
 
     while(len > maxPopSize)
     {
         len--;
-        int cl_id = deleteStochClassifier(action_set.pop);
+        int cl_id = deleteStochClassifier(population);
     }
 }
 
@@ -648,9 +657,9 @@ void doActionSetSubsumption(ClassifierSet &action_set)
     /* Find the most general subsumer */
     for(auto& id : action_set.ids)
     {
-        if(isSubsumer(action_set.pop[id]))
+        if(isSubsumer(population[id]))
         {
-            if(subsumer== -1 || isMoreGeneral(action_set.pop[id], action_set.pop[subsumer]))
+            if(subsumer== -1 || isMoreGeneral(population[id], population[subsumer]))
             {
                 subsumer = id;
             }
@@ -661,10 +670,10 @@ void doActionSetSubsumption(ClassifierSet &action_set)
     if(subsumer!= -1)
     {
         for(auto& id : action_set.ids){
-            if(isMoreGeneral(action_set.pop[subsumer], action_set.pop[id]))
-                action_set.pop[subsumer].numerosity += action_set.pop[id].numerosity;
+            if(isMoreGeneral(population[subsumer], population[id]))
+                population[subsumer].numerosity += population[id].numerosity;
                 remove_classifier(action_set, id);
-                action_set.pop[id].id = -1;
+                population[id].id = -1;
         }
 
     }
@@ -703,7 +712,7 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
 
     for(auto & id : cl_set.ids)
     {
-        if(subsumes(cl_set.pop[id], cl))
+        if(subsumes(population[id], cl))
         {
             subsumers.push_back(id);
         }
@@ -713,7 +722,7 @@ bool subsumeClassifierToSet(Classifier &cl, ClassifierSet &cl_set)
     {
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
-        cl_set.pop[*random_it].numerosity++;
+        population[*random_it].numerosity++;
         return true;
     }
     return false;
@@ -749,11 +758,11 @@ void remove_classifier_cfs_from_list(Classifier &cl)
 /**
  * Try to subsume in the population.
  */
-bool subsumeClassifierToPop(Classifier &cl, ClassifierVector &cl_set)
+bool subsumeClassifierToPop(Classifier &cl)
 {
     std::list<int> subsumers;
 
-    for(auto & item : cl_set)
+    for(auto & item : population)
     {
         if(item.id == -1) continue; // skip empty slots in the array
         if(subsumes(item, cl))
@@ -766,7 +775,7 @@ bool subsumeClassifierToPop(Classifier &cl, ClassifierVector &cl_set)
     {
         auto random_it = subsumers.begin();
         random_it = std::next(random_it, irand(subsumers.size()));
-        cl_set[*random_it].numerosity++;
+        population[*random_it].numerosity++;
         return true;
     }
     return false;
@@ -867,7 +876,7 @@ double getDelProp(Classifier &clfr, double meanFitness)  //Returns the vote for 
 // ############################### output operations ####################################
 
 
-void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_file)
+void print_population_stats(std::ofstream &output_stats_file)
 {
     int size = 0; //get_pop_size(pop, false);
 
@@ -876,7 +885,7 @@ void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_f
     int n_total = 0, n_min = INT16_MAX, n_max = -1;
     int cf_count = 0;
     float f_total = 0, f_min = FLT_MAX, f_max = -1;
-    std::for_each(pop.begin(), pop.end(),
+    std::for_each(population.begin(), population.end(),
                   [&size, &cf_count, &n_total, &n_min, &n_max, &f_total, &f_min, &f_max]
                           (const ClassifierVector::value_type & item)
                   {
@@ -903,7 +912,7 @@ void print_population_stats(ClassifierVector &pop, std::ofstream &output_stats_f
  * This function saves the classifier population and outputs various stats.
  * This function also saves promising code fragments and filters for reuse by the subsequent experiments
  */
-void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
+void save_experiment_results(std::string path_postfix)
 {
     std::string output_full_path = output_path + path_postfix;
     mkdir(output_full_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -950,11 +959,11 @@ void save_experiment_results(ClassifierVector &pop, std::string path_postfix)
         exit(1);
     }
     output_parameter_file<<"pM "<<pM<<std::endl;
-    print_population_stats(pop, output_stats_file);
+    print_population_stats(output_stats_file);
     print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
     print_filter_evaluation_stats(output_stats_file);
-    for(auto& item : pop)
+    for(auto& item : population)
     {
         if(item.id == -1) continue; // skip empty slots in the array
         fprintClassifier(item, output_classifier_file);
@@ -1070,12 +1079,12 @@ inline bool is_promising_classifier(Classifier& cl)
  * A promising classifier is one whose error < 10 and experience > 10
  */
 
-void manage_filter_and_cf_list(ClassifierVector &pop){
+void manage_filter_and_cf_list() {
     // reset statistics of all filters before updating
     reset_filter_stats();
     reset_cf_stats();
 
-    for(auto& item : pop){
+    for(auto& item : population){
         if(item.id == -1) continue; // skip empty slots in the array
         bool promising = is_promising_classifier(item);
         for(int i=0; i < clfrCondMaxLength; i++){
@@ -1107,10 +1116,10 @@ void manage_filter_and_cf_list(ClassifierVector &pop){
     prepare_promising_cf_list();
 }
 
-int get_pop_size(ClassifierVector &pop, bool numerosity) {
+int get_pop_size(bool numerosity) {
     int pop_numerosity = 0;
     int pop_size = 0;
-    std::for_each(pop.begin(), pop.end(),
+    std::for_each(population.begin(), population.end(),
                   [&pop_numerosity, &pop_size](ClassifierVector::value_type& item)
                   {
                       if(item.id == -1) return; // skip empty slots in the array
@@ -1121,12 +1130,13 @@ int get_pop_size(ClassifierVector &pop, bool numerosity) {
     else return pop_size;
 }
 
-void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent, std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution) {
+void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent,
+                              std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution) {
     std::unordered_map<int, std::vector<std::pair<int, int>>> *p_map_local= nullptr; // vector of pair(classifier_id, pair(filter_id, result))
     if(transparent){
         p_map_local = new std::unordered_map<int, std::vector<std::pair<int, int>>>; // vector of pair(classifier_id, pair(filter_id, result))
     }
-    std::for_each(pop.begin(), pop.end(), [&match_set, &state, img_id, train, transparent, p_map_local](ClassifierVector::value_type& item)
+    std::for_each(population.begin(), population.end(), [&match_set, &state, img_id, train, transparent, p_map_local](ClassifierVector::value_type& item)
     {
         std::vector<std::pair<int, int>> *p_list_temp= nullptr;
         if(transparent){
@@ -1146,7 +1156,7 @@ void get_matching_classifiers(ClassifierVector &pop, float *state, ClassifierSet
 }
 
 
-void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
+void load_classifier(std::string classifier_file_name)
 {
     int loaded_cl_gid = -1;
     std::string line;
@@ -1191,8 +1201,8 @@ void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
         for(int i=0; i<clfrCondMaxLength; i++){
             line2>>cl.cf_ids[i];
         }
-//        pop.resize(cl.id + 1);
-        pop[cl.id] = cl;
+        population.resize(cl.id + 1);
+        population[cl.id] = cl;
         if(loaded_cl_gid < cl.id){
             loaded_cl_gid = cl.id;
         }
@@ -1200,6 +1210,6 @@ void load_classifier(std::string classifier_file_name, ClassifierVector &pop)
     classifier_gid = 1 + loaded_cl_gid;
     // populate stack with available slots till classifier_gid
     for(int i=0; i<classifier_gid; i++){
-        if(pop[i].id == -1) classifier_gid_stack.push(i);
+        if(population[i].id == -1) classifier_gid_stack.push(i);
     }
 }

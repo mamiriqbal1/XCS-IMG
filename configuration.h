@@ -7,8 +7,9 @@
 #include "xcsMacros.h"
 #include <vector>
 #include <list>
+#include <algorithm>
 //#include "flat_hash_map/unordered_map.hpp"
-#include "flat_hash_map/bytell_hash_map.hpp"
+//#include "flat_hash_map/bytell_hash_map.hpp"
 //#include "HashMap/include/rigtorp/HashMap.h"
 
 extern bool use_kb;
@@ -160,8 +161,8 @@ struct CodeFragment
     }
 };
 
-typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
-extern CodeFragmentMap kb_cf;
+//typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
+//extern CodeFragmentMap kb_cf;
 typedef std::vector<CodeFragment> CodeFragmentVector;
 
 extern int classifier_gid;
@@ -190,8 +191,7 @@ typedef std::vector<Classifier> ClassifierVector;
 typedef std::vector<int> ClassifierIDVector;
 struct ClassifierSet{
     ClassifierIDVector ids;
-    ClassifierVector& pop;
-    ClassifierSet(int size, ClassifierVector& population) : pop(population){
+    ClassifierSet(int size){
         ids.reserve(size);
     }
 };
