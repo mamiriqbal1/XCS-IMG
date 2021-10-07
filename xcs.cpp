@@ -24,6 +24,7 @@
 #include "cf_list.h"
 #include <chrono>
 #include <ctime>
+#include <iomanip>
 
 auto start = std::chrono::system_clock::now();
 double beta = 0.2;
@@ -103,34 +104,66 @@ double executeAction(int action, int stateAction, bool &wasCorrect){  // Execute
  * @param sysError The system error in the last fifty exploration trials.
  * @param problem_count The number of exploration trials executed so far.
  */
-void writePerformance(double performance, double sysError, int problem_count, std::ofstream &output_training_file) {
+void writePerformance(double performance, double sysError, int problem_count, double action_set_size,
+                      std::ofstream &output_training_file) {
 
     int setSize = get_pop_size(false);
-    output_training_file << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
-    std::cout << "Training: " << problem_count << "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
+    int setTotal = get_pop_size(true);
+    output_training_file << std::fixed;
+    output_training_file.precision(4);
+    output_training_file << std::setw(7) << problem_count << " " << performance;
+    output_training_file.precision(1);
+    output_training_file << " " << std::setw(5) << sysError;
+    output_training_file << " " << std::setw(5) << setSize << " " << std::setw(5) << setTotal << " " << std::setw(5) << action_set_size << std::endl;
+    std::cout << std::fixed;
+    std::cout.precision(4);
+    std::cout << "Training " << std::setw(7) << problem_count;
+    std::cout << " accuracy "  << performance;
+    std::cout.precision(1);
+    std::cout << " error " << std::setw(5) << sysError;
+    std::cout << " set " << std::setw(5) << setSize;
+    std::cout << "/" << std::setw(5) << setTotal;
+    std::cout << " action set " << std::setw(5) << action_set_size << std::endl;
 }
 
 /*******************************Write Test Performance*************************************/
-void writeTestPerformance(double performance, double sysError, int problem_count, std::ofstream &output_test_file,
-                          int training_problem_count, double training_accuracy, double training_error) {
+void writeTestPerformance(double performance, double sysError, int problem_count, double action_set_size,
+                          std::ofstream &output_test_file, int training_problem_count, double training_accuracy,
+                          double training_error) {
 
     int setSize = get_pop_size(false);
-    output_test_file << training_problem_count << " " << training_accuracy << " " << training_error << " "
-    << problem_count << " " << performance << " " << sysError << " " << setSize << std::endl;
-    std::cout << "Validation: " << training_problem_count << " " << problem_count <<
-    "  accuracy: " << performance << "  error: " << sysError << "  set size: " << setSize << std::endl;
+    int setTotal = get_pop_size(true);
+    output_test_file << std::fixed;
+    output_test_file.precision(4);
+    output_test_file << std::setw(7) << training_problem_count << " " << training_accuracy;
+    output_test_file.precision(1);
+    output_test_file << " " << std::setw(5) << training_error;
+    output_test_file.precision(4);
+    output_test_file << " " << std::setw(7) << problem_count << " " << performance;
+    output_test_file.precision(1);
+    output_test_file << " " << std::setw(5) << sysError;
+    output_test_file << " " << std::setw(5) << setSize << " " << std::setw(5) << setTotal;
+    output_test_file << " " << action_set_size << std::endl;
+
+    std::cout << std::fixed;
+    std::cout.precision(4);
+    std::cout << "Validation " << training_problem_count << " " << problem_count << " accuracy " << performance;
+    std::cout.precision(1);
+    std::cout << " error " << std::setw(5) << sysError << " set " << setSize << "/" << setTotal << " action set " << action_set_size << std::endl;
 }
 
 
 
 // new unified single step using epsilon greedy strategy
-void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &correct, double &sysError) {
+void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &correct, double &sysError,
+                            int &match_set_size) {
 
     bool wasCorrect = false;
     ClassifierSet match_set(maxPopSize);
     ClassifierSet action_set(maxPopSize);
 
     getMatchSet(match_set, object->state, counter, object->action, img_id);
+    match_set_size = match_set.ids.size();
     getPredictionArray(match_set);
 
     int actionWinner;
@@ -221,6 +254,7 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
 
     int correct = 0, correct_count = 0, epoch_correct_count = 0;
     double sysError = 0, error_sum = 0, epoch_error_sum = 0;
+    int match_set_size = 0, match_set_size_sum = 0, epoch_match_set_size_sum = 0;
     DataSource *state = NULL;
     int problem_count=1;
 
@@ -254,27 +288,33 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
 
-        doOneSingleStepProblem(state, problem_count, img_id, correct, sysError);
+        doOneSingleStepProblem(state, problem_count, img_id, correct, sysError, match_set_size);
         correct_count += correct;
         error_sum += sysError;
         epoch_correct_count += correct;
         epoch_error_sum += sysError;
+        match_set_size_sum += match_set_size;
+        epoch_match_set_size_sum += match_set_size;
 
        if(problem_count % testFrequency == 0 && problem_count > 0){
            double accuracy = correct_count/(double)testFrequency;
            double error = error_sum / testFrequency;
-           writePerformance(accuracy, error, problem_count, output_training_file);
+           double avg_action_set_size = (match_set_size_sum / (double)testFrequency) / numActions;
+           writePerformance(accuracy, error, problem_count, avg_action_set_size, output_training_file);
            correct_count = 0;
            error_sum = 0;
+           match_set_size_sum = 0;
         }
         if(problem_count % validation_frequency == 0 && problem_count > 0){
 
             double epoch_accuracy = epoch_correct_count/(double)validation_frequency;
             double epoch_error = epoch_error_sum/validation_frequency;
+            double avg_epoch_action_set_size = (epoch_match_set_size_sum / (double)validation_frequency) / numActions;
             save_experiment_results(std::to_string(problem_count) + "/"); // save experiment results after every epoch
             doOneSingleStepTest(problem_count, output_test_file, false, epoch_accuracy, epoch_error);
             epoch_correct_count = 0;
             epoch_error_sum = 0;
+            epoch_match_set_size_sum = 0;
         }
         if(problem_count % filter_list_management_frequency == 0 && problem_count > 0){
             manage_filter_and_cf_list();
@@ -296,6 +336,7 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
 	bool wasCorrect = false;
     int correct_count = 0;
     double error_sum = 0;
+    int match_set_sum = 0;
 	DataSource *testState = NULL;
 
     std::ofstream output_visualization_file;
@@ -320,6 +361,7 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
 		}
         get_matching_classifiers(testState->state, match_set, t, false, visualization, p_map_cl_contribution);
         isMatched = match_set.ids.size() > 0;
+        match_set_sum += match_set.ids.size();
         int actionWinner=-1;
         if(isMatched) {
             getPredictionArray(match_set);
@@ -354,7 +396,8 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
 	}
     double accuracy = correct_count/(double)testNumInstances;
     double error = error_sum / testNumInstances;
-    writeTestPerformance(accuracy, error, testNumInstances, output_test_file, training_problem_count,
+    double avg_action_set_size = (match_set_sum / (double)testNumInstances) / numActions;
+    writeTestPerformance(accuracy, error, testNumInstances, avg_action_set_size, output_test_file, training_problem_count,
                          training_performance, training_error);
     output_test_file.flush();
 }

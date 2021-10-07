@@ -6,7 +6,8 @@ DataSource *trainingData = NULL, *testingData = NULL;
 double executeAction(int action, int stateAction, bool &wasCorrect);
 
 
-void writePerformance(double performance, double sysError, int problem_count, std::ofstream &output_training_file);
+void writePerformance(double performance, double sysError, int problem_count, double action_set_size,
+                      std::ofstream &output_training_file);
 
 void startXCS();
 void doOneSingleStepExperiment();
