@@ -376,7 +376,7 @@ void updateFitness(ClassifierSet &action_set)
  * The discovery conmponent with the genetic algorithm
  * note: some classifiers in set could be deleted !
  */
-void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation)
+void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation, int action)
 {
     Classifier child[2];
     int parent[2];
@@ -393,6 +393,9 @@ void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation)
         return;
     }
     setTimeStamps(action_set, itTime);
+
+    add_new_classifiers_to_population(situation, action, itTime);
+    return;
 
     selectTwoClassifiers(child[0], child[1] , parent[0], parent[1], action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
     // Prediction, prediction error and fitness is only updated if crossover is done instead of always
@@ -572,8 +575,9 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
 
 
 
+
 /*
- * Sync with original code. Toggle one code fragment
+ * mutate by the existing cf after copying it
  */
 bool mutation(Classifier &clfr, float *state)
 {
@@ -582,16 +586,18 @@ bool mutation(Classifier &clfr, float *state)
         if(drand() < pM){
             changed = true;
             if(clfr.cf_ids[i] != -1){
-                clfr.cf_ids[i] = -1; // set as don't care
-            }else{
-                CodeFragment new_cf;
-                clfr.cf_ids[i] = create_new_cf(state);
+                CodeFragment new_cf = get_cf(clfr.cf_ids[i]);
+                new_cf.cf_id = get_next_cf_gid();
+                clfr.cf_ids[i] = new_cf.cf_id;
+                mutate_cf(new_cf, state);
+                add_cf_to_list(new_cf);
             }
         }
     }
 
     return changed;
 }
+
 
 
 bool mutateAction(Classifier& clfr)  //Mutates the action of the classifier.
@@ -1211,5 +1217,21 @@ void load_classifier(std::string classifier_file_name)
     // populate stack with available slots till classifier_gid
     for(int i=0; i<classifier_gid; i++){
         if(population[i].id == -1) classifier_gid_stack.push(i);
+    }
+}
+
+
+// add new classifiers to population
+void add_new_classifiers_to_population(float* state, int action, int itTime)
+{
+    Classifier coverClfr;
+    matchingCondAndSpecifiedAct(coverClfr, state, action, 0, itTime);
+    coverClfr.id = get_next_cl_gid();
+    population[coverClfr.id] = coverClfr;
+    int len = get_pop_size(true);
+    while(len > maxPopSize)
+    {
+        len--;
+        int cl_id = deleteStochClassifier(population);
     }
 }

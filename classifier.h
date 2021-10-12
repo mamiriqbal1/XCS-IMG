@@ -18,7 +18,7 @@ void getActionSet(int action, ClassifierSet &match_set, ClassifierSet &action_se
 void updateActionSet(ClassifierSet &action_set, double maxPrediction, double reward);
 void updateFitness(ClassifierSet &action_set);
 
-void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation);
+void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation, int action);
 void getDiscoversSums(ClassifierSet &action_set, double *fitsum, int *setsum, int *gaitsum);
 void setTimeStamps(ClassifierSet &action_set, int itTime);
 
@@ -63,4 +63,5 @@ void load_classifier(std::string classifier_file_name);
 
 void initialize_population(int size);
 
+void add_new_classifiers_to_population(float* state, int action, int itTime);
 #endif //XCS_IMG_CL_H

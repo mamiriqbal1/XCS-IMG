@@ -185,11 +185,11 @@ void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &co
     getActionSet(actionWinner, match_set, action_set);
     reward = executeAction(actionWinner,object->action,wasCorrect);
 
-    updateActionSet(action_set, 0.0, reward);
+    updateActionSet(action_set, 0.0, reward);  // maxPrediction parameter is zero for single step
 
     // apply GA only with exploration step
     if(explore) {
-        discoveryComponent(action_set, counter, object->state);
+        discoveryComponent(action_set, counter, object->state, 0);
     }
 
     // get best action for statistics
