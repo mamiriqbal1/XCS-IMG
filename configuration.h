@@ -138,6 +138,14 @@ struct Position
     int y = -1;
 };
 
+typedef std::vector<float> FloatVector;
+typedef std::vector<int> IntVector;
+typedef std::vector<FloatVector> FloatMatrix;
+typedef std::vector<IntVector> IntMatrix;
+const int NOT_INITIALIZED = -1;
+const int ENABLED = 1;
+const int DISABLED = 0;
+
 struct CodeFragment
 {
     std::vector<opType> reverse_polish;
@@ -148,10 +156,16 @@ struct CodeFragment
     int numerosity = 1;
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
     BoundingBox bb;
-    CodeFragment(){
+    FloatMatrix pattern; // -1 not initialized
+    IntMatrix mask;  // 0 disabled, 1 enabled
+
+    CodeFragment():
+        pattern(cf_max_bounding_box_size, FloatVector (cf_max_bounding_box_size, NOT_INITIALIZED)),
+        mask(cf_max_bounding_box_size, IntVector (cf_max_bounding_box_size, ENABLED))
+
+    {
         reverse_polish.reserve(cfMaxLength);
-        reverse_polish.assign(cfMaxLength, OPNOP);
-        filter_ids.reserve(cfMaxLeaf);
+        reverse_polish.assign(cfMaxLength, OPNOP); filter_ids.reserve(cfMaxLeaf);
         filter_ids.assign(cfMaxLeaf, -1);
         filter_positions.reserve(cfMaxLeaf);
         Position p;

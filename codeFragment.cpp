@@ -136,19 +136,56 @@ void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
 }
 
 /*
- * Sets id and bounding box for cf
+ * Sets id
  */
 void initializeNewCF(int id, CodeFragment &cf)
 {
     cf.cf_id = id;
+}
 
-    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+
+void set_cf_bounding_box(CodeFragment &cf)
+{
+    //    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    //    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    cf.bb.size_x = cf_max_bounding_box_size;
+    cf.bb.size_y = cf_max_bounding_box_size;
     cf.bb.x = irand(image_width - cf.bb.size_x+1);
     cf.bb.y = irand(image_height - cf.bb.size_y+1);
     // align with image slice
     cf.bb.x = cf.bb.x - cf.bb.x % image_slice_size;
     cf.bb.y = cf.bb.y - cf.bb.y % image_slice_size;
+}
+
+
+// translate bounding box coordinates to state coordinates
+int translate(BoundingBox& bb, int x, int y)
+{
+    return (bb.y+y)*image_width + bb.x +x;
+}
+
+
+void set_cf_pattern_and_mask(CodeFragment &cf, float* state)
+{
+    // initialize the pattern and mask
+    // pattern gets all values from the state
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            cf.pattern[y][x] = state[translate(cf.bb, x, y)];
+        }
+    }
+    // mask enables 25% to 75% pixels in the pattern
+    double enabled_pixels_percentage = (drand() / 2) + 0.5;
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            if(drand() < enabled_pixels_percentage){
+                cf.mask[y][x] = ENABLED;
+            }else{
+                cf.mask[y][x] = DISABLED;
+            }
+        }
+    }
+
 }
 
 
@@ -505,6 +542,8 @@ int create_new_cf(float *state) {
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
+        set_cf_bounding_box(new_cf);
+        set_cf_pattern_and_mask(new_cf, state);
         opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
         addLeafCF(new_cf, state, new_cf.bb);
 //        if (evaluateCF(new_cf, state) != 1) {
@@ -519,13 +558,20 @@ int create_new_cf(float *state) {
 
 
 /*
- * Mutate CF by randomly replacing one filter
+ * Mutate CF by changing the mask
  */
 bool mutate_cf(CodeFragment &cf, float *state) {
-    int mutate_filter_index = irand(cf.num_filters);
-    Position p;
-    cf.filter_ids[mutate_filter_index] = get_new_filter(state, cf.bb, p);
-    cf.filter_positions[mutate_filter_index] = p;
+
+    for (int y = 0; y < cf.bb.size_y; y++) {
+        for (int x = 0; x < cf.bb.size_x; x++) {
+            if (cf.mask[y][x] == ENABLED) {
+                if (drand() < pM_allel) {
+                    cf.mask[y][x] = DISABLED;
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -610,7 +656,33 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
 }
 
 
+bool evaluate_cf_bb(CodeFragment& cf, float* state)
+{
+    double distance = 0;
+    int mask_size = 0;
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            if(cf.mask[y][x] == ENABLED) {
+                mask_size += 1;
+                distance += std::abs(cf.pattern[y][x] - state[translate(cf.bb, x, y)]);
+            }
+        }
+    }
+
+    if(distance/(mask_size) < filter_matching_threshold){  // average distance per pixel
+        return true;
+    }else{
+        return false;
+    }
+}
+
+
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train, bool transparent, std::vector<std::pair<int, int>>* contribution){
+
+    if(evaluate_cf_bb(cf, state)) return 1;
+    else return 0;
+
+
     std::stack<std::vector<std::pair<int, int>>>* p_filter_stack = nullptr;  // stack of vector of pair(filter_id, result)
     if(transparent) {
         // keep track of filters that have contributed to the result of cf evaluation

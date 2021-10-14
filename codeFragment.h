@@ -41,5 +41,11 @@ opType str_to_opt(std::string str);
 void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution);
 bool is_cf_covered(CodeFragment& cf, Classifier& cl);
 void transfer_filters_from_kb_cf(CodeFragment & kb_cf);
+void set_cf_bounding_box(CodeFragment &cf);
+int translate(BoundingBox& bb, int x, int y);
+void set_cf_pattern_and_mask(CodeFragment &cf, float* state);
+bool evaluate_cf_bb(CodeFragment& cf, float* state);
+
+
 
 #endif //XCS_IMG_CF_H

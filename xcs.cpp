@@ -535,7 +535,7 @@ void LoadConfig(char* file)
             }else if(name == "kb_filter_file"){
                 kb_filter_file = value;
             }else if(name == "output_path"){
-                output_path = value;
+                output_path = value + "/";
             }else if(name == "max_population_size"){
                 maxPopSize = atoi(value.c_str());
             }else if(name == "epochs"){
@@ -701,6 +701,7 @@ int main(int argc, char **argv){
         return -1;
     }
     output_path = argv[2];
+    output_path = output_path + "/";
     // check if the experiment has already completed
     std::ifstream input_done_file;
     input_done_file.open(output_path + output_done_file_name);
