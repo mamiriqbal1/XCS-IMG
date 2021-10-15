@@ -60,8 +60,8 @@ void remove_classifier_cfs_from_list(Classifier &cl);
 void add_classifier_cfs_to_list(Classifier &cl);
 int count_classifier_cfs(const Classifier &cl);
 void load_classifier(std::string classifier_file_name);
-
 void initialize_population(int size);
-
 void add_new_classifiers_to_population(float* state, int action, int itTime);
+void write_classifier_header(std::ofstream &output_classifier_file);
+
 #endif //XCS_IMG_CL_H

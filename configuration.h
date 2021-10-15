@@ -159,10 +159,7 @@ struct CodeFragment
     FloatMatrix pattern; // -1 not initialized
     IntMatrix mask;  // 0 disabled, 1 enabled
 
-    CodeFragment():
-        pattern(cf_max_bounding_box_size, FloatVector (cf_max_bounding_box_size, NOT_INITIALIZED)),
-        mask(cf_max_bounding_box_size, IntVector (cf_max_bounding_box_size, ENABLED))
-
+    CodeFragment()
     {
         reverse_polish.reserve(cfMaxLength);
         reverse_polish.assign(cfMaxLength, OPNOP); filter_ids.reserve(cfMaxLeaf);

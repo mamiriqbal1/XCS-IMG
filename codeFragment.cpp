@@ -146,10 +146,14 @@ void initializeNewCF(int id, CodeFragment &cf)
 
 void set_cf_bounding_box(CodeFragment &cf)
 {
-    //    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    //    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    cf.bb.size_x = cf_max_bounding_box_size;
-    cf.bb.size_y = cf_max_bounding_box_size;
+    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+
+    FloatMatrix pattern(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
+    IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
+    cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
+    cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
+
     cf.bb.x = irand(image_width - cf.bb.size_x+1);
     cf.bb.y = irand(image_height - cf.bb.size_y+1);
     // align with image slice
@@ -178,7 +182,7 @@ void set_cf_pattern_and_mask(CodeFragment &cf, float* state)
     double enabled_pixels_percentage = (drand() / 2) + 0.5;
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
-            if(drand() < enabled_pixels_percentage){
+            if(true || drand() < enabled_pixels_percentage){
                 cf.mask[y][x] = ENABLED;
             }else{
                 cf.mask[y][x] = DISABLED;
@@ -966,7 +970,16 @@ inline std::string op_to_str(opType code)
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
-    output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " " << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " ";
+    output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
+    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << std::endl;
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            output_code_fragment_file << cf.pattern[y][x] <<  " ";
+        }
+    }
+    output_code_fragment_file << std::endl;
+    return;
+
     std::string str;
     opType code = 0;
     for(int i=0; i<cfMaxLength; i++){

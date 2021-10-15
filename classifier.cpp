@@ -305,17 +305,17 @@ void getActionSet(int action, ClassifierSet &match_set,
  */
  /*
   * code review notes
-  * The formulas are implemented in a slightly differnt form with same end result. Can be simplified as per the paper.
+  * code is as per paper
   */
  void updateActionSet(ClassifierSet &action_set, double maxPrediction, double reward)
 {
-    double P, setsize=0.0;
+    double P, action_set_numerosity=0.0;
 
     P = reward + gama*maxPrediction;
 
     for(auto& id : action_set.ids)
     {
-        setsize += population[id].numerosity;
+        action_set_numerosity += population[id].numerosity;
         population[id].experience++;
     }
 
@@ -324,16 +324,16 @@ void getActionSet(int action, ClassifierSet &match_set,
         if((double)population[id].experience < 1.0 / beta)
         {
             // !first adjustments! -> simply calculate the average
-            population[id].predictionError = (population[id].predictionError * ((double)population[id].experience - 1.0) + absoluteValue(P - population[id].prediction)) / (double)population[id].experience;
-            population[id].prediction = (population[id].prediction * ((double)population[id].experience - 1.0) + P) / (double)population[id].experience;
-            population[id].actionSetSize = (population[id].actionSetSize * ((double)(population[id].experience - 1)) + setsize) / (double)population[id].experience;
+            population[id].predictionError += (absoluteValue(P - population[id].prediction) - population[id].predictionError) / (double)population[id].experience;
+            population[id].prediction += (P - population[id].prediction) / (double)population[id].experience;
+            population[id].actionSetSize = (action_set_numerosity - population[id].actionSetSize) / (double)population[id].experience;
         }
         else
         {
             // normal adjustment -> use widrow hoff delta rule
             population[id].predictionError += beta * (absoluteValue(P - population[id].prediction) - population[id].predictionError);
             population[id].prediction += beta * (P - population[id].prediction);
-            population[id].actionSetSize += beta * (setsize - population[id].actionSetSize);
+            population[id].actionSetSize += beta * (action_set_numerosity - population[id].actionSetSize);
         }
     }
     updateFitness(action_set);
@@ -969,12 +969,13 @@ void save_experiment_results(std::string path_postfix)
     print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
     print_filter_evaluation_stats(output_stats_file);
+    write_classifier_header(output_classifier_file);
     for(auto& item : population)
     {
         if(item.id == -1) continue; // skip empty slots in the array
         fprintClassifier(item, output_classifier_file);
     }
-    output_filters(output_filter_file, output_promising_filter_file);
+//    output_filters(output_filter_file, output_promising_filter_file);
     output_cf_list(output_code_fragment_file, output_promising_code_fragment_file);
     //storeCFs(pop, fpCF);
     output_classifier_file.close();
@@ -1008,40 +1009,38 @@ void fprintClassifier(FILE *fp, Classifier *classifier){
 */
 
 
+void write_classifier_header(std::ofstream &output_classifier_file)
+{
+    output_classifier_file << "id ";
+    output_classifier_file << "numerosity ";
+    output_classifier_file << "experience ";
+    output_classifier_file << "cf_count ";
+    output_classifier_file << "fitness ";
+    output_classifier_file << "accuracy ";
+    output_classifier_file << "prediction ";
+    output_classifier_file << "error ";
+    output_classifier_file << "action_set_size ";
+    output_classifier_file << "time_stamp ";
+    output_classifier_file << "action ";
+    output_classifier_file << "cfs... ";
+    output_classifier_file << std::endl;
+
+}
 
 void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_file)
 {
-    output_classifier_file << "id ";
-    output_classifier_file.width(5);
-    output_classifier_file << classifier.id;
-    output_classifier_file << " num ";
-    output_classifier_file << classifier.numerosity;
-    output_classifier_file << " exp ";
-    output_classifier_file.width(5);
-    output_classifier_file << classifier.experience;
-    output_classifier_file << " num_cf ";
-    output_classifier_file.width(5);
-    output_classifier_file << count_classifier_cfs(classifier);
-    output_classifier_file << " fitness ";
-    output_classifier_file.width(11);
-    output_classifier_file << classifier.fitness;
-    output_classifier_file << " accuracy ";
-    output_classifier_file.width(11);
-    output_classifier_file << classifier.accuracy;
-    output_classifier_file << " prediction ";
-    output_classifier_file.width(11);
-    output_classifier_file << classifier.prediction;
-    output_classifier_file << " error ";
-    output_classifier_file.width(11);
-    output_classifier_file << classifier.predictionError;
-    output_classifier_file << " action_set_size ";
-    output_classifier_file.width(7);
-    output_classifier_file << classifier.actionSetSize;
-    output_classifier_file << " time_stamp ";
-    output_classifier_file.width(5);
-    output_classifier_file << classifier.timeStamp;
-    output_classifier_file << " action ";
-    output_classifier_file << classifier.action << std::endl;
+    output_classifier_file << std::fixed;
+    output_classifier_file << classifier.id << " ";
+    output_classifier_file << classifier.numerosity << " ";
+    output_classifier_file << classifier.experience << " ";
+    output_classifier_file << count_classifier_cfs(classifier) << " ";
+    output_classifier_file << classifier.fitness << " ";
+    output_classifier_file << classifier.accuracy << " ";
+    output_classifier_file << classifier.prediction << " ";
+    output_classifier_file << classifier.predictionError << " ";
+    output_classifier_file << classifier.actionSetSize << " ";
+    output_classifier_file << classifier.timeStamp << " ";
+    output_classifier_file << classifier.action << " ";
 
     for(auto & id : classifier.cf_ids)
     {
