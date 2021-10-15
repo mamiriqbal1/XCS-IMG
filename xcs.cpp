@@ -189,7 +189,7 @@ void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &co
 
     // apply GA only with exploration step
     if(explore) {
-        discoveryComponent(action_set, counter, object->state, 0);
+        discoveryComponent(action_set, counter, object->state, actionWinner);
     }
 
     // get best action for statistics
@@ -273,10 +273,6 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
         p_kb = p_kb_start - (p_kb_start - p_kb_end) * problem_count/maxProblems;
     }
-    if(visualization){
-        std::cout<<"Saving visualization data..."<<std::endl;
-        doOneSingleStepTest(problem_count, output_test_file, true, 0, 0);
-    }
     for( ; problem_count <= maxProblems; problem_count++)
     {
         int pop_size = get_pop_size(false);
@@ -311,7 +307,8 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
             double epoch_error = epoch_error_sum/validation_frequency;
             double avg_epoch_action_set_size = (epoch_match_set_size_sum / (double)validation_frequency) / numActions;
             save_experiment_results(std::to_string(problem_count) + "/"); // save experiment results after every epoch
-            doOneSingleStepTest(problem_count, output_test_file, false, epoch_accuracy, epoch_error);
+            doOneSingleStepTest(problem_count, output_test_file, epoch_accuracy, epoch_error,
+                                std::to_string(problem_count) + "/");
             epoch_correct_count = 0;
             epoch_error_sum = 0;
             epoch_match_set_size_sum = 0;
@@ -331,17 +328,18 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
 
 
 void
-doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, bool visualization,
-                    double training_performance, double training_error) {
+doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, double training_performance,
+                    double training_error, std::string path_postfix) {
 	bool wasCorrect = false;
     int correct_count = 0;
     double error_sum = 0;
     int match_set_sum = 0;
 	DataSource *testState = NULL;
+    std::string output_full_path = output_path + path_postfix;
 
     std::ofstream output_visualization_file;
     if(visualization) {
-        output_visualization_file.open(output_path + output_visualization_file_name);
+        output_visualization_file.open(output_full_path + output_visualization_file_name);
         if (!output_visualization_file.is_open()) {
             std::cout << "Could not open output visualization file";
             exit(1);
@@ -355,11 +353,7 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
 		bool isMatched = false;
 		testState = &testingData[t];
 
-        std::unordered_map<int, std::vector<std::pair<int, int>>> *p_map_cl_contribution = nullptr; // vector of pair(classifier_id, pair(filter_id, result))
-		if(visualization){
-            p_map_cl_contribution = new std::unordered_map<int, std::vector<std::pair<int, int>>>; // vector of pair(classifier_id, pair(filter_id, result))
-		}
-        get_matching_classifiers(testState->state, match_set, t, false, visualization, p_map_cl_contribution);
+        get_matching_classifiers(testState->state, match_set, t, false);
         isMatched = match_set.ids.size() > 0;
         match_set_sum += match_set.ids.size();
         int actionWinner=-1;
@@ -371,8 +365,7 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
                 getActionSet(actionWinner, match_set, action_set);
                 // save visualization data - start with image id, actual action and predicted action
                 output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
-                save_visualization_data(action_set, t, output_visualization_file, *p_map_cl_contribution);
-                delete p_map_cl_contribution;
+                save_visualization_data(action_set, t, output_visualization_file);
             }
         }else{
             // if match set is empty then select an action randomly
@@ -380,12 +373,6 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
         }
         double reward = executeAction(actionWinner, testState->action, wasCorrect);
         error_sum += absoluteValue(reward - getBestValue());
-
-//        if(last_epoch) {
-            // save visualization data - start with image id, actual action and predicted action
-//            output_visualization_file << t << " " << testState->action << " " << actionWinner << std::endl; // image id
-//            save_visualization_data(match_set, t, output_visualization_file);
-//        }
 
 		if(wasCorrect){
 		    correct_count += 1;

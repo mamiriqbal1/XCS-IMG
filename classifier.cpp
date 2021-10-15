@@ -164,32 +164,14 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 }
 
 
-bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent, std::vector<std::pair<int, int>>* contribution)
+bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
-    std::vector<std::pair<int, int>> *p_list_local= nullptr;
-    if(transparent){
-        p_list_local = new std::vector<std::pair<int, int>>;
-    }
     for(int i=0; i < clfrCondMaxLength; i++)
     {
-        std::vector<std::pair<int, int>> *p_list_temp= nullptr;
-        if(contribution){
-            p_list_temp = new std::vector<std::pair<int, int>>;
-        }
-        if(cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train, transparent, p_list_temp) == 0 )
+        if(cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0 )
         {
             return false;
-        }else{
-            // add contribution to list in case cf evaluates to true
-            if(transparent & contribution!= nullptr){
-                p_list_local->insert(p_list_local->end(), p_list_temp->begin(), p_list_temp->end());
-                delete p_list_temp;
-            }
         }
-    }
-    if(transparent && contribution != nullptr){
-        (*contribution) = *p_list_local;
-        delete p_list_local;
     }
     return true;
 }
@@ -326,7 +308,7 @@ void getActionSet(int action, ClassifierSet &match_set,
             // !first adjustments! -> simply calculate the average
             population[id].predictionError += (absoluteValue(P - population[id].prediction) - population[id].predictionError) / (double)population[id].experience;
             population[id].prediction += (P - population[id].prediction) / (double)population[id].experience;
-            population[id].actionSetSize = (action_set_numerosity - population[id].actionSetSize) / (double)population[id].experience;
+            population[id].actionSetSize += (action_set_numerosity - population[id].actionSetSize) / (double)population[id].experience;
         }
         else
         {
@@ -1135,29 +1117,15 @@ int get_pop_size(bool numerosity) {
     else return pop_size;
 }
 
-void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent,
-                              std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution) {
-    std::unordered_map<int, std::vector<std::pair<int, int>>> *p_map_local= nullptr; // vector of pair(classifier_id, pair(filter_id, result))
-    if(transparent){
-        p_map_local = new std::unordered_map<int, std::vector<std::pair<int, int>>>; // vector of pair(classifier_id, pair(filter_id, result))
-    }
-    std::for_each(population.begin(), population.end(), [&match_set, &state, img_id, train, transparent, p_map_local](ClassifierVector::value_type& item)
+void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train) {
+    std::for_each(population.begin(), population.end(), [&match_set, &state, img_id, train](ClassifierVector::value_type& item)
     {
         std::vector<std::pair<int, int>> *p_list_temp= nullptr;
-        if(transparent){
-            p_list_temp = new std::vector<std::pair<int, int>>;
-        }
         if(item.id == -1) return; // skip empty slots in the array
-        if(isConditionMatched(item, state, img_id, train, transparent, p_list_temp)){
+        if(isConditionMatched(item, state, img_id, train)){
             match_set.ids.push_back(item.id);
-            if(transparent){
-                (*p_map_local)[item.id] = *p_list_temp;
-                delete p_list_temp;
-            }
         }
     });
-    if(transparent) *contribution = *p_map_local;
-    delete p_map_local;
 }
 
 

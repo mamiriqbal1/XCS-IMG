@@ -13,5 +13,5 @@ void startXCS();
 void doOneSingleStepExperiment();
 
 void
-doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, bool visualization,
-                    double training_performance, double training_error);
+doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file, double training_performance,
+                    double training_error, std::string path_postfix);

@@ -13,8 +13,8 @@ bool isDontcareCF(CodeFragment &cf);
 int validateDepth(opType *cf);
 void initializeNewCF(int id, CodeFragment &cf);
 
-int evaluateCF(CodeFragment &cf, float *state, int cl_id=-1, int img_id=-1, bool train=true, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
-int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id=-1, int img_id=-1, bool train=true, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
+int evaluateCF(CodeFragment &cf, float *state, int cl_id = -1, int img_id = -1, bool train = true);
+int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id = -1, int img_id = -1, bool train = true);
 bool isPreviousLevelsCode(const opType code);
 
 int getNumberOfArguments(const opType opcode);
@@ -38,7 +38,7 @@ int create_new_cf(float *state);
 
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file);
 opType str_to_opt(std::string str);
-void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file, std::unordered_map<int, std::vector<std::pair<int, int>>> &map_cl_contribution);
+void save_visualization_data(ClassifierSet &action_set, int img_id, std::ofstream &output_visualization_file);
 bool is_cf_covered(CodeFragment& cf, Classifier& cl);
 void transfer_filters_from_kb_cf(CodeFragment & kb_cf);
 void set_cf_bounding_box(CodeFragment &cf);

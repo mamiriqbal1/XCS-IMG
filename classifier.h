@@ -5,7 +5,7 @@ void setInitialVariables(Classifier &clfr, double setSize, int time);
 
 void getMatchSet(ClassifierSet &match_set, float *state, int itTime, int action, int img_id);
 int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions);
-bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train, bool transparent=false, std::vector<std::pair<int, int>>* contribution=nullptr);
+bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train);
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time);
 void createMatchingCondition(Classifier &cl, float *state);
 
@@ -52,8 +52,7 @@ double absoluteValue(double value);
 
 void manage_filter_and_cf_list();
 int get_pop_size(bool numerosity);
-void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train, bool transparent = false,
-                              std::unordered_map<int, std::vector<std::pair<int, int>>> *contribution = nullptr);
+void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train);
 bool is_promising_classifier(Classifier& cl);
 
 void remove_classifier_cfs_from_list(Classifier &cl);
