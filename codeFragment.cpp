@@ -870,7 +870,7 @@ inline std::string op_to_str(opType code)
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
     output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
-    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " " << cf.matching_threshold << std::endl;
+    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " " << cf.matching_threshold << " ";
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             output_code_fragment_file << cf.pattern[y][x] <<  " ";

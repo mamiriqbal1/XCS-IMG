@@ -114,6 +114,10 @@ void print_code_fragment_stats(std::ofstream &output_stats_file) {
 
 
 void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file) {
+
+    output_code_fragment_file << "id" << " " << "numerosity" << " " << "fitness" << " "
+                              << "x" << " " << "y" << " " << "size_x" << " " << "size_y" << " "
+                              << "matching_threshold" << " " << "pattern" << std::endl;
     for(CodeFragment & item : main_cf_list){
         if(item.cf_id == -1) continue; // skip empty slots in the array
         output_code_fragment_to_file(item, output_code_fragment_file);
