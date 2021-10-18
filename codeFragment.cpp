@@ -553,7 +553,13 @@ bool mutate_cf(CodeFragment &cf, float *state) {
 
 bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
-    if(cf1.pattern == cf2.pattern){
+    return false;
+
+    if(cf1.bb.x == cf2.bb.x&&
+        cf1.bb.y == cf2.bb.y &&
+        cf1.bb.size_x == cf2.bb.size_x &&
+        cf1.bb.size_y == cf2.bb.size_y &&
+        cf1.pattern == cf2.pattern){
         return true;
     }else{
         return false;

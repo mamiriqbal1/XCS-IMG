@@ -1120,7 +1120,6 @@ int get_pop_size(bool numerosity) {
 void get_matching_classifiers(float *state, ClassifierSet &match_set, int img_id, bool train) {
     std::for_each(population.begin(), population.end(), [&match_set, &state, img_id, train](ClassifierVector::value_type& item)
     {
-        std::vector<std::pair<int, int>> *p_list_temp= nullptr;
         if(item.id == -1) return; // skip empty slots in the array
         if(isConditionMatched(item, state, img_id, train)){
             match_set.ids.push_back(item.id);
