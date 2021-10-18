@@ -135,12 +135,11 @@ void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth)
     }
 }
 
-/*
- * Sets id
- */
+
 void initializeNewCF(int id, CodeFragment &cf)
 {
     cf.cf_id = id;
+    cf.matching_threshold = filter_matching_threshold;
 }
 
 
@@ -543,24 +542,18 @@ int create_new_cf(float *state) {
  * Mutate CF by changing the mask
  */
 bool mutate_cf(CodeFragment &cf, float *state) {
-
-    for (int y = 0; y < cf.bb.size_y; y++) {
-        for (int x = 0; x < cf.bb.size_x; x++) {
-            if (cf.mask[y][x] == ENABLED) {
-                if (drand() < pM_allel) {
-                    cf.mask[y][x] = DISABLED;
-                }
-            }
-        }
-    }
-
+    float change = drand() / 100;
+    int sign = irand(2) == 0 ? 1 : -1;
+    cf.matching_threshold += (change * sign);
+    cf.matching_threshold = std::fmax(cf.matching_threshold, 0);
+    cf.matching_threshold = std::fmin(cf.matching_threshold, 1);
     return true;
 }
 
 
 bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
-    if(cf1.cf_id == cf2.cf_id){
+    if(cf1.pattern == cf2.pattern){
         return true;
     }else{
         return false;
@@ -651,7 +644,7 @@ bool evaluate_cf_bb(CodeFragment& cf, float* state)
         }
     }
 
-    if(distance/(mask_size) < filter_matching_threshold){  // average distance per pixel
+    if(distance/(mask_size) < cf.matching_threshold){  // average distance per pixel
         return true;
     }else{
         return false;
@@ -877,7 +870,7 @@ inline std::string op_to_str(opType code)
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
     output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
-    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << std::endl;
+    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " " << cf.matching_threshold << std::endl;
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             output_code_fragment_file << cf.pattern[y][x] <<  " ";

@@ -1193,8 +1193,10 @@ void add_new_classifiers_to_population(float* state, int action, int itTime)
 {
     Classifier coverClfr;
     matchingCondAndSpecifiedAct(coverClfr, state, action, 0, itTime);
-    coverClfr.id = get_next_cl_gid();
-    population[coverClfr.id] = coverClfr;
+    if(!subsumeClassifierToPop(coverClfr)) {
+        coverClfr.id = get_next_cl_gid();
+        population[coverClfr.id] = coverClfr;
+    }
     int len = get_pop_size(true);
     while(len > maxPopSize)
     {

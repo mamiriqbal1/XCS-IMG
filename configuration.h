@@ -158,6 +158,7 @@ struct CodeFragment
     BoundingBox bb;
     FloatMatrix pattern; // -1 not initialized
     IntMatrix mask;  // 0 disabled, 1 enabled
+    float matching_threshold = NOT_INITIALIZED;
 
     CodeFragment()
     {
