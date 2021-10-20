@@ -374,8 +374,8 @@ int evaluate_filter_actual(const Filter &filter, float *state, Position p)
 int evaluate_filter_actual_slide(const Filter& filter, float *state)
 {
     Position p;
-    for(int y=0; y < image_height - filter.size_y; y+=image_slice_size) {
-        for (int x = 0; x < image_width - filter.size_x; x+=image_slice_size) {
+    for(int y=0; y < image_height - filter.size_y; y+=1) {
+        for (int x = 0; x < image_width - filter.size_x; x+=1) {
             p.x = x;
             p.y = y;
             if (evaluate_filter_actual(filter, state, p)) {

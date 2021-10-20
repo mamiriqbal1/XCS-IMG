@@ -148,31 +148,16 @@ void extract_cf_attributes(std::string& line, CodeFragment& cf)
     cf.bb.size_x = val;
     line1>>val;
     cf.bb.size_y = val;
-
-    int index = 0, leaf_index = 0;
-    while(!line1.eof()){
-        std::string token;
-        line1>>token;
-        // last token is "" that needs to be handled
-        if(token.empty()) break;
-        if(token.substr(0,1) == "D"){ // this is filter id
-            int filter_id = std::stoi(token.substr(1));
-            cf.filter_ids[leaf_index] = filter_id;
-            int val = 0;
-            line1 >> val;
-            cf.filter_positions[leaf_index].x = val;
-            line1 >> val;
-            cf.filter_positions[leaf_index].y = val;
-            cf.filter_ids[leaf_index] = filter_id;
-            cf.reverse_polish[index] = leaf_index;
-            leaf_index++;
-        }else{ // this is operator
-            cf.reverse_polish[index] = str_to_opt(token);
+    set_cf_bounding_box(cf, cf.bb);
+    float fval = 0;
+    line1>>fval;
+    cf.matching_threshold = fval;
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            line1 >> fval;
+            cf.pattern[y][x] = fval;
         }
-        index++;
     }
-    cf.reverse_polish[index] = OPNOP; // terminate the reverse polish
-    cf.num_filters = leaf_index;
 }
 
 
@@ -187,6 +172,8 @@ void load_cf_for_resume(std::string cf_file_name)
         throw std::runtime_error(error);
     }
 
+    // skip header line
+    getline(cf_file, line);
     while(getline(cf_file, line)) {
         // load cf
         CodeFragment cf;

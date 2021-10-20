@@ -225,7 +225,7 @@ void load_parameter(std::string parameter_file_name)
 void load_state_for_resume()
 {
 //    load_parameter(output_path + resume_from + output_filter_file_name);
-    load_filter_for_resume(output_path + resume_from + output_filter_file_name);
+//    load_filter_for_resume(output_path + resume_from + output_filter_file_name);
     load_cf_for_resume(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name);
 }

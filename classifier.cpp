@@ -115,7 +115,7 @@ int get_set_numerosity(ClassifierSet &set)
             if(!coveredActions[i]){  // make sure that all actions are covered!
                 // TEMP: boost covering
                 // add large number of classifier in case of filter approach in covering
-                int add = 1;
+                int add = 10;
                 for(int j=0; j<add; j++){
                     Classifier coverClfr;
                     matchingCondAndSpecifiedAct(coverClfr, state, i, match_set_numerosity + 1,
@@ -376,8 +376,8 @@ void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation,
     }
     setTimeStamps(action_set, itTime);
 
-    add_new_classifiers_to_population(situation, action, itTime);
-    return;
+//    add_new_classifiers_to_population(situation, action, itTime);
+//    return;
 
     selectTwoClassifiers(child[0], child[1] , parent[0], parent[1], action_set, fitsum, setsum); // select two classifiers (tournament selection) and copy them
     // Prediction, prediction error and fitness is only updated if crossover is done instead of always
@@ -556,10 +556,8 @@ bool crossover(Classifier &cl1, Classifier &cl2, float *state) {
 }
 
 
-
-
 /*
- * mutate by the existing cf after copying it
+ * Sync with original code. Toggle one code fragment
  */
 bool mutation(Classifier &clfr, float *state)
 {
@@ -568,18 +566,16 @@ bool mutation(Classifier &clfr, float *state)
         if(drand() < pM){
             changed = true;
             if(clfr.cf_ids[i] != -1){
-                CodeFragment new_cf = get_cf(clfr.cf_ids[i]);
-                new_cf.cf_id = get_next_cf_gid();
-                clfr.cf_ids[i] = new_cf.cf_id;
-                mutate_cf(new_cf, state);
-                add_cf_to_list(new_cf);
+                clfr.cf_ids[i] = -1; // set as don't care
+            }else{
+                CodeFragment new_cf;
+                clfr.cf_ids[i] = create_new_cf(state);
             }
         }
     }
 
     return changed;
 }
-
 
 
 bool mutateAction(Classifier& clfr)  //Mutates the action of the classifier.
@@ -1139,39 +1135,27 @@ void load_classifier(std::string classifier_file_name)
         throw std::runtime_error(error);
     }
 
+    // skip header line
+    getline(cl_file, line);
     while(getline(cl_file, line)) {
         // load classifier
         Classifier cl;
         int num_cf=-1;
-        std::string str;
         std::stringstream line1(line);
-        line1>>str;
         line1>>cl.id;
-        line1>>str;
         line1>>cl.numerosity;
-        line1>>str;
         line1>>cl.experience;
-        line1>>str;
         line1>>num_cf;
-        line1>>str;
         line1>>cl.fitness;
-        line1>>str;
         line1>>cl.accuracy;
-        line1>>str;
         line1>>cl.prediction;
-        line1>>str;
         line1>>cl.predictionError;
-        line1>>str;
         line1>>cl.actionSetSize;
-        line1>>str;
         line1>>cl.timeStamp;
-        line1>>str;
         line1>>cl.action;
 
-        getline(cl_file, line);
-        std::stringstream line2(line);
         for(int i=0; i<clfrCondMaxLength; i++){
-            line2>>cl.cf_ids[i];
+            line1>>cl.cf_ids[i];
         }
         population.resize(cl.id + 1);
         population[cl.id] = cl;

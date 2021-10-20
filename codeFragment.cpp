@@ -143,21 +143,30 @@ void initializeNewCF(int id, CodeFragment &cf)
 }
 
 
-void set_cf_bounding_box(CodeFragment &cf)
+/*
+ * Set bb as per parameter and initialize matrix accordingly
+ */
+void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
-    cf.bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-    cf.bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
-
+    cf.bb = bb;
     FloatMatrix pattern(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
     IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
     cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
     cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
+}
 
-    cf.bb.x = irand(image_width - cf.bb.size_x+1);
-    cf.bb.y = irand(image_height - cf.bb.size_y+1);
-    // align with image slice
-    cf.bb.x = cf.bb.x - cf.bb.x % image_slice_size;
-    cf.bb.y = cf.bb.y - cf.bb.y % image_slice_size;
+
+/*
+ * Initialize bb randomly
+ */
+void initialize_cf_bounding_box(CodeFragment &cf)
+{
+    BoundingBox bb;
+    bb.size_x = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    bb.size_y = cf_min_bounding_box_size + irand(cf_max_bounding_box_size - cf_min_bounding_box_size+1);
+    bb.x = irand(image_width - bb.size_x+1);
+    bb.y = irand(image_height - bb.size_y+1);
+    set_cf_bounding_box(cf, bb);
 }
 
 
@@ -523,10 +532,10 @@ int create_new_cf(float *state) {
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
-        set_cf_bounding_box(new_cf);
+        initialize_cf_bounding_box(new_cf);
         set_cf_pattern_and_mask(new_cf, state);
-        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
-        addLeafCF(new_cf, state, new_cf.bb);
+//        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
+//        addLeafCF(new_cf, state, new_cf.bb);
 //        if (evaluateCF(new_cf, state) != 1) {
 //            negate_cf(new_cf);
 //        }
@@ -553,13 +562,14 @@ bool mutate_cf(CodeFragment &cf, float *state) {
 
 bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
 {
-    return false;
+    if(cf1.cf_id == cf2.cf_id) return true;
 
     if(cf1.bb.x == cf2.bb.x&&
         cf1.bb.y == cf2.bb.y &&
         cf1.bb.size_x == cf2.bb.size_x &&
         cf1.bb.size_y == cf2.bb.size_y &&
-        cf1.pattern == cf2.pattern){
+        cf1.pattern == cf2.pattern &&
+        cf1.mask == cf2.mask){
         return true;
     }else{
         return false;
@@ -605,7 +615,7 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, bool train)
 {
     // evaluate cf in the +/- 4 (8x8 region)
-    int region_shift = 0;
+    int region_shift = 0; // INT16_MAX; // 0;
     // save cf coordinates
     int cf_x = cf.bb.x;
     int cf_y = cf.bb.y;
