@@ -11,11 +11,18 @@
 //#include "flat_hash_map/unordered_map.hpp"
 //#include "flat_hash_map/bytell_hash_map.hpp"
 //#include "HashMap/include/rigtorp/HashMap.h"
+typedef std::vector<double> DoubleVector;
+typedef std::vector<float> FloatVector;
+typedef std::vector<int> IntVector;
+typedef std::vector<FloatVector> FloatMatrix;
+typedef std::vector<IntVector> IntMatrix;
+typedef std::unordered_map<int, int> IntMap;
 
 extern bool use_kb;
 extern std::string kb_file;
 extern std::string output_path;
 extern int numActions; // = 2; //0 or 1
+extern IntMap class_map;
 // max_actions have to be set such that it is always more than the actual number of actions in an experiment
 extern int trainNumInstances;// = 11982;
 extern int testNumInstances;// = 1984;
@@ -137,11 +144,7 @@ struct Position
     int y = -1;
 };
 
-typedef std::vector<double> DoubleVector;
-typedef std::vector<float> FloatVector;
-typedef std::vector<int> IntVector;
-typedef std::vector<FloatVector> FloatMatrix;
-typedef std::vector<IntVector> IntMatrix;
+
 const int NOT_INITIALIZED = -1;
 const int ENABLED = 1;
 const int DISABLED = 0;

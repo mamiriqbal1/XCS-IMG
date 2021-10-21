@@ -47,6 +47,7 @@ bool fixed_seed = true;
 bool use_kb = false;
 bool Testing = true;
 int numActions = 2;
+IntMap class_map;
 int image_width = NOT_INITIALIZED;
 int image_height = NOT_INITIALIZED;
 int condLength = NOT_INITIALIZED;
@@ -462,6 +463,15 @@ void LoadConfig(char* file)
                 inputTestFile = value;
             }else if(name == "num_actions"){
                 numActions = atoi(value.c_str());
+            }else if(name == "classes"){
+                std::replace(value.begin(), value.end(), ',', ' ');
+                std::stringstream ss(value);
+                for(int i=0; i<numActions; i++)
+                {
+                    int c=0;
+                    ss>>c;
+                    class_map[c] = i;
+                }
             }else if(name == "image_width"){
                 image_width = atoi(value.c_str());
             }else if(name == "image_height"){

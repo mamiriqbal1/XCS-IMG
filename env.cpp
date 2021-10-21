@@ -112,11 +112,19 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
                 //while(singleValue>>featureIndex)
                 while(featureIndex <= condLength)
                 {
+                    if(singleValue.eof()){
+                        std::string error("Data length is less than expected");
+                        throw std::runtime_error(error);
+                    }
                     singleValue>>tfIDF;
-                    if(featureIndex==condLength)
+                    if(featureIndex==condLength) {
+                        if (!singleValue.eof()) {
+                            std::string error("Data length is more than expected");
+                            throw std::runtime_error(error);
+                        }
                         //if(featureIndex==5000)
-                        data[docIndex].action = int(tfIDF);
-                    else
+                        data[docIndex].action = class_map[int(tfIDF)];
+                    }else
                     {
                         //tfIDF = roundRealValue(tfIDF,precisionDigits);
                         data[docIndex].state[featureIndex] = tfIDF;

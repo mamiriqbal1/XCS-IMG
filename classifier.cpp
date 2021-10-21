@@ -49,6 +49,12 @@ void initialize_parameters()
     predictionArray = prediction_array;
     DoubleVector sum(numActions);
     sumClfrFitnessInPredictionArray = sum;
+    // if class map not initialized through config
+    if(class_map.empty()) {
+        for (int i = 0; i < numActions; i++) {
+            class_map[i] = i;
+        }
+    }
 }
 
 
@@ -126,7 +132,7 @@ int get_set_numerosity(ClassifierSet &set)
             if(!coveredActions[i]){  // make sure that all actions are covered!
                 // TEMP: boost covering
                 // add large number of classifier in case of filter approach in covering
-                int add = 10;
+                int add = 1;
                 for(int j=0; j<add; j++){
                     Classifier coverClfr;
                     matchingCondAndSpecifiedAct(coverClfr, state, i, match_set_numerosity + 1,
