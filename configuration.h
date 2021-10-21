@@ -17,14 +17,13 @@ extern std::string kb_file;
 extern std::string output_path;
 extern int numActions; // = 2; //0 or 1
 // max_actions have to be set such that it is always more than the actual number of actions in an experiment
-const int max_actions = 10;
 extern int trainNumInstances;// = 11982;
 extern int testNumInstances;// = 1984;
 extern int totalNumInstances;// = trainNumInstances + testNumInstances;//4; //for review analysis
 
-const int condLength = 784; //512; //256; //4626; //for review analysis 300, 500, 1000, 1500, 2000, 2257
-const int image_width = 28;
-const int image_height = 28;
+extern int condLength; // = 784; //512; //256; //4626; //for review analysis 300, 500, 1000, 1500, 2000, 2257
+extern int image_width; // = 28;
+extern int image_height; // = 28;
 extern int maxPopSize; //=  1000; //1 * totalNumInstances; //Specifies the maximal number of micro-classifiers in the population. [ (0.5, 1, 2, 5, 10/20, 50)*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 extern int maxProblems;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 const double maxPayoff = 1000;
@@ -138,6 +137,7 @@ struct Position
     int y = -1;
 };
 
+typedef std::vector<double> DoubleVector;
 typedef std::vector<float> FloatVector;
 typedef std::vector<int> IntVector;
 typedef std::vector<FloatVector> FloatMatrix;

@@ -47,6 +47,9 @@ bool fixed_seed = true;
 bool use_kb = false;
 bool Testing = true;
 int numActions = 2;
+int image_width = NOT_INITIALIZED;
+int image_height = NOT_INITIALIZED;
+int condLength = NOT_INITIALIZED;
 int clfrCondMaxLength = 0; // 784/8; // 64; //32; //300;//condLength/4; // condLength/2 and condLength/4 for 70mux and 135mux respectively.
 int cfMaxDepth = 0;
 int cfMinDepth = 0;
@@ -459,6 +462,10 @@ void LoadConfig(char* file)
                 inputTestFile = value;
             }else if(name == "num_actions"){
                 numActions = atoi(value.c_str());
+            }else if(name == "image_width"){
+                image_width = atoi(value.c_str());
+            }else if(name == "image_height"){
+                image_height = atoi(value.c_str());
             }else if(name == "max_depth"){
                 cfMaxDepth = atoi(value.c_str());
                 cfMaxLength = std::pow(2, cfMaxDepth+1);
@@ -589,6 +596,7 @@ void LoadConfig(char* file)
     if(maxProblems == 0) {
         maxProblems = trainNumInstances * epochs;
     }
+    condLength = image_width*image_height;
 }
 
 /*
@@ -702,10 +710,12 @@ int main(int argc, char **argv){
 
     // standardized random number generator
     initialize_random_number_generator(fixed_seed);
+    initialize_parameters();
+    initialize_env();
     initialize_population(maxPopSize + 10);
     // initialize size of cf_list such that it can accommodate enough code fragments before periodic cleanup
     initialize_cf_list(clfrCondMaxLength*(maxPopSize + filter_list_management_frequency*numActions));
-    initialize_filter_list(clfrCondMaxLength * cfMaxLeaf * (maxPopSize + filter_list_management_frequency*numActions));
+//    initialize_filter_list(clfrCondMaxLength * cfMaxLeaf * (maxPopSize + filter_list_management_frequency*numActions));
 
     if(analyze){
         analyze_rules();

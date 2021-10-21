@@ -20,8 +20,9 @@
 
 ClassifierVector population; //(maxPopSize + 10);
 int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
-double predictionArray[max_actions]; //prediction array
-double sumClfrFitnessInPredictionArray[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
+
+DoubleVector predictionArray; // [max_actions]; //prediction array
+DoubleVector sumClfrFitnessInPredictionArray; //[max_actions]; //The sum of the fitnesses of classifiers that represent each entry in the prediction array.
 
 std::vector<int> cl_gid_vector;
 std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
@@ -40,6 +41,16 @@ int get_next_cl_gid()
         return classifier_gid++;
     }
 }
+
+
+void initialize_parameters()
+{
+    DoubleVector prediction_array(numActions);
+    predictionArray = prediction_array;
+    DoubleVector sum(numActions);
+    sumClfrFitnessInPredictionArray = sum;
+}
+
 
 void initialize_population(int size)
 {

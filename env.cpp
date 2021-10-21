@@ -15,8 +15,18 @@
 #include "cf_list.h"
 
 
-float lowerLimit[condLength];
-float upperLimit[condLength];
+FloatVector lowerLimit; //[condLength];
+FloatVector upperLimit; //[condLength];
+
+void initialize_env()
+{
+    FloatVector l(condLength);
+    lowerLimit = l;
+    FloatVector  u(condLength);
+    upperLimit = u;
+
+}
+
 
 void initializeInput(DataSource inputArray[],int numofRows){
     int featureIndex,docIndex;
