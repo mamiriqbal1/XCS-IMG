@@ -171,7 +171,7 @@ void initialize_cf_bounding_box(CodeFragment &cf)
 
 
 // translate bounding box coordinates to state coordinates
-int translate(BoundingBox& bb, int x, int y)
+inline int translate(BoundingBox& bb, int x, int y)
 {
     return (bb.y+y)*image_width + bb.x +x;
 }

@@ -44,6 +44,7 @@ double p_promising;// = 0.5;  // probability of using a filter from observed lis
 
 bool visualization = false;
 bool fixed_seed = true;
+bool normalize_data = true;
 bool use_kb = false;
 bool Testing = true;
 int numActions = 2;
@@ -403,8 +404,10 @@ void startXCS(){
     initializeInput(testingData,testNumInstances);
     loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
     loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
-    updateRange(trainingData,trainNumInstances);
-    updateRange(testingData,testNumInstances);
+    if(normalize_data) {
+        updateRange(trainingData, trainNumInstances);
+        updateRange(testingData, testNumInstances);
+    }
     if(use_kb) {
         load_kb(kb_cf_file, kb_filter_file);
     }
@@ -516,6 +519,12 @@ void LoadConfig(char* file)
                 pM_allel = atof(value.c_str());
             }else if(name == "p_promising"){
                 p_promising = atof(value.c_str());
+            }else if(name == "normalize_data"){
+                if(value == "no"){
+                    normalize_data = false;
+                }else if(value == "yes"){
+                    normalize_data = true;
+                }
             }else if(name == "use_kb"){
                 if(value == "no"){
                     use_kb = false;
