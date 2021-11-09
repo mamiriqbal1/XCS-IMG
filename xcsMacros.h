@@ -47,7 +47,9 @@ const double selectTolerance = 0.0;
 const char dontcare='#'; //The don't care symbol (normally '#')
 const float m_0 = 0.5; //to be used in mutation
 const float m = 0.1; // how much to mutuate one single ellel
-const float epsilon = 0.5; // the probability of exploration for epsilon greedy strategy
+extern float epsilon; // = 0.5; // the probability of exploration for epsilon greedy strategy
+extern float epsilon_start; // = 0.5; // the probability of exploration for epsilon greedy strategy
+extern float epsilon_end; // = 0.5; // the probability of exploration for epsilon greedy strategy
 const int N_filter_ol = 2500;  // maximum limit of filters in the managed observed list
 extern float filter_matching_threshold; // = 0.001; // thresh hold for filter matching
 

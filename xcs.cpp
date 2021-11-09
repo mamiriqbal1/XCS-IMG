@@ -27,6 +27,9 @@
 #include <iomanip>
 
 auto start = std::chrono::system_clock::now();
+float epsilon = 0.5; // the probability of exploration for epsilon greedy strategy
+float epsilon_start = 0.5; // the probability of exploration for epsilon greedy strategy
+float epsilon_end = 0.5; // the probability of exploration for epsilon greedy strategy
 double beta = 0.2;
 double beta_start = 0.2;
 double beta_end = 0.2;
@@ -273,6 +276,7 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
         problem_count = std::atoi(resume_from.c_str());
         problem_count++;  // resume from next problem
         // parameter control from initial value to final value
+        epsilon = epsilon_start - (epsilon_start - epsilon_end) * problem_count/maxProblems;
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
         pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
@@ -322,6 +326,7 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
             manage_filter_and_cf_list();
         }
         // parameter control from initial value to final value
+        epsilon = epsilon_start - (epsilon_start - epsilon_end) * problem_count/maxProblems;
         beta = beta_start - (beta_start - beta_end) * problem_count/maxProblems;
         pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
@@ -510,6 +515,11 @@ void LoadConfig(char* file)
                 p_kb = p_kb_start;
             }else if(name == "p_kb_end"){
                 p_kb_end = atof(value.c_str());
+            }else if(name == "epsilon_start"){
+                epsilon_start = atof(value.c_str());
+                epsilon = epsilon_start;
+            }else if(name == "epsilon_end"){
+                epsilon_end = atof(value.c_str());
             }else if(name == "beta_start"){
                 beta_start = atof(value.c_str());
                 beta = beta_start;
