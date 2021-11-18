@@ -126,24 +126,28 @@ int get_set_numerosity(ClassifierSet &set)
 //            coveredActions[i] = false;
 //        }
 //    }
+     while(representedActions < numActions){  // create covering classifiers, if not all actions are covered
+         for(int i=0; i<numActions; i++){
+             if(!coveredActions[i]){  // make sure that all actions are covered!
+                 // TEMP: boost covering
+                 // add large number of classifier in case of filter approach in covering
+                 int add = 1;
+                 for(int j=0; j<add; j++){
+                     Classifier coverClfr;
+                     matchingCondAndSpecifiedAct(coverClfr, state, i, match_set_numerosity + 1,
+                                                 itTime);
+                     // before inserting the new classifier into the population check for subsumption by a generic one
+                     if(!subsumeClassifierToPop(coverClfr)) {
+                         coverClfr.id = get_next_cl_gid();
+                         population[coverClfr.id] = coverClfr;
+                         match_set.ids.push_back(coverClfr.id);
+                     }
+                     match_set_numerosity++;
+                     population_numerosity++;
+                 }
+             }
+         }
 
-    while(!coveredActions[action]){  // create covering classifiers, if not all actions are covered
-                // TEMP: boost covering
-                // add large number of classifier in case of filter approach in covering
-                int add = 1;
-                for(int j=0; j<add; j++){
-                    Classifier coverClfr;
-                    matchingCondAndSpecifiedAct(coverClfr, state, action, match_set_numerosity + 1,
-                                                            itTime);
-                    // before inserting the new classifier into the population check for subsumption by a generic one
-                    if(!subsumeClassifierToPop(coverClfr)) {
-                        coverClfr.id = get_next_cl_gid();
-                        population[coverClfr.id] = coverClfr;
-                        match_set.ids.push_back(coverClfr.id);
-                    }
-                    match_set_numerosity++;
-                    population_numerosity++;
-                }
 
         /* Delete classifier if population is too big and record it in killset */
         while(population_numerosity > maxPopSize )
