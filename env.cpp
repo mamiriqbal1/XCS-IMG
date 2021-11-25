@@ -58,13 +58,12 @@ float ScaleRange(float Value,float FromMinValue, float FromMaxValue, float ToMin
     }
 }
 
-void updateRange(DataSource data[],int totalRows){
+void normalize_image(DataSource *data, int totalRows){
     for(int docNo = 0; docNo<totalRows;docNo++)
         {
             for(int featureNo=0;featureNo<condLength;featureNo++)
             {
-                data[docNo].state[featureNo] = ScaleRange(data[docNo].state[featureNo],lowerLimit[featureNo],upperLimit[featureNo],0.0,1.0);
-                data[docNo].state[featureNo] = roundRealValue(data[docNo].state[featureNo],precisionDigits);
+                data[docNo].state[featureNo] = data[docNo].state[featureNo] / IMAGE_MAX_VALUE;
             }
         }
 }
@@ -139,7 +138,7 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
         throw std::runtime_error(error);
     }
     infile.close();
-    //updateRange(inputArray,totalNumInstances);
+    //normalize_image(inputArray,totalNumInstances);
 }
 
 

@@ -19,6 +19,7 @@ typedef std::vector<IntVector> IntMatrix;
 typedef std::unordered_map<int, int> IntMap;
 
 extern bool normalize_data;
+const float IMAGE_MAX_VALUE = 255.0;
 extern bool use_kb;
 extern std::string kb_file;
 extern std::string output_path;

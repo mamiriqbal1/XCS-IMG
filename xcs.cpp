@@ -49,7 +49,7 @@ bool visualization = false;
 bool fixed_seed = true;
 bool normalize_data = true;
 bool use_kb = false;
-bool Testing = true;
+bool Testing = false;
 int numActions = 2;
 IntMap class_map;
 int image_width = NOT_INITIALIZED;
@@ -410,8 +410,8 @@ void startXCS(){
     loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
     loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
     if(normalize_data) {
-        updateRange(trainingData, trainNumInstances);
-        updateRange(testingData, testNumInstances);
+        normalize_image(trainingData, trainNumInstances);
+        normalize_image(testingData, testNumInstances);
     }
     if(use_kb) {
         load_kb(kb_cf_file, kb_filter_file);
@@ -681,8 +681,8 @@ void analyze_rules()
     initializeInput(testingData,testNumInstances);
     loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
     loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
-    updateRange(trainingData,trainNumInstances);
-    updateRange(testingData,testNumInstances);
+    normalize_image(trainingData, trainNumInstances);
+    normalize_image(testingData, testNumInstances);
 
     // load good filters
 //    std::ifstream filters_file;
