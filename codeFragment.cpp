@@ -189,8 +189,6 @@ void initializeNewCF(int id, CodeFragment &cf)
 void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
     cf.bb = bb;
-    FloatMatrix pattern(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, CELL_LIGHT));
 }
 
 
@@ -204,24 +202,36 @@ bool detect_new_feature(CodeFragment &cf, float *state)
         float metric[4] = {0};
         float max = 0;
         int max_i = 0;
+        int max_flipped = -1;
         initialize_cf_bounding_box(cf);
         for(int i=0; i<4; i++) {
             cf.edge_pattern_id = i;
+            cf.edge_pattern_flipped = EDGE_PATTERN_NOT_FLIPPED;
             if(evaluate_cf_bb(cf, state, &metric[i])){
                 found = true;
+            }else {
+                // flip and evaluate
+                cf.edge_pattern_flipped = EDGE_PATTERN_FLIPPED;
+                if (evaluate_cf_bb(cf, state, &metric[i])) {
+                    found = true;
+                }else{
+                    // reset flip
+                    cf.edge_pattern_flipped = EDGE_PATTERN_NOT_FLIPPED;
+                }
             }
             if(metric[i] > max) {
                 max = metric[i];
                 max_i = i;
+                max_flipped = cf.edge_pattern_flipped;
             }
-        }
+        }  // return the best match after trying all edge patterns
         if(found){
             cf.edge_pattern_id = max_i;
+            cf.edge_pattern_flipped = max_flipped;
             return true;
         }
         tries++;
-    }while(tries < 1000);
-    assert(false); // it must detect a feature
+    }while(tries < 100);
     return false;
 }
 
@@ -540,7 +550,9 @@ bool is_full(CodeFragment& cf){
 //    assert(false); // should not reach here
 //}
 
-
+/*
+ * Will return -1 if cf could not be created
+ */
 int create_new_cf(float *state) {
     int new_cf_id = -1;
 //    initializeNewCF(-1, new_cf);
@@ -560,33 +572,16 @@ int create_new_cf(float *state) {
     }
     if(new_cf_id == -1 && drand() < p_promising){
         int id = get_promising_cf_id();
-        if(id != -1) {
-            CodeFragment& cf = get_cf(id);
-            if(evaluate_cf_slide(cf, state)) {     // only use promising cf if it evaluates to true
-                new_cf_id = cf.cf_id;
-            }
-//            else{  // copy and negate cf
-//                CodeFragment temp = cf;
-//                temp.cf_id = get_next_cf_gid();
-//                temp.numerosity = 1;
-//                temp.fitness = 0;
-//                negate_cf(temp);
-//                add_cf_to_list(temp);
-//            }
-        }
+        new_cf_id = id;
     }
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
-        detect_new_feature(new_cf, state);
-//        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
-//        addLeafCF(new_cf, state, new_cf.bb);
-//        if (evaluateCF(new_cf, state) != 1) {
-//            negate_cf(new_cf);
-//        }
-        new_cf.cf_id = get_next_cf_gid();
-        add_cf_to_list(new_cf);
-        new_cf_id = new_cf.cf_id;
+        if(detect_new_feature(new_cf, state)) {
+            new_cf.cf_id = get_next_cf_gid();
+            add_cf_to_list(new_cf);
+            new_cf_id = new_cf.cf_id;
+        }
     }
     return new_cf_id;
 }
@@ -613,7 +608,8 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
         cf1.bb.y == cf2.bb.y &&
         cf1.bb.size_x == cf2.bb.size_x &&
         cf1.bb.size_y == cf2.bb.size_y &&
-        cf1.edge_pattern_id == cf2.edge_pattern_id){
+        cf1.edge_pattern_id == cf2.edge_pattern_id &&
+        cf1.edge_pattern_flipped == cf2.edge_pattern_flipped){
         return true;
     }else{
         return false;
@@ -672,7 +668,11 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
     return evaluation;
 }
 
-
+/*
+ * Evaluates if the edge pattern found
+ * Evaluation is done according to the flipped flag
+ * Returns metric if slipped pointer is not null
+ */
 bool evaluate_cf_bb(CodeFragment &cf, float *state, float *metric)
 {
     float region_sum_1 = 0;
@@ -684,7 +684,7 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, float *metric)
         for(int x=0; x<cf.bb.size_x; x++){
             int region = EDGE_PATTERNS[cf.edge_pattern_id][y][x];
             float val = state[translate(cf.bb, x, y)];
-            if(region == 0){
+            if(region == CELL_LIGHT){
                 region_sum_1 += val;
                 region_count_1++;
             }else{
@@ -696,11 +696,11 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, float *metric)
     assert(region_count_1 == region_count_2);
     float region_mean_1 = region_sum_1 / region_count_1;
     float region_mean_2 = region_sum_2 / region_count_2;
-    float diff = std::abs(region_mean_1 - region_mean_2);
+    float diff = region_mean_2 - region_mean_1; // dark - light
+    if(cf.edge_pattern_flipped)  diff = region_mean_1 - region_mean_2;  // light - dark
     if(metric != nullptr){
         *metric = diff;
     }
-
     if(diff > cf.matching_threshold){
         return true;
     }else{
@@ -928,7 +928,7 @@ void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_f
 {
     output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
     << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " "
-    << cf.matching_threshold << " " << cf.edge_pattern_id << std::endl;
+    << cf.matching_threshold << " " << cf.edge_pattern_id << " " << cf.edge_pattern_flipped << std::endl;
     return;
 }
 

@@ -117,7 +117,8 @@ void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &out
 
     output_code_fragment_file << "id" << " " << "numerosity" << " " << "fitness" << " "
                               << "x" << " " << "y" << " " << "size_x" << " " << "size_y" << " "
-                              << "matching_threshold" << " " << "edge_pattern_id" << std::endl;
+                              << "matching_threshold" << " " << "edge_pattern_id" << " "
+                              << "edge_pattern_flipped" << std::endl;
     for(CodeFragment & item : main_cf_list){
         if(item.cf_id == -1) continue; // skip empty slots in the array
         output_code_fragment_to_file(item, output_code_fragment_file);
@@ -154,6 +155,8 @@ void extract_cf_attributes(std::string& line, CodeFragment& cf)
     cf.matching_threshold = fval;
     line1>>fval;
     cf.edge_pattern_id = fval;
+    line1>>val;
+    cf.edge_pattern_flipped = val;
 }
 
 

@@ -207,15 +207,21 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
 void createMatchingCondition(Classifier &cl, float *state)
 {
     bool cf_added = false; // to ensure that at least one cf is added
+    int tries = 0;
     do {
         for (int i = 0; i < clfrCondMaxLength; i++) {
             if (drand() >= P_dontcare) {
-                cf_added = true;
                 CodeFragment new_cf;
-                cl.cf_ids[i] = create_new_cf(state);
+                int id = create_new_cf(state);
+                if(id != -1) {
+                    cl.cf_ids[i] = id;
+                    cf_added = true;
+                }
             }
         }
-    }while(!cf_added);
+        tries++;
+    }while(!cf_added && tries < 100);
+    assert(cf_added);
 }
 
 // ######################### prediction array operations ############################################

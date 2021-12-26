@@ -150,6 +150,8 @@ struct Position
 const int NOT_INITIALIZED = -1;
 const int CELL_LIGHT = 0;
 const int CELL_DARK = 1;
+const int EDGE_PATTERN_NOT_FLIPPED = 0;
+const int EDGE_PATTERN_FLIPPED = 1;
 
 struct CodeFragment
 {
@@ -162,6 +164,7 @@ struct CodeFragment
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
     BoundingBox bb;
     int edge_pattern_id = -1;
+    int edge_pattern_flipped = EDGE_PATTERN_NOT_FLIPPED;  // 0 not flipped, 1 flipped
     float matching_threshold = NOT_INITIALIZED;
 
     CodeFragment()
