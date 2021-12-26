@@ -150,6 +150,7 @@ struct Position
 const int NOT_INITIALIZED = -1;
 const int CELL_LIGHT = 0;
 const int CELL_DARK = 1;
+const int CELL_DONT_CARE = 9;
 const int EDGE_PATTERN_NOT_FLIPPED = 0;
 const int EDGE_PATTERN_FLIPPED = 1;
 
