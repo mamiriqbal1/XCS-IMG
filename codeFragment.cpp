@@ -31,6 +31,46 @@ FilterEvaluationMap evaluation_map;
 FilterEvaluationMap evaluation_validation_map;
 unsigned long map_hits = 0;
 
+/*
+ * define constant patterns for vertical, horizontal and diagonal edges
+ * eventually these should go to some configuration with more generic rotated edges
+ * VERTICAL, HORIZONTAL, DIAGONAL_45, DIAGONAL_135 = 0, 1, 2, 3
+ */
+int EDGE_PATTERNS[4][6][6] =
+        {
+        {
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+        },
+        {
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {1,1,1,1,1,1},
+                {1,1,1,1,1,1},
+                {1,1,1,1,1,1},
+        },
+        {
+                {0,0,0,0,0,1},
+                {0,0,0,0,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,1,1,1,1},
+                {0,1,1,1,1,1},
+        },
+        {
+                {0,1,1,1,1,1},
+                {0,0,1,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,1,1,1},
+                {0,0,0,0,1,1},
+                {0,0,0,0,0,1},
+        }
+        };
 
 
 void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
@@ -150,9 +190,39 @@ void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
     cf.bb = bb;
     FloatMatrix pattern(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
-    cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
+    IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, CELL_LIGHT));
+}
+
+
+
+
+bool detect_new_feature(CodeFragment &cf, float *state)
+{
+    int tries = 0;
+    bool found = false;
+    do{
+        float metric[4] = {0};
+        float max = 0;
+        int max_i = 0;
+        initialize_cf_bounding_box(cf);
+        for(int i=0; i<4; i++) {
+            cf.edge_pattern_id = i;
+            if(evaluate_cf_bb(cf, state, &metric[i])){
+                found = true;
+            }
+            if(metric[i] > max) {
+                max = metric[i];
+                max_i = i;
+            }
+        }
+        if(found){
+            cf.edge_pattern_id = max_i;
+            return true;
+        }
+        tries++;
+    }while(tries < 1000);
+    assert(false); // it must detect a feature
+    return false;
 }
 
 
@@ -174,30 +244,6 @@ void initialize_cf_bounding_box(CodeFragment &cf)
 inline int translate(BoundingBox& bb, int x, int y)
 {
     return (bb.y+y)*image_width + bb.x +x;
-}
-
-
-void set_cf_pattern_and_mask(CodeFragment &cf, float* state)
-{
-    // initialize the pattern and mask
-    // pattern gets all values from the state
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            cf.pattern[y][x] = state[translate(cf.bb, x, y)];
-        }
-    }
-    // mask enables 25% to 75% pixels in the pattern
-    double enabled_pixels_percentage = (drand() / 2) + 0.5;
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            if(true || drand() < enabled_pixels_percentage){
-                cf.mask[y][x] = ENABLED;
-            }else{
-                cf.mask[y][x] = DISABLED;
-            }
-        }
-    }
-
 }
 
 
@@ -532,8 +578,7 @@ int create_new_cf(float *state) {
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
-        initialize_cf_bounding_box(new_cf);
-        set_cf_pattern_and_mask(new_cf, state);
+        detect_new_feature(new_cf, state);
 //        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
 //        addLeafCF(new_cf, state, new_cf.bb);
 //        if (evaluateCF(new_cf, state) != 1) {
@@ -568,30 +613,11 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
         cf1.bb.y == cf2.bb.y &&
         cf1.bb.size_x == cf2.bb.size_x &&
         cf1.bb.size_y == cf2.bb.size_y &&
-        cf1.pattern == cf2.pattern &&
-        cf1.mask == cf2.mask){
+        cf1.edge_pattern_id == cf2.edge_pattern_id){
         return true;
     }else{
         return false;
     }
-
-//    if(cf1.num_filters != cf2.num_filters ||
-//       cf1.reverse_polish != cf2.reverse_polish ||
-//       cf1.bb.x != cf2.bb.x ||
-//       cf1.bb.y != cf2.bb.y ||
-//       cf1.bb.size != cf2.bb.size ||
-////       cf1.filter_positions != cf2.filter_positions ||
-//       cf1.filter_ids != cf2.filter_ids) {
-//        return false;
-//    }else {
-//        for(int i=0; i<cf1.num_filters; i++){
-//            if(cf1.filter_positions[i].x != cf2.filter_positions[i].x ||
-//                cf1.filter_positions[i].y != cf2.filter_positions[i].y){
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
 }
 
 
@@ -647,20 +673,35 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
 }
 
 
-bool evaluate_cf_bb(CodeFragment& cf, float* state)
+bool evaluate_cf_bb(CodeFragment &cf, float *state, float *metric)
 {
-    double distance = 0;
-    int mask_size = 0;
+    float region_sum_1 = 0;
+    float region_sum_2 = 0;
+    int region_count_1 = 0;
+    int region_count_2 = 0;
+
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
-            if(cf.mask[y][x] == ENABLED) {
-                mask_size += 1;
-                distance += std::abs(cf.pattern[y][x] - state[translate(cf.bb, x, y)]);
+            int region = EDGE_PATTERNS[cf.edge_pattern_id][y][x];
+            float val = state[translate(cf.bb, x, y)];
+            if(region == 0){
+                region_sum_1 += val;
+                region_count_1++;
+            }else{
+                region_sum_2 += val;
+                region_count_2++;
             }
         }
     }
+    assert(region_count_1 == region_count_2);
+    float region_mean_1 = region_sum_1 / region_count_1;
+    float region_mean_2 = region_sum_2 / region_count_2;
+    float diff = std::abs(region_mean_1 - region_mean_2);
+    if(metric != nullptr){
+        *metric = diff;
+    }
 
-    if(distance/(mask_size) < cf.matching_threshold){  // average distance per pixel
+    if(diff > cf.matching_threshold){
         return true;
     }else{
         return false;
@@ -670,7 +711,7 @@ bool evaluate_cf_bb(CodeFragment& cf, float* state)
 
 int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train) {
 
-    if(evaluate_cf_bb(cf, state)) return 1;
+    if(evaluate_cf_bb(cf, state, nullptr)) return 1;
     else return 0;
 
 
@@ -886,31 +927,9 @@ inline std::string op_to_str(opType code)
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
     output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
-    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " " << cf.matching_threshold << " ";
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            output_code_fragment_file << cf.pattern[y][x] <<  " ";
-        }
-    }
-    output_code_fragment_file << std::endl;
+    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " "
+    << cf.matching_threshold << " " << cf.edge_pattern_id << std::endl;
     return;
-
-    std::string str;
-    opType code = 0;
-    for(int i=0; i<cfMaxLength; i++){
-        code = cf.reverse_polish[i];
-        if(code == OPNOP){
-            break;
-        }else if(0<=code && code < cfMaxLeaf){  // if code is zero then it is a filter_ids index
-            output_code_fragment_file << "D" << cf.filter_ids[code] << " " << cf.filter_positions[code].x << " " << cf.filter_positions[code].y << " "; // print filter id
-        }else if (code>=condLength && isPreviousLevelsCode(code)){
-            // output previous when implemented
-        }else{
-            // output code str
-            output_code_fragment_file << op_to_str(code) << " ";
-        }
-    }
-    output_code_fragment_file << std::endl;
 }
 
 

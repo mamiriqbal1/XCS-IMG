@@ -582,7 +582,7 @@ bool mutation(Classifier &clfr, float *state)
     for(int i=0; i<clfrCondMaxLength; i++){
         if(drand() < pM){
             changed = true;
-            if(clfr.cf_ids[i] != -1){
+            if(clfr.cf_ids[i] != -1 && count_classifier_cfs(clfr) > 0){
                 clfr.cf_ids[i] = -1; // set as don't care
             }else{
                 CodeFragment new_cf;

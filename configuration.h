@@ -148,8 +148,8 @@ struct Position
 
 
 const int NOT_INITIALIZED = -1;
-const int ENABLED = 1;
-const int DISABLED = 0;
+const int CELL_LIGHT = 0;
+const int CELL_DARK = 1;
 
 struct CodeFragment
 {
@@ -161,8 +161,7 @@ struct CodeFragment
     int numerosity = 1;
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
     BoundingBox bb;
-    FloatMatrix pattern; // -1 not initialized
-    IntMatrix mask;  // 0 disabled, 1 enabled
+    int edge_pattern_id = -1;
     float matching_threshold = NOT_INITIALIZED;
 
     CodeFragment()
