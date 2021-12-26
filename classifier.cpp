@@ -222,6 +222,10 @@ void createMatchingCondition(Classifier &cl, float *state)
         tries++;
     }while(!cf_added && tries < 100);
     assert(cf_added);
+    if(!cf_added) {
+        std::string error("Could not create classifier, no pattern found");
+        throw std::runtime_error(error);
+    }
 }
 
 // ######################### prediction array operations ############################################

@@ -637,7 +637,7 @@ bool is_cf_covered(CodeFragment& cf, Classifier& cl)
 int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, bool train)
 {
     // evaluate cf in the +/- 4 (8x8 region)
-    int region_shift = 0; // INT16_MAX; // 0;
+    int region_shift = 2; // INT16_MAX; // 0;
     // save cf coordinates
     int cf_x = cf.bb.x;
     int cf_y = cf.bb.y;
