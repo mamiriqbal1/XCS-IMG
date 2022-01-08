@@ -8,9 +8,6 @@
 #include <vector>
 #include <list>
 #include <algorithm>
-//#include "flat_hash_map/unordered_map.hpp"
-//#include "flat_hash_map/bytell_hash_map.hpp"
-//#include "HashMap/include/rigtorp/HashMap.h"
 typedef std::vector<double> DoubleVector;
 typedef std::vector<float> FloatVector;
 typedef std::vector<int> IntVector;
@@ -39,11 +36,8 @@ extern int maxPopSize; //=  1000; //1 * totalNumInstances; //Specifies the maxim
 extern int maxProblems;// = trainNumInstances; //50 * totalNumInstances; //1*100*1000; //training set = [ (1, 1.5, 2, 2.5, 3,)*100*1000 for 6-, 11-, 20-, 37-, 70-, 135-bits MUX respectively]
 const double maxPayoff = 1000;
 const int run = 1;
-//const char inputFile[] = "features1.txt";
 extern std::string inputTrainingFile; //[] = "../data/mnist/3_8_train_mnist.txt";
 extern std::string inputTestFile; //[] = "../data/mnist/3_8_test_mnist.txt";
-//const char testFile[] = ""; extern bool Testing;
-//const int currentProblemLevel = 1; //must be set coz previous level and current level file names are adjusted
 
 const int precisionDigits = 2;
 extern int testFrequency;// = trainNumInstances; // 1034;
@@ -172,12 +166,12 @@ struct CodeFragment
 
     CodeFragment()
     {
-        reverse_polish.reserve(cfMaxLength);
-        reverse_polish.assign(cfMaxLength, OPNOP); filter_ids.reserve(cfMaxLeaf);
-        filter_ids.assign(cfMaxLeaf, -1);
-        filter_positions.reserve(cfMaxLeaf);
-        Position p;
-        filter_positions.assign(cfMaxLeaf, p);
+//        reverse_polish.reserve(cfMaxLength);
+//        reverse_polish.assign(cfMaxLength, OPNOP); filter_ids.reserve(cfMaxLeaf);
+//        filter_ids.assign(cfMaxLeaf, -1);
+//        filter_positions.reserve(cfMaxLeaf);
+//        Position p;
+//        filter_positions.assign(cfMaxLeaf, p);
         num_filters = -1;
         cf_id = -1;
     }
@@ -207,8 +201,6 @@ struct Classifier
 };
 
 
-//typedef rigtorp::HashMap<int, Classifier, Hash> ClassifierVector;
-//typedef ska::bytell_hash_map<int, Classifier, Hash> ClassifierVector;
 typedef std::vector<Classifier> ClassifierVector;
 typedef std::vector<int> ClassifierIDVector;
 struct ClassifierSet{

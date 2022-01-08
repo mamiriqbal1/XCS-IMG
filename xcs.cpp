@@ -240,6 +240,7 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
 
     // load state from previous execution in case resume is require
     if(!resume_from.empty()){
+        std::cout << "Resuming experiment from iteration: " + resume_from << std::endl;
         // insert one empty line before resuming performance recording
         output_training_file<<std::endl;
         output_test_file<<std::endl;

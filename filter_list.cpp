@@ -6,9 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <numeric>
 #include <vector>
-#include <float.h>
 #include <stack>
 #include <sstream>
 #include <assert.h>

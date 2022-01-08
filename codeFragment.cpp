@@ -1,20 +1,13 @@
 #include <iostream>
-#include <string.h>
 #include <string>
 #include <assert.h>
 #include <stdlib.h>
-#include <fstream>
-#include <sstream>
-#include <stdio.h>
 #include <math.h>
 #include "xcsMacros.h"
 #include "codeFragment.h"
-#include "env.h"
 #include "filter_list.h"
 #include "cf_list.h"
 #include <unordered_map>
-#include <utility>
-#include <algorithm>
 #include <stack>
 //using namespace std;
 
@@ -23,47 +16,6 @@ int numPreviousCFs = 0;     //When to set
 int startingPreviousCFID = 0;   //what is this value
 
 CodeFragment *previousCFPopulation;
-
-// <image_id, location_where_matched> if location >= 0 then matched otherwise not matched.
-typedef std::unordered_map<int, int> ImageEvaluationMap;
-typedef std::unordered_map<int, ImageEvaluationMap> FilterEvaluationMap;  // <filter_ids, <img_id, bool>>
-FilterEvaluationMap evaluation_map;
-FilterEvaluationMap evaluation_validation_map;
-unsigned long map_hits = 0;
-
-
-
-void print_filter_evaluation_stats(std::ofstream &output_stats_file) {
-    //std::cout<<"--- Filter Evaluation Stats ---\n";
-
-    output_stats_file<<"--- Filter Evaluation Stats ---\n";
-    int size = std::distance(evaluation_map.begin(), evaluation_map.end());
-    int total = 0, positive = 0, min = INT16_MAX, max = -1;
-    std::for_each(evaluation_map.begin(), evaluation_map.end(),
-                  [&total, &positive, &min, &max](const FilterEvaluationMap::value_type & item)
-                  {
-                      int size = item.second.size();
-                      int yes = std::count_if(item.second.begin(), item.second.end(),
-                              [](const ImageEvaluationMap::value_type & item2)
-                              {
-                                return item2.second>=0;
-                              });
-                      total += size;
-                      positive += yes;
-                      if(min > yes) min = yes;
-                      if(max < yes) max = yes;
-                 });
-    //std::cout<<"map hits: "<<map_hits<<std::endl;
-    //std::cout<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
-    //std::cout<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
-    //std::cout<<"--- Filter Evaluation Stats ---\n\n";
-
-    output_stats_file<<"map hits: "<<map_hits<<std::endl;
-    output_stats_file<<"total evaluations recorded: "<<total<<" , total evaluated filters: "<<size<<std::endl;
-    output_stats_file<<"avg positive: "<<positive/(float)size<<" , max positive: "<<max<<" , min positive: "<<min<<std::endl;
-    output_stats_file<<"--- Filter Evaluation Stats ---\n\n";
-}
-
 
 opType str_to_opt(std::string str)
 {
@@ -260,16 +212,6 @@ void addLeafCF(CodeFragment &cf, float *state, BoundingBox bb) {
 }
 
 
-void update_evaluation_cache(std::forward_list<int>& removed_filters){
-    std::forward_list<int>::iterator it;
-    for(it = removed_filters.begin(); it != removed_filters.end(); it++){
-        evaluation_map.erase(*it);
-        evaluation_validation_map.erase((*it));
-    }
-}
-
-
-
 /*
  * This function will save data that can be used to visualize classifiers and filters for an image
  * that was predicted correctly or incorrectly
@@ -376,121 +318,6 @@ bool is_full(CodeFragment& cf){
     }
 }
 
-/*
- * Removes an operator from the cf.
- * Do nothing in case of depth 0 or depth 1 with NOT operator
- */
-//bool remove_operator(CodeFragment& cf, float* state){
-//    int depth = validateDepth(cf.reverse_polish.data());
-//    if(depth == 0) return false;
-//
-//    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
-//        return false;
-//    }
-//    std::vector<int> temp_reverse_polish;
-//    temp_reverse_polish.reserve(cfMaxLength);
-//    temp_reverse_polish.assign(cfMaxLength, OPNOP);
-//    temp_reverse_polish = cf.reverse_polish;
-//    for(int i=0; i<cfMaxLength; i++){
-//        if(cf.reverse_polish[i] < 0){ // its an operator
-//            // remove leaf from leaves list
-//            int leave_index = cf.reverse_polish[i-1];
-//            cf.filter_ids[leave_index] = -1;
-//            for(int j=leave_index+1; j<cfMaxLeaf; j++){
-//                cf.filter_ids[j - 1] = cf.filter_ids[j];
-//            }
-//            cf.filter_ids[cfMaxLeaf - 1] = -1;
-//            // now adjust indexes of all leaves which were greater than leave_index
-//            for(int k=0; k<cfMaxLength; k++){
-//                if(cf.reverse_polish[k] > leave_index){
-//                    cf.reverse_polish[k]--;
-//                    temp_reverse_polish[k]--;
-//                }
-//            }
-//
-//            // shift left all the contents to remove the operator and one operand
-//            std::copy(
-//                    std::next(temp_reverse_polish.begin(),i+1),
-//                    temp_reverse_polish.end(),
-//                    std::next(cf.reverse_polish.begin(),i-1)
-//            );
-//            // now reset last two  slots
-//            auto it = cf.reverse_polish.end();
-//            it--;
-//            *it = OPNOP;
-//            it--;
-//            *it = OPNOP;
-//            cf.num_filters--;
-//            if (evaluateCF(cf, state) != 1){
-//                negate_cf(cf);
-//                assert(evaluateCF(cf, state) == 1);
-//            }
-//            return true;
-//        }
-//    }
-//    assert(false); // should not reach here
-//}
-
-
-
-
-/*
- * Shrink cf by removing an operator from it
- */
-//bool shrink_cf(CodeFragment &cf, float* state){
-//    return remove_operator(cf, state);
-//}
-
-
-/*
- * Adds a new operator to the cf from the operator list. The operator list does not include OPNOT operator.
- * OPNOT will only be added as a result of negation of zero depth cf.
- */
-//bool add_operator(CodeFragment& cf, float* state){
-//    int depth = validateDepth(cf.reverse_polish.data());
-//    if(is_full(cf)) return false;
-////    if(depth >= cfMaxDepth) return false;
-//
-//    if(cf.reverse_polish[1] == OPNOT){ // NOT will only be added to a zero depth cf via negation
-//        assert(depth == 1 && cf.num_filters == 1);
-//        negate_cf(cf); // remove NOT operator
-//    }
-//    opType selected_operator = functionCodes[irand(totalFunctions)];
-//    std::vector<int> temp_reverse_polish;
-//    temp_reverse_polish.reserve(cfMaxLength);
-//    temp_reverse_polish.assign(cfMaxLength, OPNOP);
-//    temp_reverse_polish = cf.reverse_polish;
-//    //std::copy(cf.reverse_polish.begin(), cf.reverse_polish.end(), temp_reverse_polish.begin());
-//    int new_filter_id = get_new_filter(state, BoundingBox(), <#initializer#>);
-//    for(int i=0; i<cfMaxLength; i++){
-//        if(cf.reverse_polish[i] >= 0){ // its an operand
-//            // shift right all the contents to make room for one operand and one operator
-//            std::copy(
-//                    std::next(temp_reverse_polish.begin(),i+1),
-//                    std::prev(temp_reverse_polish.end(),2),
-//                    std::next(cf.reverse_polish.begin(),i+3)
-//                    );
-//            cf.reverse_polish[i+1] = cf.num_filters;
-//            cf.filter_ids[cf.num_filters] = new_filter_id;
-//            cf.num_filters++;
-//            cf.reverse_polish[i+2] = selected_operator;
-//            if(validateDepth(cf.reverse_polish.data()) <= cfMaxDepth) {
-//                // now evaluate cf before returning
-//                if (evaluateCF(cf, state) != 1){
-//                    negate_cf(cf);
-//                    assert(evaluateCF(cf, state) == 1);
-//                }
-//                return true;
-//            }else{  // reset and try the next operand
-//                cf.reverse_polish = temp_reverse_polish;
-//                //std::copy(std::begin(temp_reverse_polish), std::end(temp_reverse_polish), std::begin(cf.reverse_polish));
-//                cf.num_filters--;
-//                cf.filter_ids[cf.num_filters] = -1;
-//            }
-//        }
-//    }
-//    assert(false); // should not reach here
-//}
 
 
 int create_new_cf(float *state) {
@@ -748,48 +575,6 @@ int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train
     return value;
 }
 
-/*
-int evaluateCF(CodeFragment cf, float state[], int cl_id, int img_id){
-    // if cl_id or img_id is -1 then do not check evaluation  map otherwise check for prior results
-    if(cl_id >=0 and img_id >=0){
-        // return prior result if it is found
-        if(evaluation_map.find(pair(cl_id, img_id)) != evaluation_map.end()){  // if found
-            return evaluation_map[pair(cl_id, img_id)];
-        }
-    }
-    // set featureNumber appropriately and then call evaluateCF_old
-    int size = (int)sqrt(cfMaxLeaf);  // filter size
-    int index[size*size];
-    bool done = false;
-    int return_value = 0;
-
-    for(int i=0; i<image_height - size && !done; i++){
-        for(int j=0; j<image_width - size && !done; j++){
-           for(int k=0; k<size; k++){
-               for(int l=0; l<size; l++){
-                   index[k*size+l] = i*image_width+j + k*image_width+l;
-                   cf.leaf[k*size+l].featureNumber = i*image_width+j + k*image_width+l;
-               }
-           }
-           if(evaluateCF_old(cf, state) == 1){
-               done = true;
-               return_value = 1;
-           }else{
-               continue;
-           }
-        }
-    }
-    // reset after evaluation
-    for(int m=0; m<size*size; m++){
-        cf.leaf[m].featureNumber = 0;
-    }
-    // set hasmap entry for re-using evaluation across epochs
-    if(cl_id >=0 and img_id >=0) {
-        evaluation_map[pair(cl_id, img_id)] = return_value;
-    }
-    return return_value;
-}
-*/
 
 bool isPreviousLevelsCode(const opType code){
     return false;

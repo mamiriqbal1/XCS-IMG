@@ -1,15 +1,12 @@
 #include <stdlib.h>
-#include <string.h>
 #include <iostream>
 #include <math.h>
 #include <assert.h>
-#include <fstream>
 #include <vector>
 #include <algorithm>
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "classifier.h"
-#include "env.h"
 #include "filter_list.h"
 #include <float.h>
 #include <iomanip>
@@ -43,7 +40,6 @@ int get_next_cl_gid()
         result = classifier_gid++;
     }
     // reset evaluation cache
-//    evaluation_cache[result].assign(trainNumInstances, UNKNOWN);
     std::fill(evaluation_cache[result].begin(), evaluation_cache[result].end(), UNKNOWN);
     return result;
 }
@@ -361,7 +357,7 @@ void getActionSet(int action, ClassifierSet &match_set,
     }
 }
 
-// update the fitnesses of an action set (the previous [A] in multi-step envs or the current [A] in single-step envs.)
+// update the fitness of an action set (the previous [A] in multi-step envs or the current [A] in single-step envs.)
 /*
  * code review notes
  * correctly implementation
@@ -511,40 +507,6 @@ void tournament_selection(Classifier &child, int &parent, ClassifierSet &set, do
     random_it = std::next(winner_set.begin(), irand(winner_set.size()));
     child = population[*random_it];
     parent = *random_it;
-}
-
-void tournament_selection_(Classifier &child, int &parent, ClassifierSet &set, double setsum)
-{
-    int first_index = irand(set.ids.size());
-    int second_index = irand(set.ids.size());
-    if(first_index > second_index){
-        int temp = first_index;
-        first_index = second_index;
-        second_index = temp;
-    }
-    int first=-1, second=-1;
-    auto it = set.ids.begin();
-    std::next(it, first_index);
-    first = *it;
-    std::next(it, second_index - first_index);
-    second = *it;
-    assert(first != -1);
-    assert(second != -1);
-    int selected = -1;
-    if(population[first].fitness > population[second].fitness){
-        selected = first;
-    }else if(population[first].fitness < population[second].fitness){
-        selected = second;
-    }else{
-        int r = irand(2);
-        if(r == 0){
-            selected = first;
-        }else{
-            selected = second;
-        }
-    }
-    child = population[selected];
-    parent = selected;
 }
 
 // ########################### selection mechanism ########################################
@@ -982,7 +944,6 @@ void save_experiment_results(std::string path_postfix)
     print_population_stats(output_stats_file);
     print_code_fragment_stats(output_stats_file);
     print_filter_stats(output_stats_file);
-    print_filter_evaluation_stats(output_stats_file);
     write_classifier_header(output_classifier_file);
     for(auto& item : population)
     {
@@ -1000,27 +961,6 @@ void save_experiment_results(std::string path_postfix)
     output_stats_file.close();
     output_parameter_file.close();
 }
-
-/**
- * print a single classifier to the file fp
- */
-/*
-void fprintClassifier(FILE *fp, Classifier *classifier){
-	char buf[1000];
-	for(int i=0; i<clfrCondMaxLength; i++){
-		outprog(classifier->code_fragment[i].reverse_polish,cfMaxLength,fp);
-		fwrite("\n",strlen("\n"),1,fp);
-	}
-	sprintf(buf,"Action: %d\n",classifier->action); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Numerosity: %d ",classifier->numerosity); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Accuracy: %f ",classifier->accuracy); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Fitness: %f ",classifier->fitness); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Prediction Error: %f ",classifier->predictionError); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Prediction: %f ",classifier->prediction); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Experience: %d ",classifier->experience); fwrite(buf,strlen(buf),1,fp);
-	sprintf(buf,"Specificness: %d\n",classifier->specificness); fwrite(buf,strlen(buf),1,fp);
-}
-*/
 
 
 void write_classifier_header(std::ofstream &output_classifier_file)
@@ -1129,7 +1069,6 @@ void manage_filter_and_cf_list() {
     // remove filters with numerosity=0 from the filter list
     std::forward_list<int> removed_filters;
     remove_unused_filters(removed_filters);
-    update_evaluation_cache(removed_filters);
     prepare_promising_filter_list();
     remove_unused_cf();
     prepare_promising_cf_list();

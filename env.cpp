@@ -1,16 +1,9 @@
-#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
 #include <math.h>
-#include <string.h>
-#include <cstring>
-#include <assert.h>
-#include "xcsMacros.h"
 #include "configuration.h"
 #include "env.h"
-#include "codeFragment.h"
 #include "filter_list.h"
 #include "cf_list.h"
 
@@ -42,8 +35,6 @@ void initializeInput(DataSource inputArray[],int numofRows){
 }
 
 float roundRealValue(float val, int num){
-    // do nothing
-    return val;
     float p = (float)pow(10.0,num);
     val = val * p;
     float tmp = roundf(val);
@@ -66,24 +57,6 @@ void normalize_image(DataSource *data, int totalRows){
                 data[docNo].state[featureNo] = data[docNo].state[featureNo] / IMAGE_MAX_VALUE;
             }
         }
-}
-
-// This is my improved re-written function for laoding data
-int LoadDataFromFile(DataSource data[], const char inputFile[])
-{
-    std::string line;
-    std::ifstream infile(inputFile);
-
-    if(infile.is_open()){
-        while(getline(infile, line)){
-            std::stringstream line_stream(line);
-
-        }
-    }else{
-        std::string error("Error opening input file: ");
-        error.append(inputFile).append(", could not load data!");
-        throw std::runtime_error(error);
-    }
 }
 
 

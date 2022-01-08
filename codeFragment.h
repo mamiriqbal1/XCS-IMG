@@ -27,8 +27,6 @@ opType* randomProgram(opType prog[], const int isfull, const int maxDepth, const
 void DepthMax(const opType* const end,opType** prog, int& argstogo, int& depth);
 
 
-void update_evaluation_cache(std::forward_list<int>& removed_filters);
-void print_filter_evaluation_stats(std::ofstream &output_stats_file);
 bool mutate_cf(CodeFragment &cf, float *state);
 
 bool shrink_cf(CodeFragment &cf, float* state);
