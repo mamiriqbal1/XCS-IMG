@@ -1,15 +1,10 @@
 #include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include <sstream>
-#include <assert.h>
 #include <math.h>
-#include <cstring>
 #include <vector>
 #include "xcsMacros.h"
 #include "configuration.h"
@@ -20,7 +15,6 @@
 #include <execinfo.h>
 #include <signal.h>
 #include "codeFragment.h"
-#include "filter_list.h"
 #include "cf_list.h"
 #include <chrono>
 #include <ctime>
@@ -86,11 +80,9 @@ std::string resume_from;
 double executeAction(int action, int stateAction, bool &wasCorrect){  // Executes the action and determines the reward.
 
     int ret=0;
-   // std::cout<<"--- "<<action<<" = " <<stateAction<<"--- ";
 
     if(action == stateAction)
     {
-       // std::cout<<"-- "<<action << " = "<<stateAction<<"--";
         wasCorrect=true;
         ret = maxPayoff;
     }
@@ -178,7 +170,6 @@ void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &co
     double reward;
     bool explore = false;
 
-    //if(drand() < epsilon - ((float)counter/(float)maxProblems)/2.0){  // steadily decrease the exploration probability
     if(drand() < epsilon){
         explore = true;
     }else{
@@ -213,27 +204,8 @@ void doOneSingleStepProblem(DataSource *object, int counter, int img_id, int &co
 }
 
 
-void load_parameter(std::string parameter_file_name)
-{
-    std::string line;
-    std::ifstream parameter_file(parameter_file_name);
-    if (!parameter_file.is_open()) {
-        std::string error("Error opening input file: ");
-        error.append(parameter_file_name).append(", could not load data!");
-        throw std::runtime_error(error);
-    }
-    getline(parameter_file, line);
-    std::string str;
-    std::stringstream line1(line);
-    line1>>str;
-    line1>>pM;
-}
-
-
 void load_state_for_resume()
 {
-//    load_parameter(output_path + resume_from + output_filter_file_name);
-//    load_filter_for_resume(output_path + resume_from + output_filter_file_name);
     load_cf_for_resume(output_path + resume_from + output_code_fragment_file_name);
     load_classifier(output_path + resume_from + output_classifier_file_name);
 }
@@ -284,12 +256,6 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
     }
     for( ; problem_count <= maxProblems; problem_count++)
     {
-        int pop_size = get_pop_size(false);
-        int pop_numerosity = get_pop_size(true);
-        //std::cout<<problem_count<<"/"<<maxProblems<<"  "<<pop_size<<"/"<<pop_numerosity<<"\r";
-        // state = inputArray[irand(totalNumInstances)];
-        //index = ;
-        //state = &inputArray[irand(totalNumInstances)];
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
 
@@ -359,7 +325,6 @@ doOneSingleStepTest(int training_problem_count, std::ofstream &output_test_file,
 	for(int t=0; t<testNumInstances; t++){
         ClassifierSet match_set(maxPopSize);
         ClassifierSet action_set(maxPopSize);
-        //std::cout<<t<<"/"<<testNumInstances<<"\r";
 		bool isMatched = false;
 		testState = &testingData[t];
 
@@ -628,77 +593,6 @@ void LoadConfig(char* file)
     condLength = image_width*image_height;
 }
 
-/*
-void copy_filter_to_condition(Classifier *classifer, xt::xtensor<float, 1> filter)
-{
-     Leaf *leaf = classifer->code_fragment[0].leaf;
-
-     for (int i = 0; i < cfMaxLeaf; i++) {
-        leaf[i].lowerBound = filter(i*2);
-        leaf[i].upperBound = filter(i*2+1);
-     }
-}
-
-void count_matches_for_filters(xt::xtensor<float, 2> good_filters, xt::xtensor<float, 2> good_actions)
-{
-
-    int num_filters = good_actions.shape()[0];
-    Classifier *classifier;
-    // create a dummy classifier code_fragment and reuse for all filters later
-    DataSource *obj = &trainingData[0];
-    classifier = matchingCondAndSpecifiedAct(obj->state, 0, 1, 1);
-    CodeFragment *cfs = classifier->code_fragment;
-
-    for (int i = 0; i < num_filters; i++) {
-        int match_0 = 0;
-        int match_1 = 0;
-        int matched = 0;
-
-        copy_filter_to_condition(classifier, xt::view(good_filters, i, xt::all()));
-        for (int j = 0; j < trainNumInstances; j++) {
-            obj = &trainingData[j];
-            if(isConditionMatched(cfs, obj->state, -1, -1)){
-                matched++;
-                if(obj->action == 0){
-                    match_0++;
-                }else{
-                    match_1++;
-                }
-            }
-        }
-
-        std::cout << good_actions(i,0) << " , " << matched << " , " << match_0 << " , " << match_1 << std::endl;
-    }
-}
-*/
-
-void analyze_rules()
-{
-
-    trainingData = new DataSource[trainNumInstances];
-    testingData = new DataSource[testNumInstances];
-    initializeInput(trainingData,trainNumInstances);
-    initializeInput(testingData,testNumInstances);
-    loadDataFromFile(trainingData, inputTrainingFile.c_str(), trainNumInstances);
-    loadDataFromFile(testingData, inputTestFile.c_str(), testNumInstances);
-    normalize_image(trainingData, trainNumInstances);
-    normalize_image(testingData, testNumInstances);
-
-    // load good filters
-//    std::ifstream filters_file;
-//    filters_file.open(analyze_path + "all_filters.txt");
-//    auto good_filters = xt::load_csv<float>(filters_file);
-//    std::ifstream actions_file;
-//    actions_file.open(analyze_path + "all_actions.txt");
-//    auto good_actions = xt::load_csv<float>(actions_file);
-
-
-    //count_matches_for_filters(good_filters, good_actions);
-
-
-
-}
-
 
 void handler(int sig) {
     void *array[100];
@@ -744,12 +638,8 @@ int main(int argc, char **argv){
     initialize_population(maxPopSize + 10);
     // initialize size of cf_list such that it can accommodate enough code fragments before periodic cleanup
     initialize_cf_list(clfrCondMaxLength*(maxPopSize + filter_list_management_frequency*numActions));
-//    initialize_filter_list(clfrCondMaxLength * cfMaxLeaf * (maxPopSize + filter_list_management_frequency*numActions));
 
-    if(analyze){
-        analyze_rules();
-        return 0;
-    }
+
     // check if resume is needed by looking for validation_performance file
     std::ifstream validation_file(output_path + output_test_file_name);
     if(validation_file.is_open()){
@@ -773,13 +663,8 @@ int main(int argc, char **argv){
     for(int j=0; j<run; j++)
     {
         mkdir(output_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        //mkdir(path);
         setSeed(seeds[j]);
 
-        if (use_kb)
-        {
-            // open kb file
-        }
         startXCS();
     }
 
