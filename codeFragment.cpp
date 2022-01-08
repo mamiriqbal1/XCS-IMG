@@ -149,8 +149,6 @@ void initializeNewCF(int id, CodeFragment &cf)
 void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
     cf.bb = bb;
-    FloatMatrix pattern(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    IntMatrix mask(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
     cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
     cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
 }

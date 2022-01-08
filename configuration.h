@@ -14,8 +14,10 @@
 typedef std::vector<double> DoubleVector;
 typedef std::vector<float> FloatVector;
 typedef std::vector<int> IntVector;
+typedef std::vector<char> CharVector;
 typedef std::vector<FloatVector> FloatMatrix;
 typedef std::vector<IntVector> IntMatrix;
+typedef std::vector<CharVector> CharMatrix;
 typedef std::unordered_map<int, int> IntMap;
 
 extern bool normalize_data;
@@ -150,6 +152,9 @@ struct Position
 const int NOT_INITIALIZED = -1;
 const int ENABLED = 1;
 const int DISABLED = 0;
+const char UNKNOWN = -1;
+const char MATCHED = 1;
+const char NOT_MATCHED = 0;
 
 struct CodeFragment
 {

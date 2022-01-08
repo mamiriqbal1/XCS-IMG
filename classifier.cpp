@@ -17,6 +17,7 @@
 #include <stack>
 #include "cf_list.h"
 
+CharMatrix evaluation_cache;
 
 ClassifierVector population; //(maxPopSize + 10);
 int classifier_gid=0; // global incremental id to  uniquely identify the classifiers for evaluation reuse
@@ -31,15 +32,20 @@ std::stack<int, std::vector<int>> classifier_gid_stack(cl_gid_vector);
 
 int get_next_cl_gid()
 {
+    int result = -1;
     if(classifier_gid_stack.size()>0){
         int val = classifier_gid_stack.top();
         classifier_gid_stack.pop();
-        return val;
+        result = val;
     }else{
         // only grow the vector when a new element is needed
         population.resize(classifier_gid+1);
-        return classifier_gid++;
+        result = classifier_gid++;
     }
+    // reset evaluation cache
+//    evaluation_cache[result].assign(trainNumInstances, UNKNOWN);
+    std::fill(evaluation_cache[result].begin(), evaluation_cache[result].end(), UNKNOWN);
+    return result;
 }
 
 
@@ -61,6 +67,8 @@ void initialize_parameters()
 void initialize_population(int size)
 {
     population.reserve(size);
+    // create a matrix with rows=population size and columns = number of images
+    evaluation_cache = CharMatrix(size, CharVector (trainNumInstances, UNKNOWN));
 }
 
 void setInitialVariables(Classifier &clfr, double setSize, int time){
@@ -183,14 +191,25 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
-    for(int i=0; i < clfrCondMaxLength; i++)
-    {
-        if(cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0 )
-        {
-            return false;
+    bool result = false;
+    if(train && evaluation_cache[cl.id][img_id] == NOT_MATCHED) result = false;
+    else if(train && evaluation_cache[cl.id][img_id] == MATCHED)  result = true;
+    else {
+        bool matched = true;
+        for (int i = 0; i < clfrCondMaxLength && matched; i++) {
+            if (cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0) {
+                matched = false;
+            }
+        }
+        if(matched)  result = true;
+        else  result = false;
+
+        if(train){
+            if(matched)  evaluation_cache[cl.id][img_id] = MATCHED;
+            else  evaluation_cache[cl.id][img_id] = NOT_MATCHED;
         }
     }
-    return true;
+    return result;
 }
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time)
 {
