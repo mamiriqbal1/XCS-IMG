@@ -13,7 +13,8 @@ bool isDontcareCF(CodeFragment &cf);
 int validateDepth(opType *cf);
 void initializeNewCF(int id, CodeFragment &cf);
 
-int evaluateCF(CodeFragment &cf, float *state, int cl_id = -1, int img_id = -1, bool train = true);
+int evaluateCF(CodeFragment &cf, float *state, int shift_x, int shift_y, int cl_id = -1, int img_id = -1,
+               bool train = true);
 int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id = -1, int img_id = -1, bool train = true);
 bool isPreviousLevelsCode(const opType code);
 
@@ -42,8 +43,8 @@ void transfer_filters_from_kb_cf(CodeFragment & kb_cf);
 void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb);
 void initialize_cf_bounding_box(CodeFragment &cf);
 int translate(BoundingBox& bb, int x, int y);
-void set_cf_pattern_and_mask(CodeFragment &cf, float* state);
-bool evaluate_cf_bb(CodeFragment& cf, float* state);
+bool set_cf_pattern_and_mask(CodeFragment &cf, float* state);
+bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y);
 
 
 

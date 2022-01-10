@@ -63,5 +63,6 @@ void initialize_population(int size);
 void add_new_classifiers_to_population(float* state, int action, int itTime);
 void write_classifier_header(std::ofstream &output_classifier_file);
 void initialize_parameters();
+void update_cl_bb(Classifier& cl);
 
 #endif //XCS_IMG_CL_H

@@ -127,15 +127,23 @@ inline int translate(BoundingBox& bb, int x, int y)
 }
 
 
-void set_cf_pattern_and_mask(CodeFragment &cf, float* state)
+bool set_cf_pattern_and_mask(CodeFragment &cf, float* state)
 {
+    bool result = false;
+    float max = 0;
+    float min = 1;
     // initialize the pattern and mask
     // pattern gets all values from the state
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             cf.pattern[y][x] = state[translate(cf.bb, x, y)];
+            if(cf.pattern[y][x] > max) max = cf.pattern[y][x];
+            if(cf.pattern[y][x] < min) min = cf.pattern[y][x];
         }
     }
+    // see if region is not all homogeneous
+    if(max - min > 0.1) result = true;
+
     // mask enables 25% to 75% pixels in the pattern
     double enabled_pixels_percentage = (drand() / 2) + 0.5;
     for(int y=0; y<cf.bb.size_y; y++){
@@ -148,6 +156,7 @@ void set_cf_pattern_and_mask(CodeFragment &cf, float* state)
         }
     }
 
+    return result;
 }
 
 
@@ -357,8 +366,11 @@ int create_new_cf(float *state) {
     if (new_cf_id == -1) { // if cf not received from kb
         CodeFragment new_cf;
         initializeNewCF(-1, new_cf);
-        initialize_cf_bounding_box(new_cf);
-        set_cf_pattern_and_mask(new_cf, state);
+        bool found_interesting_region = false;
+        do {
+            initialize_cf_bounding_box(new_cf);
+            found_interesting_region = set_cf_pattern_and_mask(new_cf, state);
+        }while(!found_interesting_region);
 //        opType *end = randomProgram(new_cf.reverse_polish.data(), 0, cfMaxDepth, cfMinDepth);
 //        addLeafCF(new_cf, state, new_cf.bb);
 //        if (evaluateCF(new_cf, state) != 1) {
@@ -458,7 +470,7 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
         for(int x=x_start; x<=x_end && !matched; x++){
             cf.bb.y = y;
             cf.bb.x = x;
-            if(evaluateCF(cf, state, cl_id, img_id, train)){  // keep x,y coordinates for successful evaluation and return true
+            if(evaluateCF(cf, state, 0, 0, cl_id, img_id, train)){  // keep x,y coordinates for successful evaluation and return true
                 matched = true;
             }
         }
@@ -472,15 +484,19 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
 }
 
 
-bool evaluate_cf_bb(CodeFragment& cf, float* state)
+bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
 {
     double distance = 0;
     int mask_size = 0;
+
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             if(cf.mask[y][x] == ENABLED) {
                 mask_size += 1;
-                distance += std::abs(cf.pattern[y][x] - state[translate(cf.bb, x, y)]);
+                BoundingBox bb = cf.bb;
+                bb.y = bb.y + shift_y;
+                bb.x = bb.x + shift_x;
+                distance += std::abs(cf.pattern[y][x] - state[translate(bb, x, y)]);
             }
         }
     }
@@ -493,86 +509,9 @@ bool evaluate_cf_bb(CodeFragment& cf, float* state)
 }
 
 
-int evaluateCF(CodeFragment &cf, float *state, int cl_id, int img_id, bool train) {
-
-    if(evaluate_cf_bb(cf, state)) return 1;
+int evaluateCF(CodeFragment &cf, float *state, int shift_x, int shift_y, int cl_id, int img_id, bool train) {
+    if(evaluate_cf_bb(cf, state, shift_x, shift_y)) return 1;
     else return 0;
-
-
-    int stack[cfMaxStack];
-    stack[0] = 0;
-    int SP = 0;
-    int tmptmpfval1 = 0;
-    for(int i=0; /*i<cfMaxLength*/; i++)
-    {
-        const opType opcode = cf.reverse_polish[i];
-        if(opcode == OPNOP)
-        {
-            break;
-        }
-        if(isPreviousLevelsCode(opcode))  //CF from any previous level
-        {
-
-            int valueOfCF = evaluateCF(previousCFPopulation[opcode - condLength], state, train);
-            stack[SP++] = valueOfCF;
-        }
-        else if(0<=opcode && opcode<condLength)  //code_fragment bit
-        {
-
-            //if(cf.leaf[opcode].lowerBound<=state[cf.leaf[opcode].featureNumber] && state[cf.leaf[opcode].featureNumber]<=cf.leaf[opcode].upperBound)
-            Position p;
-            p.x = cf.bb.x + cf.filter_positions[opcode].x;
-            p.y = cf.bb.y + cf.filter_positions[opcode].y;
-            int result = evaluate_filter(get_filter(cf.filter_ids[opcode]), state, p, cl_id, img_id, train);
-
-            if(result != -1)  // if matched
-            {
-                stack[SP++] = 1;   //changed
-            }
-            else // if not matched
-            {
-                stack[SP++] = 0;   //changed
-            }
-
-        }
-        else if(opcode == OPNOT)
-        {
-            const int sp = stack[--SP];
-            stack[SP++] = (!sp)?1:0;
-            // no change in the filter stack because NOT retains all filters regardless its bool value
-        }
-        else
-        {
-            const int sp2 = stack[--SP];
-            const int sp1 = stack[--SP];
-
-            switch(opcode)
-            {
-            case OPAND:
-                stack[SP++] = (sp1&&sp2)?1:0;
-                break;
-            case OPOR:
-                stack[SP++] = (sp1||sp2)?1:0;
-                break;
-            case OPNAND:
-                stack[SP++] = (sp1&&sp2)?0:1;
-                break;
-            case OPNOR:
-                stack[SP++] = (sp1||sp2)?0:1;
-                break;
-            case OPXOR:
-                stack[SP++] = (sp1!=sp2)?1:0;
-                break;
-            case OPXNOR:
-                stack[SP++] = (sp1!=sp2)?0:1;
-                break;
-            }//end switch
-        }
-    }
-    int value = stack[--SP];
-    //std::cout<<"SP: "<<SP<<"\n";
-    assert(SP==0);
-    return value;
 }
 
 

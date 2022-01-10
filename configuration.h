@@ -131,8 +131,8 @@ struct BoundingBox
     // bounding box related parameters; x, y coordinates and size, height
     int x = -1;
     int y = -1;
-    int size_x = -1;
-    int size_y = -1;
+    int size_x = -1;  // size_x == pixel width, for a 1x1 bb size_x == 1, for 2x2 size_x == 2, it can not be zero
+    int size_y = -1;  // end coordinate of bb end_x = x + size_x -1
 };
 
 struct Position
@@ -195,6 +195,7 @@ struct Classifier
     int numerosity = 0;
     double actionSetSize = 0;
     int timeStamp = 0;
+    BoundingBox bb; // a calculated value based on cf bounding boxes
     Classifier() : cf_ids(clfrCondMaxLength){
         cf_ids.assign(clfrCondMaxLength, -1);
     }

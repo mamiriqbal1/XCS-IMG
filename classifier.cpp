@@ -67,6 +67,26 @@ void initialize_population(int size)
     evaluation_cache = CharMatrix(size, CharVector (trainNumInstances, UNKNOWN));
 }
 
+
+void update_cl_bb(Classifier& cl)
+{
+    BoundingBox& bb = cl.bb;
+    bb.x = image_width;
+    bb.y = image_height;
+    bb.size_x = 0;
+    bb.size_y = 0;
+    for(int id : cl.cf_ids){
+        if(id != -1){
+            CodeFragment& cf = get_cf(id);
+            if(cf.bb.x < bb.x)  bb.x = cf.bb.x;
+            if(cf.bb.y < bb.y)  bb.y = cf.bb.y;
+            if(cf.bb.x + cf.bb.size_x > bb.x + bb.size_x)  bb.size_x = cf.bb.x + cf.bb.size_x - bb.x;
+            if(cf.bb.y + cf.bb.size_y > bb.y + bb.size_y)  bb.size_y = cf.bb.y + cf.bb.size_y - bb.y;
+        }
+    }
+}
+
+
 void setInitialVariables(Classifier &clfr, double setSize, int time){
 //    clfr.id = get_next_cl_gid();  // it will be set just before adding to population
     clfr.prediction = predictionIni;
@@ -77,6 +97,7 @@ void setInitialVariables(Classifier &clfr, double setSize, int time){
     clfr.experience = 0;
     clfr.actionSetSize = 1; // chnged to 1 as per paper instead of setSize argument
     clfr.timeStamp = time;
+    update_cl_bb(clfr);
 }
 
 
@@ -185,28 +206,58 @@ int nrActionsInSet(ClassifierSet &match_set, bool *coveredActions)
 }
 
 
+bool isConditionMatched_actual(Classifier &cl, float state[], int shift_x, int shift_y, int img_id, bool train)
+{
+    bool matched = true;
+    for (int i = 0; i < clfrCondMaxLength && matched; i++) {
+        if (cl.cf_ids[i] != -1 && evaluateCF(get_cf(cl.cf_ids[i]), state, shift_x, shift_y, cl.id, img_id, train) == 0) {
+            matched = false;
+        }
+    }
+
+    return matched;
+}
+
+
 bool isConditionMatched(Classifier &cl, float state[], int img_id, bool train)
 {
     bool result = false;
-    if(train && evaluation_cache[cl.id][img_id] == NOT_MATCHED) result = false;
-    else if(train && evaluation_cache[cl.id][img_id] == MATCHED)  result = true;
+    if(train && evaluation_cache[cl.id][img_id] == NOT_MATCHED) {
+        result = false;
+    }
+    else if(train && evaluation_cache[cl.id][img_id] == MATCHED) {
+        result = true;
+    }
     else {
-        bool matched = true;
-        for (int i = 0; i < clfrCondMaxLength && matched; i++) {
-            if (cl.cf_ids[i] != -1 && evaluate_cf_slide(get_cf(cl.cf_ids[i]), state, cl.id, img_id, train) == 0) {
-                matched = false;
+        int region_shift = slide_region;
+        // save cf coordinates
+        int cl_x = cl.bb.x;
+        int cl_y = cl.bb.y;
+
+        // define region of search
+        int y_start = std::max(cl_y - region_shift, 0);
+        int x_start = std::max(cl_x - region_shift, 0);
+        int y_end = std::min(cl_y + region_shift, image_height - cl.bb.size_y);
+        int x_end = std::min(cl_x + region_shift, image_width - cl.bb.size_x);
+
+        for (int y = y_start; y <= y_end && !result; y++) {
+            for (int x = x_start; x <= x_end && !result; x++) {
+                int shift_y = y - cl.bb.y;
+                int shift_x = x - cl.bb.x;
+                if (isConditionMatched_actual(cl, state, shift_x, shift_y, img_id, train)) {
+                    result = true;
+                }
             }
         }
-        if(matched)  result = true;
-        else  result = false;
-
         if(train){
-            if(matched)  evaluation_cache[cl.id][img_id] = MATCHED;
+            if(result)  evaluation_cache[cl.id][img_id] = MATCHED;
             else  evaluation_cache[cl.id][img_id] = NOT_MATCHED;
         }
     }
     return result;
 }
+
+
 void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setSize, int time)
 {
     createMatchingCondition(cl, state);
@@ -423,10 +474,12 @@ void discoveryComponent(ClassifierSet &action_set, int itTime, float *situation,
     child[0].prediction   = (child[0].prediction + child[1].prediction) / 2.0;
     child[0].predictionError = predictionErrorReduction * ((child[0].predictionError + child[1].predictionError) / 2.0 );
     child[0].fitness = fitnessReduction * ((child[0].fitness + child[1].fitness) / 2.0 );
+    update_cl_bb(child[0]);
 
     child[1].prediction = child[0].prediction;
     child[1].predictionError = child[0].predictionError;
     child[1].fitness = child[0].fitness;
+    update_cl_bb(child[1]);
 
     // get the length of the population to check if clasifiers have to be deleted
     len = get_pop_size(true);
@@ -976,6 +1029,10 @@ void write_classifier_header(std::ofstream &output_classifier_file)
     output_classifier_file << "action_set_size ";
     output_classifier_file << "time_stamp ";
     output_classifier_file << "action ";
+    output_classifier_file << "bb_x ";
+    output_classifier_file << "bb_y ";
+    output_classifier_file << "bb_size_x ";
+    output_classifier_file << "bb_size_y ";
     output_classifier_file << "cfs... ";
     output_classifier_file << std::endl;
 
@@ -995,6 +1052,10 @@ void fprintClassifier(Classifier &classifier, std::ofstream &output_classifier_f
     output_classifier_file << classifier.actionSetSize << " ";
     output_classifier_file << classifier.timeStamp << " ";
     output_classifier_file << classifier.action << " ";
+    output_classifier_file << classifier.bb.x << " ";
+    output_classifier_file << classifier.bb.y << " ";
+    output_classifier_file << classifier.bb.size_x << " ";
+    output_classifier_file << classifier.bb.size_y << " ";
 
     for(auto & id : classifier.cf_ids)
     {
@@ -1128,6 +1189,10 @@ void load_classifier(std::string classifier_file_name)
         line1>>cl.actionSetSize;
         line1>>cl.timeStamp;
         line1>>cl.action;
+        line1>>cl.bb.x;
+        line1>>cl.bb.y;
+        line1>>cl.bb.size_x;
+        line1>>cl.bb.size_y;
 
         for(int i=0; i<clfrCondMaxLength; i++){
             line1>>cl.cf_ids[i];

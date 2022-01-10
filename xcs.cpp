@@ -59,6 +59,7 @@ int cfMinLeaf = 1;// = 1; // 2^cfMinDepth
 int cf_max_bounding_box_size = image_height;
 int cf_min_bounding_box_size = max_filter_size * 2;
 float filter_matching_threshold = 0.001; // thresh hold for filter matching
+int slide_region = 0;
 
 std::string inputTrainingFile;
 std::string inputTestFile;
@@ -466,6 +467,8 @@ void LoadConfig(char* file)
                 cf_min_bounding_box_size = atoi(value.c_str());
             }else if(name == "filter_matching_threshold"){
                 filter_matching_threshold = atof(value.c_str());
+            }else if(name == "slide_region"){
+                slide_region = atoi(value.c_str());
             }else if(name == "pX_start"){
                 pX_start = atof(value.c_str());
                 pX = pX_start;
