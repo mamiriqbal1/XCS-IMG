@@ -142,7 +142,7 @@ bool set_cf_pattern_and_mask(CodeFragment &cf, float* state)
         }
     }
     // see if region is not all homogeneous
-    if(max - min > 0.1) result = true;
+    if(max - min > 0.05) result = true;
 
     // mask enables 25% to 75% pixels in the pattern
     double enabled_pixels_percentage = (drand() / 2) + 0.5;
