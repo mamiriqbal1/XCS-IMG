@@ -69,31 +69,6 @@ extern int cfMinLeaf;// = 1; // 2^cfMinDepth
 
 
 
-struct Filter{
-    int id=-1; // uninitialized value
-    int numerosity = 1; // initial numerosity when a filter is created
-    // Fitness of a filter is the appearance of the filter in "promising classifiers"
-    // a promising classifier is one whose error < 10 and experience > 10
-    int fitness = 0; // Fitness of a filter is the appearance of the filter in "promising classifiers"
-    int size_x = -1;
-    int size_y = -1;
-    std::vector<float> values;
-    bool is_dilated = false; // what is the type of filter normal or dilated
-};
-
-struct Hash {
-    size_t operator()(int v) const { return v; }
-};
-
-//typedef rigtorp::HashMap<int, Filter, Hash> FilterMap;
-typedef std::vector<Filter> FilterMap;
-
-struct FilterList{
-    FilterMap filters;
-    int gid = 0;
-    int max_size_limit = N_filter_ol;
-};
-
 // CF will now have a bounding box within which all filters will lie.
 extern int cf_max_bounding_box_size;
 extern int cf_min_bounding_box_size;

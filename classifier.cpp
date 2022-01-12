@@ -264,7 +264,6 @@ void matchingCondAndSpecifiedAct(Classifier &cl, float *state, int act, int setS
     setInitialVariables(cl,setSize,time);
 }
 
-//todo: create_new_cf should be done to temporary location and should be added to main cf_list only when cl is added to pop
 
 /*
  * Default cf has id == -1 that represent don't care
