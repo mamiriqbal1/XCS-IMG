@@ -7,15 +7,14 @@
 #include "cf_list.h"
 
 
-FloatVector lowerLimit; //[condLength];
-FloatVector upperLimit; //[condLength];
+float max_pixel_value = IMAGE_MIN_VALUE;
+float min_pixel_value = IMAGE_MAX_VALUE;
+
+float min_binary_threshold = IMAGE_MIN_VALUE;
+float max_binary_threshold = IMAGE_MAX_VALUE;
 
 void initialize_env()
 {
-    FloatVector l(condLength);
-    lowerLimit = l;
-    FloatVector  u(condLength);
-    upperLimit = u;
 
 }
 
@@ -91,10 +90,10 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
                         //tfIDF = roundRealValue(tfIDF,precisionDigits);
                         data[docIndex].state[featureIndex] = tfIDF;
 
-                        if(tfIDF>upperLimit[featureIndex])
-                            upperLimit[featureIndex] = tfIDF;
-                        if(tfIDF<lowerLimit[featureIndex])
-                            lowerLimit[featureIndex] = tfIDF;
+                        if(tfIDF>max_pixel_value)
+                            max_pixel_value = tfIDF;
+                        if(tfIDF<min_pixel_value)
+                            min_pixel_value = tfIDF;
                     }
                     featureIndex++;
                 }
@@ -104,6 +103,9 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
                 break;
             }
         }
+
+        max_binary_threshold = max_pixel_value / IMAGE_MAX_VALUE;
+        min_binary_threshold = min_pixel_value / IMAGE_MAX_VALUE;
     }else{
         std::string error("Error opening input file: ");
         error.append(inputFile).append(", could not load data!");

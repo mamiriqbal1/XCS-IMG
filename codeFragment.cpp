@@ -11,6 +11,9 @@ void initializeNewCF(int id, CodeFragment &cf)
 {
     cf.cf_id = id;
     cf.matching_threshold = filter_matching_threshold;
+    cf.numerosity = NUMEROSITY_INITIALIZATION;
+    cf.fitness = FITNESS_INITIALIZATION;
+    cf.binary_threshold = BINARY_THRESHOLD_INITIALIZATION;
 }
 
 
@@ -45,16 +48,31 @@ inline int translate(BoundingBox& bb, int x, int y)
 }
 
 
+void set_cf_binary_threshold(CodeFragment &cf)
+{
+    cf.binary_threshold = drand() * (max_binary_threshold - min_binary_threshold) + min_binary_threshold;
+}
+
+inline float binarize_at_threshold(float val, float threshold)
+{
+    float result = 0;
+    if(val < threshold) result = 0;
+    else result = 1;
+    return result;
+}
+
+
 bool set_cf_pattern(CodeFragment &cf, float* state)
 {
     bool result = false;
     float max = 0;
     float min = 1;
+    set_cf_binary_threshold(cf);
     // initialize the pattern and mask
     // pattern gets all values from the state
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
-            cf.pattern[y][x] = state[translate(cf.bb, x, y)];
+            cf.pattern[y][x] = binarize_at_threshold(state[translate(cf.bb, x, y)], cf.binary_threshold);
             if(cf.pattern[y][x] > max) max = cf.pattern[y][x];
             if(cf.pattern[y][x] < min) min = cf.pattern[y][x];
         }
@@ -199,7 +217,9 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
             BoundingBox bb = cf.bb;
             bb.y = bb.y + shift_y;
             bb.x = bb.x + shift_x;
-            distance += std::abs(cf.pattern[y][x] - state[translate(bb, x, y)]);
+            distance += std::abs(
+                    cf.pattern[y][x] -
+                    binarize_at_threshold(state[translate(bb, x, y)], cf.binary_threshold));
         }
     }
 
@@ -212,7 +232,21 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
 
 
 int evaluateCF(CodeFragment &cf, float *state, int shift_x, int shift_y, int cl_id, int img_id, bool train) {
-    if(evaluate_cf_bb(cf, state, shift_x, shift_y)) return 1;
+    bool result = false;
+    float binary_threshold = cf.binary_threshold;
+    float binary_threshold_delta = 0.05;
+    for(int i=0; i<5 && !result; i++){
+        cf.binary_threshold = std::min(binary_threshold + binary_threshold_delta*i, max_binary_threshold);
+        result = evaluate_cf_bb(cf, state, shift_x, shift_y);
+    }
+    cf.binary_threshold = binary_threshold;  // reset and check for lower values
+    for(int i=1; i<5 && !result; i++){
+        cf.binary_threshold = std::max(binary_threshold - binary_threshold_delta*i, min_binary_threshold);
+        result = evaluate_cf_bb(cf, state, shift_x, shift_y);
+    }
+    cf.binary_threshold = binary_threshold;  // reset to original value
+
+    if(result) return 1;
     else return 0;
 }
 
@@ -220,7 +254,8 @@ int evaluateCF(CodeFragment &cf, float *state, int shift_x, int shift_y, int cl_
 void output_code_fragment_to_file(CodeFragment &cf, std::ofstream &output_code_fragment_file)
 {
     output_code_fragment_file << cf.cf_id << " " << cf.numerosity << " " << cf.fitness << " "
-    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y << " " << cf.matching_threshold << " ";
+    << cf.bb.x << " " << cf.bb.y << " " << cf.bb.size_x << " " << cf.bb.size_y
+        << " " << cf.matching_threshold << " " << cf.binary_threshold << " ";
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             output_code_fragment_file << cf.pattern[y][x] <<  " ";

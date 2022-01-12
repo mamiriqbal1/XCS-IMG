@@ -19,6 +19,7 @@ typedef std::unordered_map<int, int> IntMap;
 
 extern bool normalize_data;
 const float IMAGE_MAX_VALUE = 255.0;
+const float IMAGE_MIN_VALUE = 0;
 extern bool use_kb;
 extern std::string kb_file;
 extern std::string output_path;
@@ -96,15 +97,22 @@ const int DISABLED = 0;
 const char UNKNOWN = -1;
 const char MATCHED = 1;
 const char NOT_MATCHED = 0;
+const int NUMEROSITY_INITIALIZATION = -1;
+const int FITNESS_INITIALIZATION = 0;
+const float BINARY_THRESHOLD_INITIALIZATION = 0.5;
+
+extern float min_binary_threshold;
+extern float max_binary_threshold;
 
 struct CodeFragment
 {
-    int cf_id = -1;
-    int numerosity = 1;
-    int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
+    int cf_id = NOT_INITIALIZED;
+    int numerosity = NUMEROSITY_INITIALIZATION;
+    int fitness = FITNESS_INITIALIZATION; // Fitness of a code fragment is its appearance in "promising classifiers"
     BoundingBox bb;
-    FloatMatrix pattern; // -1 not initialized
+    FloatMatrix pattern;
     float matching_threshold = NOT_INITIALIZED;
+    float binary_threshold = BINARY_THRESHOLD_INITIALIZATION; // the threshold used to binarize image region before extracting pattern
 };
 
 //typedef std::unordered_map<int, CodeFragment> CodeFragmentMap;
