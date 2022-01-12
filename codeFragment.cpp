@@ -102,7 +102,6 @@ void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
     cf.bb = bb;
     cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
 }
 
 
@@ -143,18 +142,6 @@ bool set_cf_pattern_and_mask(CodeFragment &cf, float* state)
     }
     // see if region is not all homogeneous
     if(max - min > 0.05) result = true;
-
-    // mask enables 25% to 75% pixels in the pattern
-    double enabled_pixels_percentage = (drand() / 2) + 0.5;
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            if(true || drand() < enabled_pixels_percentage){
-                cf.mask[y][x] = ENABLED;
-            }else{
-                cf.mask[y][x] = DISABLED;
-            }
-        }
-    }
 
     return result;
 }
@@ -405,8 +392,7 @@ bool is_cf_equal(CodeFragment& cf1, CodeFragment& cf2)
         cf1.bb.y == cf2.bb.y &&
         cf1.bb.size_x == cf2.bb.size_x &&
         cf1.bb.size_y == cf2.bb.size_y &&
-        cf1.pattern == cf2.pattern &&
-        cf1.mask == cf2.mask){
+        cf1.pattern == cf2.pattern){
         return true;
     }else{
         return false;
@@ -491,13 +477,11 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
 
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
-            if(cf.mask[y][x] == ENABLED) {
-                mask_size += 1;
-                BoundingBox bb = cf.bb;
-                bb.y = bb.y + shift_y;
-                bb.x = bb.x + shift_x;
-                distance += std::abs(cf.pattern[y][x] - state[translate(bb, x, y)]);
-            }
+            mask_size += 1;
+            BoundingBox bb = cf.bb;
+            bb.y = bb.y + shift_y;
+            bb.x = bb.x + shift_x;
+            distance += std::abs(cf.pattern[y][x] - state[translate(bb, x, y)]);
         }
     }
 

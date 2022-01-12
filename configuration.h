@@ -161,7 +161,6 @@ struct CodeFragment
     int fitness = 0; // Fitness of a code fragment is its appearance in "promising classifiers"
     BoundingBox bb;
     FloatMatrix pattern; // -1 not initialized
-    IntMatrix mask;  // 0 disabled, 1 enabled
     float matching_threshold = NOT_INITIALIZED;
 
     CodeFragment()
