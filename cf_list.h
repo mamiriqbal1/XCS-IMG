@@ -22,4 +22,5 @@ void remove_unused_cf();
 void load_cf_for_kb(std::string cf_file_name);
 CodeFragment get_kb_code_fragment(float* state);
 int count_total_cf();
+void output_cf_list(std::ofstream &output_code_fragment_file, std::ofstream &output_promising_code_fragment_file);
 #endif //RCFC_KB_CF_LIST_H

@@ -17,4 +17,4 @@ add_executable(XCS-IMG
         xcs.cpp
         xcs.h
         xcsMacros.cpp
-        xcsMacros.h filter_list.cpp filter_list.h cf_list.h cf_list.cpp)
+        xcsMacros.h cf_list.h cf_list.cpp)

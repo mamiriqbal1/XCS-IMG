@@ -7,12 +7,11 @@
 #include "xcsMacros.h"
 #include "codeFragment.h"
 #include "classifier.h"
-#include "filter_list.h"
-#include <float.h>
 #include <iomanip>
 #include <sys/stat.h>
 #include <stack>
 #include "cf_list.h"
+#include <float.h>
 
 CharMatrix evaluation_cache;
 
@@ -996,14 +995,12 @@ void save_experiment_results(std::string path_postfix)
     output_parameter_file<<"pM "<<pM<<std::endl;
     print_population_stats(output_stats_file);
     print_code_fragment_stats(output_stats_file);
-    print_filter_stats(output_stats_file);
     write_classifier_header(output_classifier_file);
     for(auto& item : population)
     {
         if(item.id == -1) continue; // skip empty slots in the array
         fprintClassifier(item, output_classifier_file);
     }
-//    output_filters(output_filter_file, output_promising_filter_file);
     output_cf_list(output_code_fragment_file, output_promising_code_fragment_file);
     //storeCFs(pop, fpCF);
     output_classifier_file.close();
@@ -1100,8 +1097,6 @@ inline bool is_promising_classifier(Classifier& cl)
  */
 
 void manage_filter_and_cf_list() {
-    // reset statistics of all filters before updating
-    reset_filter_stats();
     reset_cf_stats();
 
     for(auto& item : population){
@@ -1114,23 +1109,10 @@ void manage_filter_and_cf_list() {
                 if(promising){
                     cf.fitness++;
                 }
-                for (int j = 0; j < cf.num_filters; j++) {
-                    Filter &f = get_filter(cf.filter_ids[j]);
-                    f.numerosity++;
-                    // if classifier is "promising" then increase the fitness of the filter
-                    // a promising classifier is one whose error < 10 and experience > 10
-                    if (promising) {
-                        f.fitness++;
-                    }
-
-                }
             }
         }
     }
-    // remove filters with numerosity=0 from the filter list
-    std::forward_list<int> removed_filters;
-    remove_unused_filters(removed_filters);
-    prepare_promising_filter_list();
+    // remove cf with numerosity=0 from the filter list
     remove_unused_cf();
     prepare_promising_cf_list();
 }
