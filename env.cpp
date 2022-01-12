@@ -4,7 +4,6 @@
 #include <math.h>
 #include "configuration.h"
 #include "env.h"
-#include "filter_list.h"
 #include "cf_list.h"
 
 
@@ -118,7 +117,6 @@ void loadDataFromFile(DataSource data[], const char inputFile[], const int numIn
 
 void load_kb(std::string kb_cf_file_name, std::string kb_filter_file_name) {
 
-    load_filter_for_kb(kb_filter_file_name);
     load_cf_for_kb(kb_cf_file_name);
 }
 

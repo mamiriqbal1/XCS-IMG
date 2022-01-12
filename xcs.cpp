@@ -57,7 +57,7 @@ int cfMaxStack = 1;// = (cfMaxArity-1)*(cfMaxDepth-1)+2;
 int cfMaxLeaf = 1;// = 4; // 2^cfMaxDepth
 int cfMinLeaf = 1;// = 1; // 2^cfMinDepth
 int cf_max_bounding_box_size = image_height;
-int cf_min_bounding_box_size = max_filter_size * 2;
+int cf_min_bounding_box_size = 1;
 float filter_matching_threshold = 0.001; // thresh hold for filter matching
 int slide_region = 0;
 
