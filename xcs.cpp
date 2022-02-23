@@ -534,6 +534,8 @@ void LoadConfig(char* file)
                 epochs = atoi(value.c_str());
             }else if(name == "test_frequency"){
                 testFrequency= atoi(value.c_str());
+            }else if(name == "validation_frequency"){
+                validation_frequency= atoi(value.c_str());
             }else if(name == "max_problems"){
                 maxProblems= atoi(value.c_str());
             }else if(name == "analyze"){

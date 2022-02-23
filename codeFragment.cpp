@@ -510,7 +510,17 @@ bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
 
 
 int evaluateCF(CodeFragment &cf, float *state, int shift_x, int shift_y, int cl_id, int img_id, bool train) {
-    if(evaluate_cf_bb(cf, state, shift_x, shift_y)) return 1;
+    bool matched = false;
+    // evaluate cf with +/- 1 shift flexibility
+    int cf_shift_region = 1;
+    for(int cf_shift_y = cf_shift_region*-1; cf_shift_y <= cf_shift_region && !matched ; cf_shift_y++){
+        int new_shift_y = std::min(std::max(shift_y + cf_shift_y, 0), image_height - cf.bb.size_y);
+        for(int cf_shift_x = cf_shift_region*-1; cf_shift_x <= cf_shift_region && !matched ; cf_shift_x++) {
+            int new_shift_x = std::min(std::max(shift_x + cf_shift_x, 0), image_width - cf.bb.size_x);
+            matched = evaluate_cf_bb(cf, state, new_shift_x, new_shift_y);
+        }
+    }
+    if(matched) return 1;
     else return 0;
 }
 
