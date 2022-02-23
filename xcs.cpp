@@ -43,7 +43,7 @@ bool visualization = false;
 bool fixed_seed = true;
 bool normalize_data = true;
 bool use_kb = false;
-bool Testing = false;
+bool test_only_run = false;
 int numActions = 2;
 IntMap class_map;
 int image_width = NOT_INITIALIZED;
@@ -256,7 +256,7 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
         p_kb = p_kb_start - (p_kb_start - p_kb_end) * problem_count/maxProblems;
     }
-    for( ; problem_count <= maxProblems; problem_count++)
+    for( ; !test_only_run && problem_count <= maxProblems; problem_count++)
     {
         int img_id = irand(trainNumInstances);
         state = &trainingData[img_id];
@@ -299,6 +299,11 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
         pX = pX_start - (pX_start - pX_end) * problem_count/maxProblems;
         pM = pM_start - (pM_start - pM_end) * problem_count/maxProblems;
         p_kb = p_kb_start - (p_kb_start - p_kb_end) * problem_count/maxProblems;
+    }
+    if(test_only_run){
+        problem_count--;
+        doOneSingleStepTest(problem_count, output_test_file, 0, 0,
+                            std::to_string(problem_count) + "/");
     }
     output_training_file.close();
     output_test_file.close();
@@ -546,11 +551,11 @@ void LoadConfig(char* file)
                 }
             }else if(name == "analyze_path"){
                 analyze_path = value;
-            }else if (name == "testing") {
+            }else if (name == "test_only_run") {
                 if (value == "no") {
-                    Testing = false;
+                    test_only_run = false;
                 } else if (value == "yes") {
-                    Testing = true;
+                    test_only_run = true;
                 }
             }
             if(create_output_file){
