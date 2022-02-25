@@ -48,6 +48,8 @@ inline int translate(BoundingBox& bb, int x, int y)
 
 bool set_cf_pattern(CodeFragment &cf, float* state)
 {
+    float INTERESTING_THRESHOLD = 0.05;
+    float EDGE_THRESHOLD = 0.5;
     bool result = false;
     float max = 0;
     float min = 1;
@@ -61,21 +63,27 @@ bool set_cf_pattern(CodeFragment &cf, float* state)
         }
     }
     // see if region is not all homogeneous
-    if(max - min > 0.05) result = true;
+    if(max - min <= INTERESTING_THRESHOLD) return false; // result = true;
 
-    // mask enables 25% to 75% pixels in the pattern
-    double enabled_pixels_percentage = (drand() / 2) + 0.5;
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            if(true || drand() < enabled_pixels_percentage){
+    for(int y=0; y<cf.bb.size_y - 1; y++){
+        for(int x=0; x<cf.bb.size_x - 1; x++){
+            if(std::abs(cf.pattern[y][x] - cf.pattern[y][x+1]) > EDGE_THRESHOLD){
                 cf.mask[y][x] = ENABLED;
-            }else{
-                cf.mask[y][x] = DISABLED;
+                cf.mask[y][x+1] = ENABLED;
             }
         }
     }
 
-    return result;
+    for(int x=0; x<cf.bb.size_x - 1; x++){
+        for(int y=0; y<cf.bb.size_y - 1; y++){
+            if(std::abs(cf.pattern[y][x] - cf.pattern[y+1][x]) > EDGE_THRESHOLD){
+                cf.mask[y][x] = ENABLED;
+                cf.mask[y+1][x] = ENABLED;
+            }
+        }
+    }
+
+    return true;
 }
 
 
