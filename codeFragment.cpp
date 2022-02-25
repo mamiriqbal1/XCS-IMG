@@ -21,7 +21,7 @@ void set_cf_bounding_box(CodeFragment &cf, BoundingBox bb)
 {
     cf.bb = bb;
     cf.pattern = FloatMatrix(cf.bb.size_y, FloatVector (cf.bb.size_x, NOT_INITIALIZED));
-    cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, ENABLED));
+    cf.mask = IntMatrix(cf.bb.size_y, IntVector (cf.bb.size_x, DISABLED));
 }
 
 
@@ -50,7 +50,6 @@ bool set_cf_pattern(CodeFragment &cf, float* state)
 {
     float INTERESTING_THRESHOLD = 0.05;
     float EDGE_THRESHOLD = 0.5;
-    bool result = false;
     float max = 0;
     float min = 1;
     // initialize the pattern and mask
@@ -83,7 +82,20 @@ bool set_cf_pattern(CodeFragment &cf, float* state)
         }
     }
 
-    return true;
+    int mask_count = 0;
+    for(int y=0; y<cf.bb.size_y; y++){
+        for(int x=0; x<cf.bb.size_x; x++){
+            if(cf.mask[y][x] == ENABLED){
+                mask_count++;
+            }
+        }
+    }
+
+    if(mask_count / cf.bb.size_x*cf.bb.size_y >= 0.25){  // useful edge if at least 25% pixels are included
+        return true;
+    }else{
+        return false;
+    }
 }
 
 
