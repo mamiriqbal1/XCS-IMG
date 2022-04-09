@@ -53,6 +53,7 @@ extern float epsilon_end; // = 0.5; // the probability of exploration for epsilo
 const int N_filter_ol = 2500;  // maximum limit of filters in the managed observed list
 extern float filter_matching_threshold; // = 0.001; // thresh hold for filter matching
 extern int slide_region; // Plus minus slide region. e.g. 2 mean +/2 both horizontal and vertical 3x3 window
+extern int verbose; // 0: no, 1: yes
 
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).

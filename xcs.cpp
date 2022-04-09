@@ -60,6 +60,7 @@ int cf_max_bounding_box_size = image_height;
 int cf_min_bounding_box_size = 1;
 float filter_matching_threshold = 0.001; // thresh hold for filter matching
 int slide_region = 0;
+int verbose = 1;
 
 std::string inputTrainingFile;
 std::string inputTestFile;
@@ -273,7 +274,9 @@ void doOneSingleStepExperiment() {  //Executes one single-step experiment monito
            double accuracy = correct_count/(double)testFrequency;
            double error = error_sum / testFrequency;
            double avg_action_set_size = (match_set_size_sum / (double)testFrequency) / numActions;
-           writePerformance(accuracy, error, problem_count, avg_action_set_size, output_training_file);
+           if(verbose == 1) {
+               writePerformance(accuracy, error, problem_count, avg_action_set_size, output_training_file);
+           }
            correct_count = 0;
            error_sum = 0;
            match_set_size_sum = 0;
@@ -474,6 +477,8 @@ void LoadConfig(char* file)
                 filter_matching_threshold = atof(value.c_str());
             }else if(name == "slide_region"){
                 slide_region = atoi(value.c_str());
+            }else if(name == "verbose"){
+                verbose = atoi(value.c_str());
             }else if(name == "pX_start"){
                 pX_start = atof(value.c_str());
                 pX = pX_start;
