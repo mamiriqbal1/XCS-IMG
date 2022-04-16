@@ -82,20 +82,7 @@ bool set_cf_pattern(CodeFragment &cf, float* state)
         }
     }
 
-    int mask_count = 0;
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            if(cf.mask[y][x] == ENABLED){
-                mask_count++;
-            }
-        }
-    }
-
-    if(mask_count / cf.bb.size_x*cf.bb.size_y >= 0.25){  // useful edge if at least 25% pixels are included
-        return true;
-    }else{
-        return false;
-    }
+    return true;
 }
 
 
