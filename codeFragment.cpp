@@ -49,7 +49,7 @@ inline int translate(BoundingBox& bb, int x, int y)
 bool set_cf_pattern(CodeFragment &cf, float* state)
 {
     float INTERESTING_THRESHOLD = 0.05;
-    float EDGE_THRESHOLD = 0.5;
+    float EDGE_THRESHOLD = 0.1;
     float max = 0;
     float min = 1;
     // initialize the pattern and mask
@@ -208,29 +208,41 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
     return evaluation;
 }
 
-
-bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
+/*
+ * Evaluate if the cfs are similar enough to declare match
+ */
+bool do_cf_match(CodeFragment &cf1, CodeFragment &cf2)
 {
-    double distance = 0;
-    int mask_size = 0;
-
-    for(int y=0; y<cf.bb.size_y; y++){
-        for(int x=0; x<cf.bb.size_x; x++){
-            if(cf.mask[y][x] == ENABLED) {
-                mask_size += 1;
-                BoundingBox bb = cf.bb;
-                bb.y = bb.y + shift_y;
-                bb.x = bb.x + shift_x;
-                distance += std::abs(cf.pattern[y][x] - state[translate(bb, x, y)]);
+    int match_count = 0;
+    int max_match_count = cf1.bb.size_x*cf1.bb.size_y;
+    for(int y=0; y<cf1.bb.size_y; y++){
+        for(int x=0; x<cf1.bb.size_x; x++){
+            if(cf1.mask[y][x] != cf2.mask[y][x]) {
+                match_count++;
             }
         }
     }
-
-    if(distance/(mask_size) < cf.matching_threshold){  // average distance per pixel
+    double match = match_count/(double)max_match_count;
+    if(match < cf1.matching_threshold){
         return true;
     }else{
         return false;
     }
+
+}
+
+
+bool evaluate_cf_bb(CodeFragment &cf, float *state, int shift_x, int shift_y)
+{
+   // create a temp cf with same bounding box for comparison
+
+    CodeFragment state_cf;
+    initializeNewCF(-1, state_cf);
+    state_cf.bb = cf.bb;
+    set_cf_bounding_box(state_cf, state_cf.bb);
+    set_cf_pattern(state_cf, state);
+    if(do_cf_match(cf, state_cf)) return true;
+    else return false;
 }
 
 
