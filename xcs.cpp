@@ -388,6 +388,11 @@ void startXCS(){
         normalize_image(trainingData, trainNumInstances);
         normalize_image(testingData, testNumInstances);
     }
+    bool extract_edge_features = true;
+    if(extract_edge_features){
+        extract_features_edge(trainingData, trainNumInstances);
+        extract_features_edge(testingData, testNumInstances);
+    }
     if(use_kb) {
         load_kb(kb_cf_file, kb_filter_file);
     }

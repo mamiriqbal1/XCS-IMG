@@ -5,6 +5,7 @@
 #include "configuration.h"
 #include "env.h"
 #include "cf_list.h"
+#include "codeFragment.h"
 
 
 FloatVector lowerLimit; //[condLength];
@@ -45,6 +46,44 @@ float ScaleRange(float Value,float FromMinValue, float FromMaxValue, float ToMin
         return 0;
     }else {
         return (Value - FromMinValue) * (ToMaxValue - ToMinValue) / (FromMaxValue - FromMinValue) + ToMinValue;
+    }
+}
+
+void extract_features_edge(DataSource *data, int totalRows){
+    FloatMatrix temp_img = FloatMatrix(image_height, FloatVector (image_width, NOT_INITIALIZED));
+    BoundingBox full_img_bb;
+    full_img_bb.size_y = image_height;
+    full_img_bb.size_x = image_width;
+    full_img_bb.y = 0;
+    full_img_bb.x = 0;
+    for(int img_id = 0; img_id<totalRows;img_id++){
+        // make a copy in temp
+        for(int y=0; y<image_height; y++) {
+            for(int x=0; x<image_width; x++) {
+                temp_img[y][x] = data[img_id].state[translate(full_img_bb, x, y)];
+            }
+        }
+        // mark all pixels as 0 initially
+        for(int y=0; y<full_img_bb.size_y - 1; y++){
+            for(int x=0; x<full_img_bb.size_x - 1; x++){
+                data[img_id].state[translate(full_img_bb, x, y)] = 0;
+            }
+        }
+        // mark edge pixels with 1
+        for(int y=0; y<full_img_bb.size_y - 1; y++){
+            for(int x=0; x<full_img_bb.size_x - 1; x++){
+                if(std::abs(temp_img[y][x] - temp_img[y][x+1]) > EDGE_THRESHOLD){
+                    data[img_id].state[translate(full_img_bb, x, y)] = 1;
+                }
+            }
+        }
+        for(int x=0; x<full_img_bb.size_x - 1; x++){
+            for(int y=0; y<full_img_bb.size_y - 1; y++){
+                if(std::abs(temp_img[y][x] - temp_img[y+1][x]) > EDGE_THRESHOLD){
+                    data[img_id].state[translate(full_img_bb, x, y)] = 1;
+                }
+            }
+        }
     }
 }
 

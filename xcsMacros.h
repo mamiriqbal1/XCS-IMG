@@ -55,6 +55,9 @@ extern float filter_matching_threshold; // = 0.001; // thresh hold for filter ma
 extern int slide_region; // Plus minus slide region. e.g. 2 mean +/2 both horizontal and vertical 3x3 window
 extern int verbose; // 0: no, 1: yes
 
+const float INTERESTING_THRESHOLD = 0.05;
+const float EDGE_THRESHOLD = 0.1;
+
 const long _M = 2147483647; //Constant for the random number generator (modulus of PMMLCG = 2^31 -1).
 const long _A = 16807; //Constant for the random number generator (default = 16807).
 

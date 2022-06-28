@@ -40,7 +40,7 @@ void initialize_cf_bounding_box(CodeFragment &cf)
 
 
 // translate bounding box coordinates to state coordinates
-inline int translate(BoundingBox& bb, int x, int y)
+int translate(BoundingBox& bb, int x, int y)
 {
     return (bb.y+y)*image_width + bb.x +x;
 }
@@ -48,8 +48,6 @@ inline int translate(BoundingBox& bb, int x, int y)
 
 bool set_cf_pattern(CodeFragment &cf, float* state)
 {
-    float INTERESTING_THRESHOLD = 0.05;
-    float EDGE_THRESHOLD = 0.1;
     float max = 0;
     float min = 1;
     // initialize the pattern and mask
@@ -57,30 +55,13 @@ bool set_cf_pattern(CodeFragment &cf, float* state)
     for(int y=0; y<cf.bb.size_y; y++){
         for(int x=0; x<cf.bb.size_x; x++){
             cf.pattern[y][x] = state[translate(cf.bb, x, y)];
+            cf.mask[y][x] = state[translate(cf.bb, x, y)];
             if(cf.pattern[y][x] > max) max = cf.pattern[y][x];
             if(cf.pattern[y][x] < min) min = cf.pattern[y][x];
         }
     }
     // see if region is not all homogeneous
-    if(max - min <= INTERESTING_THRESHOLD) return false; // result = true;
-
-    for(int y=0; y<cf.bb.size_y - 1; y++){
-        for(int x=0; x<cf.bb.size_x - 1; x++){
-            if(std::abs(cf.pattern[y][x] - cf.pattern[y][x+1]) > EDGE_THRESHOLD){
-                cf.mask[y][x] = ENABLED;
-                cf.mask[y][x+1] = ENABLED;
-            }
-        }
-    }
-
-    for(int x=0; x<cf.bb.size_x - 1; x++){
-        for(int y=0; y<cf.bb.size_y - 1; y++){
-            if(std::abs(cf.pattern[y][x] - cf.pattern[y+1][x]) > EDGE_THRESHOLD){
-                cf.mask[y][x] = ENABLED;
-                cf.mask[y+1][x] = ENABLED;
-            }
-        }
-    }
+//    if(max - min <= INTERESTING_THRESHOLD) return false; // result = true;
 
     return true;
 }
@@ -214,16 +195,21 @@ int evaluate_cf_slide(CodeFragment &cf, float *state, int cl_id, int img_id, boo
 bool do_cf_match(CodeFragment &cf1, CodeFragment &cf2)
 {
     int match_count = 0;
+    int positive_count = 0;
     int max_match_count = cf1.bb.size_x*cf1.bb.size_y;
     for(int y=0; y<cf1.bb.size_y; y++){
         for(int x=0; x<cf1.bb.size_x; x++){
-            if(cf1.mask[y][x] != cf2.mask[y][x]) {
-                match_count++;
+            if(cf1.mask[y][x] == ENABLED) {
+                positive_count++;
+                if(ENABLED == cf2.mask[y][x]) {
+                    match_count++;
+                }
             }
         }
     }
-    double match = match_count/(double)max_match_count;
-    if(match < cf1.matching_threshold){
+    if(positive_count==0) positive_count = 1;
+    double match = match_count/(double)positive_count;
+    if(match > cf1.matching_threshold){
         return true;
     }else{
         return false;
